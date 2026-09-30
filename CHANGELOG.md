@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-09-30
+
+> Fix: Foto-Thumbnails brachen zufällig ab; Leistungsbericht; Qualitätsrunde vorbereitet
+
 ### Added
 
 - Einstellungen → Hardware → Leistungsbericht: misst Export und Spracherkennung auf dem eigenen Rechner und öffnet einen
