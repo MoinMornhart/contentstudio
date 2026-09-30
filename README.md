@@ -87,6 +87,7 @@ zwölf Schritten durch Profil, Kanäle, Darstellung, Marke und KI. Updates komme
 ## Neueste Änderungen
 
 <!-- CHANGELOG:START -->
+- **0.4.0** (2026-09-30): Thumbnails: Vorbilder, Stilbuch, 3D, Foto, Vorlagen, Selbstprüfung, Export
 - **0.3.0** (2026-09-30): KI-Schicht für alle Anbieter und MCP
 - **0.2.0** (2026-09-30): Creator-Profil und Einrichtungsassistent
 - **0.1.0** (2026-09-30): Fundament
