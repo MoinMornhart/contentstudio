@@ -1,0 +1,48 @@
+{
+  "name": "contentstudio",
+  "productName": "ContentStudio",
+  "version": "0.0.1",
+  "description": "Lokale Desktop-App für Creator: Thumbnails, Schnitt und Planung mit deiner eigenen KI",
+  "author": "ContentStudio contributors",
+  "license": "MIT",
+  "private": true,
+  "main": "./out/main/index.js",
+  "homepage": "https://github.com/MoinMornhart/contentstudio",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run lint && npm test && npm run build",
+    "start": "node scripts/electron.mjs .",
+    "release": "node scripts/release.mts",
+    "dist": "electron-vite build && electron-builder --win --publish never",
+    "screenshot": "electron-vite build && node scripts/electron.mjs . --cs-screenshot=test-output/screenshots",
+    "icon": "node scripts/make-icon.mts"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9",
+    "koffi": "^3.3.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "electron": "44.4.5",
+    "electron-builder": "26.15.3",
+    "electron-vite": "^5.0.0",
+    "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vite": "^7.3.6",
+    "vitest": "^5.0.3"
+  }
+}

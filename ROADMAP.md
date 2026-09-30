@@ -23,8 +23,8 @@ prüfbar; bleibt so markiert, bis ein Selbsttest auf einem passenden Rechner gr�
 
 | Meilenstein | Version | Inhalt | Status |
 |---|---|---|---|
-| M0 Setup | 0.0.x | Repo, Lizenz, Secret-Scan, ROADMAP, UPSTREAM | 🔄 |
-| M1 Fundament | → 0.1.0 | Electron-App, Installer, Update, Datenordner, Werkzeuge, Hardware-Test, Jobs, RPC, zweisprachige Oberfläche | ⬜ |
+| M0 Setup | 0.0.1 | Repo, Lizenz, Secret-Scan, ROADMAP, UPSTREAM | ✅ |
+| M1 Fundament | → 0.1.0 | Electron-App, Installer, Update, Datenordner, Werkzeuge, Hardware-Test, Jobs, RPC, zweisprachige Oberfläche | 🔄 |
 | M2 Assistent und Profil | → 0.2.0 | Creator-Profil, Einrichtungsassistent in 12 Schritten, Profil in den Einstellungen | ⬜ |
 | M3 KI-Schicht | → 0.3.0 | Anbieter-Schicht, Abo-CLIs, lokale Modelle, API-Schlüssel, Kosten, MCP-Server | ⬜ |
 | M4 Thumbnail | → 0.4.0 | Vorbilder und Stilbuch je Kanal, 3D-Szene, Foto-Compositing, Vorlagen, Freiform, Selbstprüfung | ⬜ |
@@ -40,13 +40,13 @@ prüfbar; bleibt so markiert, bis ein Selbsttest auf einem passenden Rechner gr�
 
 - [x] **0.1 Lokales Projekt:** Ordner `contentstudio`, `git init`, `.gitignore`, `.gitattributes`, Lizenz (MIT mit
   Herkunftsangabe MoinStudio), README. ✅ Erster Commit steht.
-- [ ] **0.2 GitHub-Repo:** öffentlich als `MoinMornhart/contentstudio` (Entscheidung des Menschen, 30.09.2026). ✅ Push
+- [x] **0.2 GitHub-Repo:** öffentlich als `MoinMornhart/contentstudio` (Entscheidung des Menschen, 30.09.2026). ✅ Push
   und Tag `v0.0.1` sichtbar.
-- [ ] **0.3 Secret-Scan:** gitleaks im `pre-push`-Hook, `.env.example` ohne Schlüssel, private Daten per `.gitignore`
+- [x] **0.3 Secret-Scan:** gitleaks im `pre-push`-Hook, `.env.example` ohne Schlüssel, private Daten per `.gitignore`
   ausgeschlossen. ✅ Push läuft nur nach grünem Scan.
-- [ ] **0.4 MoinStudio lesen:** schreibgeschützter Klon in `upstream/moinstudio` (nie committet), README, ROADMAP,
+- [x] **0.4 MoinStudio lesen:** schreibgeschützter Klon in `upstream/moinstudio` (nie committet), README, ROADMAP,
   CHANGELOG, `docs/`, `src/`, `blender/`, `resources/prompts/` gelesen. ✅ Diese ROADMAP und [UPSTREAM.md](UPSTREAM.md).
-- [ ] **0.5 Doku-Gerüst:** [docs/plugins.md](docs/plugins.md) (jede Installation), [docs/auftrag.md](docs/auftrag.md)
+- [x] **0.5 Doku-Gerüst:** [docs/plugins.md](docs/plugins.md) (jede Installation), [docs/auftrag.md](docs/auftrag.md)
   (Auftrag für Neubau und Update). ✅ Dateien im Repo.
 
 ## M1 – Fundament → 0.1.0
@@ -54,32 +54,32 @@ prüfbar; bleibt so markiert, bis ein Selbsttest auf einem passenden Rechner gr�
 Übernahme der App-Architektur von MoinStudio (`docs/architecture.md`): Electron, electron-vite, React, TypeScript.
 Alles, was nach Philip, seinen Kanälen oder nur nach Claude klingt, wird dabei neutral.
 
-- [ ] **1.1 Electron-Grundgerüst:** Main, Preload, Renderer getrennt, `contextIsolation`, typisierte IPC-Brücke
+- [x] **1.1 Electron-Grundgerüst:** Main, Preload, Renderer getrennt, `contextIsolation`, typisierte IPC-Brücke
   (`window.cs`), Reiter Thumbnail, Schnitt, Planung, Einstellungen; ESLint, Vitest. ✅ `npm run check` grün, App startet,
   Screenshot aller Reiter.
-- [ ] **1.2 Zweisprachige Oberfläche von Anfang an:** Wörterbücher Deutsch und Englisch, keine fest verdrahteten Texte in
+- [x] **1.2 Zweisprachige Oberfläche von Anfang an:** Wörterbücher Deutsch und Englisch, keine fest verdrahteten Texte in
   der Oberfläche, Sprache aus der Systemsprache vorgewählt, jederzeit umschaltbar. ✅ Unit-Test: beide Wörterbücher haben
   dieselben Schlüssel; Test sucht nach festen Texten in `.tsx`-Dateien; Screenshots auf Deutsch und Englisch.
-- [ ] **1.3 Installer ohne Admin-Rechte:** NSIS per Benutzer, Startmenü, Desktop-Verknüpfung, optionaler Autostart.
+- [x] **1.3 Installer ohne Admin-Rechte:** NSIS per Benutzer, Startmenü, Desktop-Verknüpfung, optionaler Autostart.
   ✅ `npm run dist` baut `ContentStudio-Setup-x.y.z.exe`; Installation und Deinstallation auf der Test-VM.
 - [ ] **1.4 Release-Pipeline und Selbst-Update:** Tag `vX.Y.0` baut auf GitHub Actions den Installer und veröffentlicht
   ihn mit `latest.yml`; electron-updater prüft, lädt und installiert auf Knopfdruck. ✅ Release erscheint mit `.exe`,
   `.blockmap`, `latest.yml`; Update von einer Version auf die nächste in der App.
-- [ ] **1.5 Datenordner mit sicherem Speichern:** frei wählbar (auch OneDrive, iCloud Drive, Dropbox, Google Drive);
+- [x] **1.5 Datenordner mit sicherem Speichern:** frei wählbar (auch OneDrive, iCloud Drive, Dropbox, Google Drive);
   atomar schreiben; Konfliktkopien aller vier Dienste erkennen und Feld für Feld zusammenführen; Download-Caches und
   große Zwischendateien liegen nie im Datenordner. ✅ Unit-Tests für jede Konfliktkopie-Schreibweise und für atomares
   Schreiben.
-- [ ] **1.6 Werkzeug-Manager:** Blender, FFmpeg, uv laden unsichtbar, SHA256-geprüft, ohne Admin nach
+- [x] **1.6 Werkzeug-Manager:** Blender, FFmpeg, uv laden unsichtbar, SHA256-geprüft, ohne Admin nach
   `%LOCALAPPDATA%\ContentStudio`; nur was gebraucht wird. ✅ Unit-Tests mit gefälschten Downloads (falsche Prüfsumme →
   Abbruch); echter FFmpeg-Download auf der Test-VM.
-- [ ] **1.7 Hardware-Test pro Gerät:** erkennt CPU, RAM, GPUs, misst Blender-Engines, Video-Encoder, Whisper-Stufe,
+- [x] **1.7 Hardware-Test pro Gerät:** erkennt CPU, RAM, GPUs, misst Blender-Engines, Video-Encoder, Whisper-Stufe,
   ONNX-/GPU-Provider; Rückfall-Kette bis zur reinen CPU; Geräteprofil lokal, nie im Datenordner. ✅ Unit-Tests mit
   simulierten NVIDIA-, AMD-, Intel- und Nur-CPU-Profilen; echter Lauf auf der Test-VM (nur CPU).
-- [ ] **1.8 Job-System:** persistente Warteschlange, Pause hält Blender/FFmpeg wirklich an, Fortsetzen nach Neustart,
+- [x] **1.8 Job-System:** persistente Warteschlange, Pause hält Blender/FFmpeg wirklich an, Fortsetzen nach Neustart,
   Knopf „Rechenlast pausieren“. ✅ Unit-Tests; Integrationstest pausiert ein Probebild und setzt fort.
-- [ ] **1.9 Named-Pipe-RPC:** Pipe je Windows-Benutzer mit Zufallstoken für MCP und Fernsteuerung. ✅ Unit-Test mit
+- [x] **1.9 Named-Pipe-RPC:** Pipe je Windows-Benutzer mit Zufallstoken für MCP und Fernsteuerung. ✅ Unit-Test mit
   falschem Token → abgelehnt.
-- [ ] **1.10 Screenshot-Modus und Release-Werkzeug:** `npm run screenshot` nimmt alle Reiter auf; `scripts/release.mts`
+- [x] **1.10 Screenshot-Modus und Release-Werkzeug:** `npm run screenshot` nimmt alle Reiter auf; `scripts/release.mts`
   erhöht Version, schreibt CHANGELOG und README-Block, taggt und pusht. ✅ Probelauf `--dry-run`, Screenshots liegen vor.
 
 **→ 0.1.0, sobald 1.1–1.10 erledigt sind.**

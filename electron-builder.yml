@@ -1,0 +1,52 @@
+# Windows-Installer und Update-Veröffentlichung für ContentStudio (Herkunft: MoinStudio, MIT).
+# electron-builder bleibt auf 26.x gepinnt: v28 lehnt Updates unsignierter Apps voraussichtlich ab.
+appId: io.github.moinmornhart.contentstudio
+productName: ContentStudio
+copyright: Copyright © 2026 ContentStudio contributors
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - out/**
+  - package.json
+  - '!**/*.map'
+
+extraResources:
+  - from: blender
+    to: blender
+    filter:
+      - '**/*.py'
+
+asar: true
+
+win:
+  target:
+    - target: nsis
+      arch: x64
+  icon: build/icon.ico
+  # Unsigniert: kein publisherName, damit electron-updater die Signaturprüfung überspringt
+  # (SHA-512-Prüfung der Downloads bleibt aktiv).
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: ContentStudio
+  uninstallDisplayName: ContentStudio
+  artifactName: ContentStudio-Setup-${version}.${ext}
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  deleteAppDataOnUninstall: false
+
+publish:
+  provider: github
+  owner: MoinMornhart
+  repo: contentstudio
+  # Der Workflow legt das Release vorher als Entwurf an und veröffentlicht es danach selbst.
+  # Legt electron-builder es an, erzeugen parallele Uploads doppelte Releases.
+  releaseType: draft

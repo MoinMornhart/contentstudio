@@ -1,0 +1,67 @@
+# Baut den Windows-Installer und veröffentlicht ihn als GitHub-Release (inkl. latest.yml für die
+# Update-Funktion). Automatisch bei Tags vX.Y.0 (fertige Features / Meilensteine), manuell für
+# jede andere Version über „Run workflow“.
+name: Release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.0']
+  workflow_dispatch:
+    inputs:
+      prerelease:
+        description: 'Als Vorab-Version veröffentlichen (die Update-Funktion ignoriert sie)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Abhängigkeiten
+        run: npm ci --no-audit --no-fund
+
+      - name: Prüfen (Typen, Lint, Tests, Build)
+        run: npm run check
+
+      - name: Version muss zum Tag passen
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          v=$(node -p "require('./package.json').version")
+          [ "v$v" = "${GITHUB_REF_NAME}" ] || { echo "package.json ($v) passt nicht zum Tag ${GITHUB_REF_NAME}"; exit 1; }
+
+      - name: Release als Entwurf anlegen (mit Notizen aus dem CHANGELOG)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          v=$(node -p "require('./package.json').version")
+          echo "TAG=v$v" >> "$GITHUB_ENV"
+          node scripts/release-notes.mts "$v" > notes.md
+          gh release view "v$v" >/dev/null 2>&1 || gh release create "v$v" --draft --verify-tag --title "ContentStudio $v" --notes-file notes.md
+
+      - name: Installer bauen und hochladen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win --publish always
+
+      - name: Release veröffentlichen
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit "$TAG" --draft=false --prerelease=${{ inputs.prerelease == true && 'true' || 'false' }} --latest=${{ inputs.prerelease == true && 'false' || 'true' }}
