@@ -5,6 +5,7 @@ import type { Schluessel, Sprache } from './i18n'
 import type { Konto, Plattform, Profil, Programm } from './profil'
 import type { KiWegStand, McpZiel } from './ki'
 import type { ExportFormat, Stilbuch, ThumbAuftragInfo, ThumbStart, VarianteInfo, VideoErgebnis, Vorbild } from './thumbnail'
+import type { PlanungAenderung, PlanungKarte, PlanungKiArt, PlanungKiStand, PlanungThumbStand, Spalte } from './planung'
 import type { SchnittAbschnitt, SchnittEffekt, SchnittExport, SchnittHighlight, SchnittListe, SchnittProjekt, SpurArt } from './schnitt'
 
 /** Reiter der Hauptoberfläche. Reihenfolge = Reihenfolge in der Navigation. */
@@ -108,7 +109,25 @@ export const IPC = {
   schnittEffekte: 'schnitt:effekte',
   schnittEffektAendern: 'schnitt:effekt-aendern',
   schnittSpurHinzu: 'schnitt:spur-hinzu',
-  schnittSpurAendern: 'schnitt:spur-aendern'
+  schnittSpurAendern: 'schnitt:spur-aendern',
+  planungKarten: 'planung:karten',
+  planungNeu: 'planung:neu',
+  planungAendern: 'planung:aendern',
+  planungVerschieben: 'planung:verschieben',
+  planungLoeschen: 'planung:loeschen',
+  planungGeaendert: 'planung:geaendert',
+  planungSchneiden: 'planung:schneiden',
+  planungThumbnail: 'planung:thumbnail',
+  planungThumbVarianten: 'planung:thumb-varianten',
+  planungThumbWaehlen: 'planung:thumb-waehlen',
+  planungKi: 'planung:ki',
+  planungKiStand: 'planung:ki-stand',
+  planungCrossPlan: 'planung:cross-plan',
+  planungPaket: 'planung:paket',
+  uploadVerbindungen: 'upload:verbindungen',
+  uploadVerbinden: 'upload:verbinden',
+  uploadTrennen: 'upload:trennen',
+  uploadStart: 'upload:start'
 } as const
 
 /** Wofür eine Datei hochgeladen wird: bestimmt Dateityp-Filter, Mehrfachauswahl und Zielordner im Datenordner. */
@@ -302,4 +321,26 @@ export interface CsApi {
   /** Weitere Spur (Facecam, Gameplay, Ton) hinzufügen → Auftrag „ausrichten“; Versatz von Hand oder Spur entfernen (null) */
   schnittSpurHinzu(id: string, art: SpurArt): Promise<string | null>
   schnittSpurAendern(id: string, index: number, aenderung: { versatz: number } | null): Promise<void>
+  /** Planung (ROADMAP M6): Karten je Konto, Änderungen vom anderen Gerät kommen als Ereignis */
+  planungKarten(): Promise<PlanungKarte[]>
+  planungNeu(basis: { kontoId: string; titel: string; spalte?: Spalte; termin?: string | null; notizen?: string }): Promise<PlanungKarte>
+  planungAendern(id: string, aenderung: PlanungAenderung): Promise<PlanungKarte>
+  planungVerschieben(id: string, ziel: { spalte: Spalte; index: number; kontoId?: string }): Promise<PlanungKarte>
+  planungLoeschen(id: string): Promise<void>
+  onPlanungGeaendert(handler: () => void): () => void
+  /** Rohvideo für die Karte wählen und schneiden (null bei Abbruch) */
+  planungSchneiden(id: string): Promise<PlanungKarte | null>
+  planungThumbnail(id: string): Promise<PlanungKarte>
+  planungThumbVarianten(id: string): Promise<PlanungThumbStand>
+  planungThumbWaehlen(id: string, pfad: string): Promise<PlanungKarte>
+  /** Ideen, Titel oder Wochenplan mit der KI → Auftrags-ID */
+  planungKi(art: PlanungKiArt, o?: { kontoId?: string; wunsch?: string; karte?: string }): Promise<string>
+  planungKiStand(auftrag: string): Promise<PlanungKiStand | null>
+  planungCrossPlan(id: string): Promise<PlanungKarte>
+  /** Upload-Paket in einen Ordner der Wahl (null bei Abbruch) */
+  planungPaket(id: string): Promise<string | null>
+  uploadVerbindungen(): Promise<{ plattform: 'youtube'; kontoId: string; verbunden: string }[]>
+  uploadVerbinden(kontoId: string, klient: { clientId: string; clientSecret: string }): Promise<{ plattform: 'youtube'; kontoId: string; verbunden: string }[]>
+  uploadTrennen(kontoId: string): Promise<{ plattform: 'youtube'; kontoId: string; verbunden: string }[]>
+  uploadStart(id: string): Promise<string>
 }

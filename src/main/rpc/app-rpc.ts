@@ -1,4 +1,4 @@
-// Herkunft: MoinStudio src/main/rpc/app-rpc.ts (MIT). Schnitt und Planung kommen mit ihren Meilensteinen dazu.
+// Herkunft: MoinStudio src/main/rpc/app-rpc.ts (MIT), mit Schnitt (video_edit) und Planung (planning) für MCP-Apps.
 import { app, nativeImage } from 'electron'
 import { rmSync } from 'node:fs'
 import { userInfo } from 'node:os'
@@ -10,6 +10,10 @@ import type { HardwareController } from '../hardware/controller'
 import { ProfileStore } from '../hardware/profile'
 import type { JobQueue } from '../jobs/queue'
 import { RpcServer } from './pipe'
+import { IPC } from '@shared/app'
+import type { Profil } from '@shared/profil'
+import type { SchnittEffekt } from '@shared/schnitt'
+import { planungAktion, type PlanungArgs } from '../planung/aktionen'
 
 export function pipeInfoFile(): string {
   return join(app.getPath('userData'), 'pipe.json')
@@ -35,6 +39,10 @@ export interface AppRpcDeps {
   starteThumbnail: (start: unknown) => Promise<string>
   /** Kanäle des Creator-Profils (für die Auswahl im KI-Client) */
   konten: () => Promise<{ id: string; name: string; plattform: string; richtungen: string[] }[]>
+  /** Schnitt (ROADMAP M5) und Planung (ROADMAP M6): dieselben Funktionen wie in der Oberfläche */
+  schnitt: { starteImport: (video: string, kontoId: string) => Promise<string>; aufruf: (kanal: string, ...a: unknown[]) => Promise<unknown> }
+  planung: { aufruf: (kanal: string, ...a: unknown[]) => Promise<unknown>; daten: () => Promise<string> }
+  profil: { laden: () => Promise<Profil>; aendern: (fn: (p: Profil) => Profil) => Promise<Profil> }
 }
 
 /** Startet den Pipe-Server der App und registriert die Methoden für MCP-Server und Fernsteuerung. */
@@ -90,6 +98,69 @@ export async function startAppRpc(deps: AppRpcDeps): Promise<RpcServer> {
   rpc.handle('probe.render', () => deps.enqueueProbe())
   rpc.handle('channels.list', () => deps.konten())
   rpc.handle('thumbnail.start', (p) => deps.starteThumbnail(p))
+
+  // Planung aus einer MCP-App: planning
+  rpc.handle('planung', async (p) =>
+    planungAktion(await deps.planung.daten(), (p ?? {}) as PlanungArgs, {
+      profil: () => deps.profil.laden(),
+      setzeRhythmus: async (kontoId, slots) => void (await deps.profil.aendern((x) => ({ ...x, konten: x.konten.map((k) => (k.id === kontoId ? { ...k, rhythmus: slots } : k)) }))),
+      starte: async (art, o) => String(await deps.planung.aufruf(IPC.planungKi, art, o)),
+      stand: (auftrag) => deps.planung.aufruf(IPC.planungKiStand, auftrag),
+      crossposting: (karte) => deps.planung.aufruf(IPC.planungCrossPlan, karte)
+    })
+  )
+  // Schnitt aus einer MCP-App: video_edit
+  rpc.handle('schnitt', async (p) => {
+    const { aktion, projekt, pfad, konto, wunsch, auswahl, index, aus, loeschen } = (p ?? {}) as { aktion?: string; projekt?: string; pfad?: string; konto?: string; wunsch?: string; auswahl?: unknown; index?: number; aus?: boolean; loeschen?: boolean }
+    const a = deps.schnitt.aufruf
+    const effektListe = (l: SchnittEffekt[]): { index: number; art: string; von?: number; bis?: number; bei?: number; aus: boolean; daten: SchnittEffekt }[] =>
+      l.map((e, i) => ({ index: i, art: e.art, von: e.von, bis: e.bis, bei: e.bei, aus: e.aus === true, daten: e }))
+    switch (aktion) {
+      case 'projekte':
+        return a(IPC.schnittProjekte)
+      case 'importieren': {
+        if (!pfad) throw new Error('pfad missing')
+        const konten = await deps.konten()
+        const kontoId = konto && konten.some((k) => k.id === konto) ? konto : konten[0]?.id
+        if (!kontoId) throw new Error('No channel in the creator profile.')
+        return { projekt: await deps.schnitt.starteImport(pfad, kontoId), hinweis: 'Import, transcript and rough cut run one after another on their own.' }
+      }
+      case 'schnitt': {
+        const [liste, transkript] = (await Promise.all([a(IPC.schnittListe, projekt), a(IPC.schnittTranskript, projekt)])) as [{ dauer: number; behalten: { start: number; ende: number }[]; entfernt: { start: number; ende: number; grund: string; text?: string; aus?: boolean }[] } | null, { start: number; ende: number; text: string }[] | null]
+        if (!liste) return { hinweis: 'No rough cut yet – wait for import and transcript.' }
+        const nachher = liste.behalten.reduce((s, b) => s + b.ende - b.start, 0)
+        return {
+          vorher: Math.round(liste.dauer),
+          nachher: Math.round(nachher),
+          entfernt: liste.entfernt.filter((e) => !e.aus && e.grund !== 'pause').map((e) => ({ grund: e.grund, start: e.start, ende: e.ende, text: e.text })),
+          pausenGekuerzt: liste.entfernt.filter((e) => !e.aus && e.grund === 'pause').length,
+          transkript: (transkript ?? []).map((s) => ({ start: s.start, ende: s.ende, text: s.text }))
+        }
+      }
+      case 'aendern':
+        return { auftrag: await a(IPC.schnittWunsch, projekt, wunsch) }
+      case 'effekte':
+        return { effekte: effektListe((await a(IPC.schnittEffekte, projekt)) as SchnittEffekt[]), hinweis: 'Times in seconds of the original recording. Render the preview again after effekt_aendern.' }
+      case 'effekt_aendern':
+        if (typeof index !== 'number') throw new Error('index missing')
+        if (loeschen !== true && typeof aus !== 'boolean') throw new Error('give aus or loeschen')
+        return { effekte: effektListe((await a(IPC.schnittEffektAendern, projekt, index, loeschen === true ? null : { aus })) as SchnittEffekt[]) }
+      case 'vorschau':
+        return { auftrag: await a(IPC.schnittVorschau, projekt) }
+      case 'export':
+        return { auftrag: await a(IPC.schnittExport, projekt) }
+      case 'export_info':
+        return a(IPC.schnittExportInfo, projekt)
+      case 'highlights':
+        return { auftrag: await a(IPC.schnittHighlightsStart, projekt) }
+      case 'highlights_liste':
+        return a(IPC.schnittHighlights, projekt)
+      case 'clips':
+        return { auftrag: await a(IPC.schnittClips, projekt, auswahl) }
+      default:
+        throw new Error(`Unknown action: ${String(aktion)}`)
+    }
+  })
 
   await rpc.listen()
   await writeJsonAtomic(pipeInfoFile(), rpc.info(app.getVersion()))

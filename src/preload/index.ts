@@ -108,7 +108,25 @@ const api = {
   schnittEffekte: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittEffekte, ...a),
   schnittEffektAendern: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittEffektAendern, ...a),
   schnittSpurHinzu: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittSpurHinzu, ...a),
-  schnittSpurAendern: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittSpurAendern, ...a)
+  schnittSpurAendern: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittSpurAendern, ...a),
+  planungKarten: (...a: unknown[]) => ipcRenderer.invoke(IPC.planungKarten, ...a),
+  planungNeu: (...a: unknown[]) => ipcRenderer.invoke(IPC.planungNeu, ...a),
+  planungAendern: (...a: unknown[]) => ipcRenderer.invoke(IPC.planungAendern, ...a),
+  planungVerschieben: (...a: unknown[]) => ipcRenderer.invoke(IPC.planungVerschieben, ...a),
+  planungLoeschen: (...a: unknown[]) => ipcRenderer.invoke(IPC.planungLoeschen, ...a),
+  planungSchneiden: (...a: unknown[]) => ipcRenderer.invoke(IPC.planungSchneiden, ...a),
+  planungThumbnail: (...a: unknown[]) => ipcRenderer.invoke(IPC.planungThumbnail, ...a),
+  planungThumbVarianten: (...a: unknown[]) => ipcRenderer.invoke(IPC.planungThumbVarianten, ...a),
+  planungThumbWaehlen: (...a: unknown[]) => ipcRenderer.invoke(IPC.planungThumbWaehlen, ...a),
+  planungKi: (...a: unknown[]) => ipcRenderer.invoke(IPC.planungKi, ...a),
+  planungKiStand: (...a: unknown[]) => ipcRenderer.invoke(IPC.planungKiStand, ...a),
+  planungCrossPlan: (...a: unknown[]) => ipcRenderer.invoke(IPC.planungCrossPlan, ...a),
+  planungPaket: (...a: unknown[]) => ipcRenderer.invoke(IPC.planungPaket, ...a),
+  uploadVerbindungen: (...a: unknown[]) => ipcRenderer.invoke(IPC.uploadVerbindungen, ...a),
+  uploadVerbinden: (...a: unknown[]) => ipcRenderer.invoke(IPC.uploadVerbinden, ...a),
+  uploadTrennen: (...a: unknown[]) => ipcRenderer.invoke(IPC.uploadTrennen, ...a),
+  uploadStart: (...a: unknown[]) => ipcRenderer.invoke(IPC.uploadStart, ...a),
+  onPlanungGeaendert: (handler: () => void) => ereignis(IPC.planungGeaendert, handler)
 } as CsApi
 
 contextBridge.exposeInMainWorld('cs', api)

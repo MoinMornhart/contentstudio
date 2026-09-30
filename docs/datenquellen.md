@@ -90,3 +90,19 @@ diese Tabelle angepasst.
 | Website, Andere | 16:9 | – | 200 | 5000 | Website ja |
 
 Technisch prüft der Export jede Datei nach der Upload-Empfehlung: H.264 High, 4:2:0, BT.709, Fast Start, AAC 48 kHz.
+
+## Hochladen zu YouTube (optional, ROADMAP 6.5)
+
+- Standard: ContentStudio lädt nichts hoch. Das Upload-Paket (Video, Thumbnail, Texte) entsteht lokal.
+- Nur wenn der Creator es in den Einstellungen selbst einrichtet: Anmeldung über Googles offizielle OAuth-Seite
+  (`accounts.google.com`, mit PKCE) mit einem eigenen OAuth-Client des Creators. ContentStudio erhält nur das Recht
+  `youtube.upload` und sieht nie das Passwort. Das Erneuerungs-Token liegt verschlüsselt (Windows DPAPI) in
+  `%APPDATA%\ContentStudio`, nie im synchronisierten Datenordner; „Trennen“ löscht es und widerruft es bei Google.
+- Beim Hochladen gehen Video, Titel, Text, Tags und Thumbnail an die YouTube Data API (`www.googleapis.com/upload/…`).
+  Das Video ist immer privat; mit Termin veröffentlicht YouTube es selbst zu diesem Zeitpunkt.
+
+## Textregeln je Plattform (Planung, ROADMAP 6.3)
+
+Empfohlene Titellänge und Hashtags stehen in `TEXT_REGELN` (`src/shared/planung.ts`), Stand 30.09.2026 aus den
+Hilfeseiten der Plattformen: YouTube Titel ≤ 60 (Grenze 100), bis 3 Hashtags im Text; Shorts 1–3 Hashtags im Titel;
+TikTok und Reels ohne eigenen Titel, 3–5 Hashtags im Text; X bis 2; Twitch, Kick, Podcast, Website ohne Hashtags.

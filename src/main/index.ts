@@ -24,6 +24,7 @@ import { registerMcpIpc } from './mcp/ipc'
 import { registerThumbnailIpc } from './thumbnail/ipc'
 import { registerSchnittIpc } from './schnitt/ipc'
 import { medienBedienen, medienSchemaAnmelden } from './schnitt/medien'
+import { registerPlanungIpc } from './planung/ipc'
 
 // Tests: eigener Einstellungsordner statt %APPDATA%\ContentStudio (vor allem anderen setzen)
 if (process.env['CS_USERDATA']) app.setPath('userData', process.env['CS_USERDATA'])
@@ -52,7 +53,8 @@ hardware.register()
 registerSetupIpc(settings, !!screenshotDir && !process.argv.includes(SETUP_FLAG))
 const { queue: jobs, enqueueProbe } = setupJobs(localRoot(), tools, hardware, mainWindow)
 const thumbnail = registerThumbnailIpc({ queue: jobs, settings, profil, hardware, tools, ki: ki.schicht, fenster: mainWindow })
-registerSchnittIpc({ queue: jobs, profil, tools, hardware, ki: ki.schicht, fenster: mainWindow, starteVideo: thumbnail.starteVideo })
+const schnitt = registerSchnittIpc({ queue: jobs, profil, tools, hardware, ki: ki.schicht, fenster: mainWindow, starteVideo: thumbnail.starteVideo })
+const planung = registerPlanungIpc({ queue: jobs, profil, ki: ki.schicht, fenster: mainWindow, userData: app.getPath('userData'), starteThumbnail: thumbnail.starte, starteImport: schnitt.starteImport })
 medienBedienen(settings)
 
 // Fester Name für den Autostart-Eintrag (HKCU\...\Run). Ohne ihn leitet Electron den Namen
@@ -203,7 +205,7 @@ if (toolsArg === 'install' || toolsArg === 'install-all') {
     if (!screenshotDir) {
       void jobs.start()
       // Verbindung für MCP-Server und Fernsteuerung
-      startAppRpc({ settings, hardware, jobs, enqueueProbe, starteThumbnail: thumbnail.starte, konten: async () => (await profil.laden()).konten.map((k) => ({ id: k.id, name: k.name, plattform: k.plattform, richtungen: k.richtungen })) }).catch((err: unknown) => console.error('pipe server:', err))
+      startAppRpc({ settings, hardware, jobs, enqueueProbe, starteThumbnail: thumbnail.starte, schnitt, planung, profil, konten: async () => (await profil.laden()).konten.map((k) => ({ id: k.id, name: k.name, plattform: k.plattform, richtungen: k.richtungen })) }).catch((err: unknown) => console.error('pipe server:', err))
       setupUpdater(mainWindow)
     }
     // Erster Start bzw. geändertes Gerät: Hardware-Test im Hintergrund (nur in der installierten App,

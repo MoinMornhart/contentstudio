@@ -1,9 +1,9 @@
 // Herkunft: MoinStudio src/renderer/src/App.tsx (MIT).
 import { useEffect, useState } from 'react'
 import { TABS, type AppInfo, type TabId } from '@shared/app'
-import { LeererReiter } from './tabs/LeererReiter'
 import { ThumbnailTab } from './tabs/ThumbnailTab'
 import { SchnittTab } from './tabs/SchnittTab'
+import { PlanungTab } from './tabs/PlanungTab'
 import { EinstellungenTab } from './tabs/EinstellungenTab'
 import { UpdateBanner } from './components/UpdateBanner'
 import { HardwareBanner } from './components/HardwareCard'
@@ -59,7 +59,7 @@ export function App(): React.JSX.Element {
         <HardwareBanner />
         {tab === 'thumbnail' && <ThumbnailTab />}
         {tab === 'schnitt' && <SchnittTab />}
-        {tab === 'planung' && <LeererReiter titel="leer.planung.titel" text="leer.planung.text" />}
+        {tab === 'planung' && <PlanungTab />}
         {tab === 'einstellungen' && <EinstellungenTab info={info} />}
       </main>
     </div>

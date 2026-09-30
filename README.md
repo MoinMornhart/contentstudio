@@ -24,7 +24,8 @@ ContentStudio ist der verallgemeinerte Nachbau von [MoinStudio](https://github.c
 Funktionsumfang, aber für **jeden** Creator – Gaming, Vlog, Kochen, Bildung, Tech, Musik, Reactions, Streams –, jede
 Plattform, jeden KI-Anbieter und fast jede Hardware. Die Oberfläche gibt es auf Deutsch und Englisch.
 
-> **Stand:** Fundament, Creator-Profil, KI-Schicht, Thumbnails und Schnitt sind fertig. Planung folgt.
+> **Stand:** Fundament, Creator-Profil, KI-Schicht, Thumbnails, Schnitt und Planung sind fertig. Als Nächstes: Export in
+> Schnittprogramme, Qualitätsrunde, Version 1.0.
 > Fortschritt: [ROADMAP](ROADMAP.md) · Änderungen: [CHANGELOG](CHANGELOG.md)
 
 ## Thumbnails
@@ -85,6 +86,35 @@ Rohvideo rein, fertiges Video raus. ContentStudio schneidet im Stil deiner Richt
 - **Export je Plattform:** YouTube, Shorts, TikTok, Reels, Facebook, X, Twitch, Kick, Podcast (M4A mit Kapiteln) –
   geprüft nach den Vorgaben der Plattform, mit Titel-, Text- und Kapitelvorschlag. Dazu Höhepunkte und Kurzvideos aus
   langen Streams.
+
+## Planung
+
+Jedes Video von der Idee bis zur Veröffentlichung – ein Board je Konto, ein Kalender für alle.
+
+<p align="center">
+  <img src="docs/bilder/app-planung.png" width="900" alt="Planungs-Board mit Karten von der Idee bis zum Upload, je Konto">
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/bilder/app-kalender.png" alt="Kalender mit Upload-Terminen und freien Terminen laut Rhythmus"></td>
+    <td width="50%"><img src="docs/bilder/app-crossposting.png" alt="Cross-Posting-Plan: Langvideo und Kurzvideos auf TikTok, Shorts und Reels"></td>
+  </tr>
+  <tr>
+    <td><b>Kalender:</b> Termine aller Konten, freie Plätze laut Upload-Rhythmus, Karten per Ziehen einplanen.</td>
+    <td><b>Cross-Posting:</b> aus einem Langvideo wird ein Plan – welches Kurzvideo wann auf welcher Plattform.</td>
+  </tr>
+</table>
+
+- **Karten rücken von selbst weiter:** Rohvideo schneiden, Thumbnail wählen, exportieren – die Karte wandert mit und
+  übernimmt Titel, Text und Kapitel.
+- **Ideen, Titel und Wochenplan mit der KI:** passend zu Richtung, Plattform und Sprache des Kontos; Titel halten die
+  Regeln der Plattform ein (Länge, Hashtags).
+- **Kein heimliches Hochladen:** Standard ist ein Upload-Paket mit Video, Thumbnail und Texten. Wer möchte, verbindet
+  YouTube über die offizielle Anmeldung von Google – verschlüsselt gespeichert, jederzeit trennbar.
+- **Mit PC und Laptop:** eine Datei je Karte, Konfliktkopien von iCloud oder OneDrive werden Feld für Feld zusammengeführt.
+- **Aus Claude Desktop & Co.:** über MCP lassen sich Thumbnails, Schnitt (`video_edit`) und Planung (`planning`) auch
+  per Chat steuern.
 
 ## Grundsätze
 

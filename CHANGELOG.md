@@ -8,6 +8,25 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Added
+
+- Planungs-Reiter: Board je Konto (Idee, Aufnahme, Schnitt, Thumbnail, Upload, Veröffentlicht) mit Ziehen und Ablegen,
+  Karten mit Termin, Notizen und Checkliste; eine Datei je Karte, Konfliktkopien von iCloud/OneDrive werden Feld für
+  Feld zusammengeführt.
+- Kalender für alle Konten mit Farben, Upload-Rhythmus aus dem Profil, freien Terminen und Wochen-/Monatsansicht.
+- Verbindung zu Schnitt und Thumbnail: Karte startet beides und rückt nach Import, Export und Thumbnail-Wahl selbst
+  weiter; Titel, Text und Kapitel aus dem Export.
+- Ideen, Titelvorschläge und Wochenplan über die KI-Schicht, abgestimmt auf Richtung, Plattform und Sprache; Titel und
+  Hashtags nach den Regeln jeder Plattform.
+- Cross-Posting-Plan: Langvideo am Termin, danach Kurzvideos aus den Höhepunkten auf TikTok, Reels und Shorts.
+- Upload-Paket (Video, Thumbnail, Texte); optional YouTube-Upload über die offizielle Anmeldung (OAuth, verschlüsselt,
+  trennbar, immer privat bzw. geplant) – ungetestet mit echtem Konto.
+- MCP-Werkzeuge `video_edit` und `planning` für Claude Desktop und andere MCP-Apps.
+
+### Changed
+
+- Wiederholungen bei Ideen werden sprachunabhängig über Wortstämme erkannt.
+
 ## [0.5.0] - 2026-09-30
 
 > Schnitt: Transkript, Rohschnitt nach Stil, Effekte in Worten, Hochformat, Spuren, Export je Plattform

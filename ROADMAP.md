@@ -29,7 +29,7 @@ prüfbar; bleibt so markiert, bis ein Selbsttest auf einem passenden Rechner gr�
 | M3 KI-Schicht | → 0.3.0 | Anbieter-Schicht, Abo-CLIs, lokale Modelle, API-Schlüssel, Kosten, MCP-Server | ✅ |
 | M4 Thumbnail | → 0.4.0 | Vorbilder und Stilbuch je Kanal, 3D-Szene, Foto-Compositing, Vorlagen, Freiform, Selbstprüfung | ✅ |
 | M5 Schnitt | → 0.5.0 | Import bis Export, Effekte in Worten, Stil je Richtung, Hochformat, mehrere Spuren | ✅ |
-| M6 Planung | → 0.6.0 | Board je Konto, Kalender, Ideen mit KI, Plattform-Regeln, Cross-Posting | ⬜ |
+| M6 Planung | → 0.6.0 | Board je Konto, Kalender, Ideen mit KI, Plattform-Regeln, Cross-Posting | ✅ |
 | M7 Export | → 0.7.0 | Premiere/After Effects, DaVinci Resolve, CapCut, Photoshop, Selbsttests | ⬜ |
 | M8 Qualität | → 0.8.0 | Freiform-Tests je Richtung, Vergleich mit Vorbildern, jeder KI-Weg, CPU und GPU | ⬜ |
 | M9 Stabil | **1.0.0** | Politur, Abnahme, Release | ⬜ |
@@ -199,17 +199,24 @@ Quelle für alles, was MoinStudio fest eingebaut hat. Jede spätere Funktion lie
 
 ## M6 – Planung → 0.6.0
 
-- [ ] **6.1 Board je Konto und Kalender:** Karten (eine Datei pro Karte, Konfliktkopien zusammenführen), Rhythmus aus dem
-  Profil, Lücken. ✅ Unit-Tests; Screenshots.
-- [ ] **6.2 Verbindung zu Schnitt und Thumbnail:** Karte startet beides und rückt selbst weiter. ✅ Durchlauf mit
-  Testvideo.
-- [ ] **6.3 Ideen, Titel, Wochenplan mit der KI:** abgestimmt auf Richtung und Plattform; Titel-Längen und Hashtag-Regeln
-  je Plattform. ✅ 10 Ideen je Test-Konto, Titel halten die Plattform-Regeln ein (Unit-Test).
-- [ ] **6.4 Cross-Posting-Plan:** ein Langvideo → welche Shorts wann auf welcher Plattform. ✅ Plan für ein Testvideo
-  mit drei Plattformen.
-- [ ] **6.5 Hochladen nur mit offizieller Anmeldung:** optional über OAuth der Plattform, Zugangsdaten verschlüsselt,
+- [x] **6.1 Board je Konto und Kalender:** Karten (eine Datei pro Karte, Konfliktkopien zusammenführen), Rhythmus aus dem
+  Profil, Lücken. ✅ Unit-Tests (Konfliktkopien OneDrive/iCloud, Reihenfolge, Lücken); Screenshots aus der echten App
+  mit drei Konten.
+- [x] **6.2 Verbindung zu Schnitt und Thumbnail:** Karte startet beides und rückt selbst weiter. ✅ Durchlauf mit echter
+  Aufgaben-Warteschlange (Import → Schnitt, Export → Thumbnail mit Texten, Thumbnail → Vorschaubild) und in der App mit
+  dem Testvideo aus M5 (verknüpftes, exportiertes Projekt übernimmt die Texte).
+- [x] **6.3 Ideen, Titel, Wochenplan mit der KI:** abgestimmt auf Richtung und Plattform; Titel-Längen und Hashtag-Regeln
+  je Plattform. ✅ 10 Ideen je Test-Konto (5 Konten: Kochen/YouTube, Gaming/Twitch, Fitness/TikTok englisch, Tech/Shorts,
+  Beauty/Reels), Titel halten die Plattform-Regeln ein (Unit-Test mit einer KI, die sich absichtlich nicht an die
+  Regeln hält). Echte KI-Antworten folgen mit den Freiform-Tests in M8.
+- [x] **6.4 Cross-Posting-Plan:** ein Langvideo → welche Shorts wann auf welcher Plattform. ✅ Plan für ein Testvideo
+  mit drei Plattformen (YouTube + TikTok + Reels, dazu Shorts): Langvideo am Termin, danach je Tag ein Kurzvideo aus den
+  stärksten Höhepunkten, Uhrzeit aus dem Rhythmus, Plattformen gestaffelt – im Unit-Test und in der App.
+- [x] **6.5 Hochladen nur mit offizieller Anmeldung:** optional über OAuth der Plattform, Zugangsdaten verschlüsselt,
   jederzeit trennbar; Standard: kein automatisches Hochladen. ✅ Ohne Verbindung nur fertige Dateien und Texte; mit
-  Verbindung „ungetestet“, bis der Mensch ein Konto verbindet.
+  Verbindung „ungetestet“, bis der Mensch ein Konto verbindet. Umgesetzt für YouTube (OAuth mit PKCE, Rückruf nur
+  auf 127.0.0.1, Token verschlüsselt außerhalb des Datenordners, Trennen widerruft); Upload immer privat bzw. geplant.
+  Unit-Tests gegen ein nachgebautes Google; mit echtem Konto ungetestet.
 
 ## M7 – Export in fremde Programme → 0.7.0
 

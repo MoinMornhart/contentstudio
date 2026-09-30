@@ -1,5 +1,5 @@
 // Herkunft: MoinStudio src/mcp/tools.ts (MIT), verallgemeinert: jede MCP-fähige Desktop-App (Claude Desktop, ChatGPT
-// Desktop …) kann ContentStudio steuern. Werkzeuge für Thumbnail, Schnitt und Planung kommen mit ihren Meilensteinen.
+// Desktop …) kann ContentStudio steuern: Thumbnail, Schnitt (video_edit) und Planung (planning).
 /**
  * Werkzeuge des ContentStudio-MCP-Servers. Sie sprechen über eine Named Pipe mit der laufenden App und starten sie bei
  * Bedarf selbst. Logs nur auf stderr (stdout gehört dem MCP-Protokoll). Texte für die KI sind englisch, damit sie in
@@ -184,6 +184,65 @@ export function createServer(version: string): McpServer {
       try {
         const id = await call<string>('probe.render')
         return text({ jobId: id, hint: 'Use job_get for progress, then job_image for the picture.' })
+      } catch (err) {
+        return fail(err)
+      }
+    }
+  )
+
+  server.registerTool(
+    'video_edit',
+    {
+      title: 'Edit videos',
+      description:
+        'Video editing in ContentStudio (raw video in, finished video out). Actions: projekte (all editing projects), importieren (pfad, konto – starts import, transcript and rough cut on its own), schnitt (projekt – rough cut with transcript and removed parts), aendern (projekt, wunsch – cuts and effects in plain words, e.g. "make an exciting intro", "slow motion at the funniest moment", "fade to black at the end"; the preview renders afterwards), effekte (projekt – all effects with number and time), effekt_aendern (projekt, index, aus: true/false or loeschen: true), vorschau, export (export for the platform of the project, with title, text, chapters and checks), export_info, highlights (find highlights in long videos and streams), highlights_liste, clips (projekt, auswahl: [{index, art: clip|short}]). Tasks run in the background – poll job_get.',
+      inputSchema: z.object({
+        aktion: z.enum(['projekte', 'importieren', 'schnitt', 'aendern', 'effekte', 'effekt_aendern', 'vorschau', 'export', 'export_info', 'highlights', 'highlights_liste', 'clips']),
+        projekt: z.string().optional().describe('Project id (from projekte)'),
+        pfad: z.string().optional().describe('Raw video path (only importieren)'),
+        konto: z.string().optional().describe('Channel id from channels_list (only importieren; default: first channel)'),
+        wunsch: z.string().optional().describe('Change in plain words (only aendern)'),
+        index: z.number().int().optional().describe('Effect number from effekte (only effekt_aendern)'),
+        aus: z.boolean().optional().describe('Switch the effect off (true) or on (false) (only effekt_aendern)'),
+        loeschen: z.boolean().optional().describe('Delete the effect (only effekt_aendern)'),
+        auswahl: z.array(z.object({ index: z.number().int(), art: z.enum(['clip', 'short']) })).optional().describe('only clips')
+      })
+    },
+    async (args) => {
+      try {
+        return text(await call('schnitt', args))
+      } catch (err) {
+        return fail(err)
+      }
+    }
+  )
+
+  server.registerTool(
+    'planning',
+    {
+      title: 'Plan videos',
+      description:
+        'Content planning in ContentStudio: one board per channel (stages idee, aufnahme, schnitt, thumbnail, upload, veroeffentlicht) and a calendar. Actions: liste (konto?, spalte?), kalender (von?, bis? – dates, free upload slots from the channel rhythm, cards without date), anlegen (konto, titel, notizen?, spalte?, termin?), aendern (karte, titel?, notizen?, termin? "2026-10-03T17:00" or null, checkliste?, konto?, spalte?), verschieben (karte, spalte, index?, konto?), loeschen (karte), rhythmus, rhythmus_setzen (rhythmus: {"<channel id>": [{"tag": 0-6 (0 = Sunday), "zeit": "18:00"}]}), ideen (konto, wunsch? – AI task), titel (karte – AI task), wochenplan (AI task), crossposting (karte – plan which short goes where and when; needs a date), ergebnis (auftrag – result of an AI task). Channel ids come from channels_list.',
+      inputSchema: z.object({
+        aktion: z.enum(['liste', 'kalender', 'anlegen', 'aendern', 'verschieben', 'loeschen', 'rhythmus', 'rhythmus_setzen', 'ideen', 'titel', 'wochenplan', 'crossposting', 'ergebnis']),
+        konto: z.string().optional(),
+        spalte: z.string().optional(),
+        karte: z.string().optional().describe('Card id'),
+        titel: z.string().optional(),
+        notizen: z.string().optional(),
+        termin: z.string().nullable().optional(),
+        checkliste: z.array(z.object({ text: z.string(), erledigt: z.boolean() })).optional(),
+        index: z.number().int().optional(),
+        von: z.string().optional(),
+        bis: z.string().optional(),
+        wunsch: z.string().optional(),
+        auftrag: z.string().optional(),
+        rhythmus: z.record(z.string(), z.array(z.object({ tag: z.number().int(), zeit: z.string() }))).optional()
+      })
+    },
+    async (args) => {
+      try {
+        return text(await call('planung', args))
       } catch (err) {
         return fail(err)
       }

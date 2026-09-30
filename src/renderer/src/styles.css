@@ -350,7 +350,7 @@ code { font-family: 'Cascadia Mono', Consolas, monospace; font-size: 12px; }
 .clip-raster video { width: 100%; background: #000; border-radius: 6px; aspect-ratio: 16 / 9; }
 .clip-raster figure.hoch video { aspect-ratio: 9 / 16; }
 
-/* Planung (ROADMAP 7.3) */
+/* Planung (ROADMAP 6.1): Farbe je Konto kommt als --kanal aus dem Stil der Elemente */
 .planung-kopf { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 14px; flex-wrap: wrap; }
 .kanal-wahl { display: flex; gap: 8px; flex-wrap: wrap; }
 .kanal-knopf { display: grid; gap: 2px; text-align: left; background: var(--bg-2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; font: inherit; cursor: pointer; }
@@ -392,12 +392,11 @@ code { font-family: 'Cascadia Mono', Consolas, monospace; font-size: 12px; }
 .details-fuss { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .btn.gefahr { background: #7a2530; }
 
-/* Planung: Kalender (ROADMAP 7.4) */
-.k-mornhart { --kanal: #ffc23d; }
-.k-morni { --kanal: #7aa2ff; }
+/* Planung: Kalender (ROADMAP 6.1) */
 .segment { display: inline-flex; background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 2px; }
 .segment button { background: none; border: 0; color: var(--muted); font: inherit; font-weight: 600; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
 .segment button.on { background: var(--panel); color: var(--text); }
+.kanal-knopf, .termin-pille, .luecke, .chip.legende, .rhythmus-konto { --kanal: var(--accent); }
 .kalender-flaeche { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 16px; align-items: start; }
 @media (max-width: 1100px) { .kalender-flaeche { grid-template-columns: 1fr; } }
 .kalender-leiste { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -432,9 +431,10 @@ code { font-family: 'Cascadia Mono', Consolas, monospace; font-size: 12px; }
 .rhythmus { display: grid; gap: 6px; margin-top: 10px; }
 .rhythmus-kanal { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 12px; }
 .rhythmus-tage { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; }
-.tag-knopf { background: var(--panel); border: 1px solid var(--border); color: var(--muted); border-radius: 5px; padding: 3px 0; width: 28px; font: inherit; font-size: 11px; cursor: pointer; }
-.tag-knopf.on { border-color: var(--kanal); color: var(--text); background: #2a2a1f; }
-.k-morni .tag-knopf.on { background: #1f2436; }
+.rhythmus-konto { display: grid; gap: 2px; margin-top: 10px; }
+.rhythmus-konto .rhythmus { margin-top: 2px; }
+.kalender-seite .rhythmus .chip { padding: 3px 7px; font-size: 11px; }
+.kanal-knopf strong { display: flex; align-items: center; gap: 6px; }
 .zeit-feld { width: 86px; flex: none; }
 .ok-text { color: #5fd38d; margin: 0; }
 .warn-text { color: #ffb347; }
