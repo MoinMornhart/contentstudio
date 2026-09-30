@@ -24,8 +24,8 @@ ContentStudio ist der verallgemeinerte Nachbau von [MoinStudio](https://github.c
 Funktionsumfang, aber für **jeden** Creator – Gaming, Vlog, Kochen, Bildung, Tech, Musik, Reactions, Streams –, jede
 Plattform, jeden KI-Anbieter und fast jede Hardware. Die Oberfläche gibt es auf Deutsch und Englisch.
 
-> **Stand:** Fundament, Creator-Profil, KI-Schicht, Thumbnails, Schnitt und Planung sind fertig. Als Nächstes: Export in
-> Schnittprogramme, Qualitätsrunde, Version 1.0.
+> **Stand:** Fundament, Creator-Profil, KI-Schicht, Thumbnails, Schnitt, Planung und Export in Schnittprogramme sind
+> fertig. Als Nächstes: Qualitätsrunde und Version 1.0.
 > Fortschritt: [ROADMAP](ROADMAP.md) · Änderungen: [CHANGELOG](CHANGELOG.md)
 
 ## Thumbnails
@@ -86,6 +86,9 @@ Rohvideo rein, fertiges Video raus. ContentStudio schneidet im Stil deiner Richt
 - **Export je Plattform:** YouTube, Shorts, TikTok, Reels, Facebook, X, Twitch, Kick, Podcast (M4A mit Kapiteln) –
   geprüft nach den Vorgaben der Plattform, mit Titel-, Text- und Kapitelvorschlag. Dazu Höhepunkte und Kurzvideos aus
   langen Streams.
+- **In deinem Schnittprogramm weitermachen:** Premiere Pro, After Effects, DaVinci Resolve oder CapCut – mit Schnitten,
+  Zooms, Texten, Markern und Untertiteln. Thumbnails gehen als Photoshop-Datei mit Ebenen raus. Ein Selbsttest in den
+  Einstellungen prüft, ob es auf deinem Rechner klappt.
 
 ## Planung
 

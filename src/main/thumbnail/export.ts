@@ -118,12 +118,47 @@ export async function exportierePsd(bild: string, ebenen: string | null, ziel: s
     layers.push({ name: EBENEN_NAME[f] ?? f.replace(/^person-/, '').replace(/\.png$/, ''), imageData: alsImageData(e) })
   }
   if (!layers.length) layers.push({ name: 'Thumbnail', imageData: alsImageData(gesamt) })
+  // Übereinander müssen die Ebenen genau das fertige Bild ergeben (ROADMAP 7.4). Was die Ebenen allein nicht erklären
+  // (Farbangleich, Licht, Kanten nach dem Zusammensetzen), kommt als oberste Ebene „Feinschliff“ dazu.
+  const rest = feinschliff(gesamt, uebereinander(layers.map((l) => l.imageData as unknown as RohBild), gesamt.width, gesamt.height))
+  if (rest) layers.push({ name: 'Feinschliff', imageData: alsImageData(rest) })
   const psd: Psd = { width: gesamt.width, height: gesamt.height, children: layers, imageData: alsImageData(gesamt) }
   await writeFile(ziel, Buffer.from(writePsdBuffer(psd, { generateThumbnail: false })))
   return layers.length
 }
 
 type PsdBild = NonNullable<Layer['imageData']>
+
+/** Ebenen (RGBA, unten zuerst) übereinander wie „Normal“ in Photoshop: Deckkraft je Pixel, 8 Bit gerundet */
+export function uebereinander(ebenen: RohBild[], breite: number, hoehe: number): RohBild {
+  const aus = new Uint8Array(breite * hoehe * 4)
+  for (const e of ebenen) {
+    const d = e.data
+    for (let i = 0; i < aus.length; i += 4) {
+      const a = d[i + 3]! / 255
+      if (a === 0) continue
+      const unten = aus[i + 3]! / 255
+      const neu = a + unten * (1 - a)
+      for (let k = 0; k < 3; k++) aus[i + k] = Math.round((d[i + k]! * a + aus[i + k]! * unten * (1 - a)) / neu)
+      aus[i + 3] = Math.round(neu * 255)
+    }
+  }
+  return { width: breite, height: hoehe, data: aus }
+}
+
+/** Pixel, in denen das Ebenen-Ergebnis vom fertigen Bild abweicht, als deckende Ebene; null, wenn alles stimmt */
+export function feinschliff(gesamt: RohBild, zusammen: RohBild): RohBild | null {
+  const aus = new Uint8Array(gesamt.data.length)
+  let abweichend = 0
+  for (let i = 0; i < aus.length; i += 4) {
+    const g = gesamt.data
+    const z = zusammen.data
+    if (g[i] === z[i] && g[i + 1] === z[i + 1] && g[i + 2] === z[i + 2] && g[i + 3] === z[i + 3]) continue
+    aus.set([g[i]!, g[i + 1]!, g[i + 2]!, g[i + 3]!], i)
+    abweichend++
+  }
+  return abweichend ? { width: gesamt.width, height: gesamt.height, data: aus } : null
+}
 
 function alsImageData(b: RohBild): PsdBild {
   return { width: b.width, height: b.height, data: new Uint8ClampedArray(b.data.buffer, b.data.byteOffset, b.data.length) } as unknown as PsdBild

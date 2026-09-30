@@ -126,7 +126,10 @@ const api = {
   uploadVerbinden: (...a: unknown[]) => ipcRenderer.invoke(IPC.uploadVerbinden, ...a),
   uploadTrennen: (...a: unknown[]) => ipcRenderer.invoke(IPC.uploadTrennen, ...a),
   uploadStart: (...a: unknown[]) => ipcRenderer.invoke(IPC.uploadStart, ...a),
-  onPlanungGeaendert: (handler: () => void) => ereignis(IPC.planungGeaendert, handler)
+  onPlanungGeaendert: (handler: () => void) => ereignis(IPC.planungGeaendert, handler),
+  programmeStatus: (...a: unknown[]) => ipcRenderer.invoke(IPC.programmeStatus, ...a),
+  programmSelbsttest: (...a: unknown[]) => ipcRenderer.invoke(IPC.programmSelbsttest, ...a),
+  schnittProgramm: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittProgramm, ...a)
 } as CsApi
 
 contextBridge.exposeInMainWorld('cs', api)

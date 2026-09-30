@@ -5,6 +5,7 @@ import type { Schluessel, Sprache } from './i18n'
 import type { Konto, Plattform, Profil, Programm } from './profil'
 import type { KiWegStand, McpZiel } from './ki'
 import type { ExportFormat, Stilbuch, ThumbAuftragInfo, ThumbStart, VarianteInfo, VideoErgebnis, Vorbild } from './thumbnail'
+import type { ProgrammeStand, ProgrammId, SchnittZiel } from './programme'
 import type { PlanungAenderung, PlanungKarte, PlanungKiArt, PlanungKiStand, PlanungThumbStand, Spalte } from './planung'
 import type { SchnittAbschnitt, SchnittEffekt, SchnittExport, SchnittHighlight, SchnittListe, SchnittProjekt, SpurArt } from './schnitt'
 
@@ -127,7 +128,10 @@ export const IPC = {
   uploadVerbindungen: 'upload:verbindungen',
   uploadVerbinden: 'upload:verbinden',
   uploadTrennen: 'upload:trennen',
-  uploadStart: 'upload:start'
+  uploadStart: 'upload:start',
+  programmeStatus: 'programme:status',
+  programmSelbsttest: 'programme:selbsttest',
+  schnittProgramm: 'schnitt:programm'
 } as const
 
 /** Wofür eine Datei hochgeladen wird: bestimmt Dateityp-Filter, Mehrfachauswahl und Zielordner im Datenordner. */
@@ -343,4 +347,8 @@ export interface CsApi {
   uploadVerbinden(kontoId: string, klient: { clientId: string; clientSecret: string }): Promise<{ plattform: 'youtube'; kontoId: string; verbunden: string }[]>
   uploadTrennen(kontoId: string): Promise<{ plattform: 'youtube'; kontoId: string; verbunden: string }[]>
   uploadStart(id: string): Promise<string>
+  /** Programme (ROADMAP M7): Erkennung (neu = noch einmal suchen), Selbsttest, Weitergabe eines Schnitt-Projekts */
+  programmeStatus(neu?: boolean): Promise<ProgrammeStand>
+  programmSelbsttest(id: ProgrammId): Promise<{ id: ProgrammId; status: 'ok' | 'fehler' | 'übersprungen' | 'checkliste'; details: string; datei: string | null }>
+  schnittProgramm(id: string, ziel: SchnittZiel): Promise<{ datei: string | null; auftrag: string | null }>
 }

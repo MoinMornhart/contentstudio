@@ -232,6 +232,31 @@ function Export({ p, neuLaden }: { p: SchnittProjekt; neuLaden: () => void }): R
           </>
         )}
       </div>
+      <div className="row wrap" style={{ alignItems: 'center' }}>
+        <span className="muted small">{t('schnitt.programm.label')}</span>
+        {(
+          [
+            ['premiere', 'Premiere Pro'],
+            ['aftereffects', 'After Effects'],
+            ['resolve', 'DaVinci Resolve'],
+            ['capcut', 'CapCut']
+          ] as const
+        ).map(([ziel, name]) => (
+          <button
+            key={ziel}
+            className="btn small"
+            title={t(`schnitt.programm.${ziel}`)}
+            onClick={() =>
+              void window.cs.schnittProgramm(p.id, ziel).then(
+                (r) => r.datei && setMeldung(t(r.auftrag ? 'schnitt.programm.laeuft' : 'schnitt.programm.fertig', { datei: r.datei })),
+                (e: unknown) => setMeldung(fehlerText(e))
+              )
+            }
+          >
+            {name}
+          </button>
+        ))}
+      </div>
       {meldung && <p className="ok-note small">{meldung}</p>}
       {info && info.plattform !== p.plattform && <p className="warn small">{t('schnitt.export.alt', { plattform: t(`plattform.${info.plattform}` as Schluessel) })}</p>}
       {info && (

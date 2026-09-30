@@ -24,3 +24,4 @@ Anmeldungen und Lizenzannahmen passieren nur nach Rückfrage.
 | 2026-09-30 | faster-whisper (Python) | 1.2 | pypi.org (MIT) über uv in die Python-Umgebung | Transkript lokal ohne Cloud (Schnitt, ROADMAP 5.1); bei NVIDIA-GPU zusätzlich nvidia-cublas-cu12 und nvidia-cudnn-cu12 (NVIDIA-Lizenz, frei weitergebbar) | nein |
 | 2026-09-30 | Whisper-Modelle (Systran/faster-whisper-base, -small, -medium, -large-v3-turbo) | – | huggingface.co/Systran (MIT), ohne Konto, 145 MB bis 1,6 GB | Spracherkennung; Größe nach Hardware-Profil, beim ersten Transkript geladen | nein |
 | 2026-09-30 | Windows-Sprachausgabe (System.Speech, Stimmen Hedda/Zira) | – | Teil von Windows | Nur Entwicklung: Sprache der Testvideos im echten Schnitt-Test, nichts wird installiert | nein |
+| 2026-09-30 | fast-xml-parser (npm, nur Entwicklung) | 5.11 | npmjs.com (MIT) | Prüft die XML-Dateien für Premiere und Resolve in den Tests | nein |

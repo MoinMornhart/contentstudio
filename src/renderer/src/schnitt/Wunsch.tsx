@@ -1,8 +1,8 @@
 // Herkunft: MoinStudio src/renderer/src/components/SchnittWunsch.tsx und src/shared/effekt-text.ts (MIT), übersetzbar gemacht.
 import { useEffect, useState } from 'react'
 import type { SchnittEffekt, SchnittProjekt } from '@shared/schnitt'
-import type { Schluessel } from '@shared/i18n'
 import { fehlerText, useT } from '../i18n'
+import { effektText } from '@shared/effekt-text'
 
 type T = ReturnType<typeof useT>
 
@@ -11,47 +11,6 @@ export const zeitText = (sek: number): string => {
   const m = Math.floor((sek % 3600) / 60)
   const s = Math.floor(sek % 60)
   return h ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`
-}
-
-const zahl = (x: unknown): string => (typeof x === 'number' ? String(Math.round(x * 100) / 100) : '')
-
-/** Effekt in einfachen Worten */
-export function effektText(e: SchnittEffekt, t: T): string {
-  switch (e.art) {
-    case 'tempo':
-      return t((e['faktor'] as number) < 1 ? 'schnitt.eff.zeitlupe' : 'schnitt.eff.zeitraffer', { faktor: zahl(e['faktor']) })
-    case 'einfrieren':
-      return t('schnitt.eff.einfrieren', { dauer: zahl(e['dauer']) })
-    case 'zoom':
-      return t('schnitt.eff.zoom', { faktor: zahl(e['faktor']) })
-    case 'farbe': {
-      const teile = [e['schwarzweiss'] ? t('schnitt.eff.schwarzweiss') : '', typeof e['ton'] === 'string' ? e['ton'] : '', e['saettigung'] !== undefined ? `${t('schnitt.eff.saettigung')} ${zahl(e['saettigung'])}` : '', e['kontrast'] !== undefined ? `${t('schnitt.eff.kontrast')} ${zahl(e['kontrast'])}` : '']
-      return t('schnitt.eff.farbe', { was: teile.filter(Boolean).join(', ') || t('schnitt.eff.angepasst') })
-    }
-    case 'blitz':
-      return t(e['farbe'] === 'schwarz' ? 'schnitt.eff.blitzSchwarz' : 'schnitt.eff.blitz')
-    case 'uebergang':
-      return t(e['farbe'] === 'weiss' ? 'schnitt.eff.blendeWeiss' : 'schnitt.eff.blende')
-    case 'abblende':
-      return t(e['richtung'] === 'ein' ? 'schnitt.eff.einblenden' : 'schnitt.eff.ausblenden')
-    case 'text':
-      return t('schnitt.eff.text', { text: String(e['text'] ?? '') })
-    case 'geraeusch':
-      return t('schnitt.eff.geraeusch', { klang: String(e['klang'] ?? '') })
-    case 'lautstaerke':
-      return t('schnitt.eff.lautstaerke', { faktor: zahl(e['faktor']) })
-    case 'intro': {
-      const teile = (e['teile'] as { art: string; text?: string }[] | undefined) ?? []
-      const karte = teile.find((x) => x.art === 'karte')
-      return t(karte ? 'schnitt.eff.introKarte' : 'schnitt.eff.intro', { anzahl: teile.filter((x) => x.art === 'clip').length, text: karte?.text ?? '' })
-    }
-    case 'wackeln':
-    case 'bild':
-    case 'zensur':
-      return t(`schnitt.eff.${e.art}` as Schluessel)
-    default:
-      return e.art
-  }
 }
 
 function effektZeit(e: SchnittEffekt, t: T): { text: string; springen: number | null } {

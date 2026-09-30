@@ -8,6 +8,15 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Added
+
+- Schnitt weitergeben: Premiere Pro (FCP7-XML mit Zooms, Texten, Markern und Untertiteln), After Effects (Skript, das die
+  Komposition anlegt), DaVinci Resolve (FCPXML und EDL) und CapCut (Ordner mit Clips in Reihenfolge, Untertiteln und
+  Liste).
+- Photoshop-Dateien ergeben übereinander genau das fertige Thumbnail (Ebene „Feinschliff“ für Farbangleich und Licht).
+- Einstellungen → Programme: Erkennung von Premiere, After Effects, Resolve, CapCut und Photoshop mit Version und
+  Selbsttest je Programm (ohne Programm „übersprungen“).
+
 ## [0.6.0] - 2026-09-30
 
 > Planung: Board je Konto, Kalender, KI-Ideen, Cross-Posting, Upload-Paket

@@ -8,6 +8,7 @@ import { DataDirCard } from '../components/DataDirCard'
 import { ToolsCard } from '../components/ToolsCard'
 import { HardwareCard } from '../components/HardwareCard'
 import { UploadCard } from '../components/UploadCard'
+import { ProgrammeCard } from '../components/ProgrammeCard'
 import { useI18n, useT } from '../i18n'
 import { ProfilKarte } from '../profil/ProfilKarte'
 
@@ -132,6 +133,7 @@ export function EinstellungenTab({ info }: { info: AppInfo | null }): React.JSX.
             </button>
           </div>
         </Card>
+        <ProgrammeCard />
         <UploadCard />
         <UpdateCard />
         <Card title={t('einst.start')}>

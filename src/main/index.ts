@@ -25,6 +25,7 @@ import { registerThumbnailIpc } from './thumbnail/ipc'
 import { registerSchnittIpc } from './schnitt/ipc'
 import { medienBedienen, medienSchemaAnmelden } from './schnitt/medien'
 import { registerPlanungIpc } from './planung/ipc'
+import { registerProgrammeIpc } from './programme/ipc'
 
 // Tests: eigener Einstellungsordner statt %APPDATA%\ContentStudio (vor allem anderen setzen)
 if (process.env['CS_USERDATA']) app.setPath('userData', process.env['CS_USERDATA'])
@@ -54,6 +55,7 @@ registerSetupIpc(settings, !!screenshotDir && !process.argv.includes(SETUP_FLAG)
 const { queue: jobs, enqueueProbe } = setupJobs(localRoot(), tools, hardware, mainWindow)
 const thumbnail = registerThumbnailIpc({ queue: jobs, settings, profil, hardware, tools, ki: ki.schicht, fenster: mainWindow })
 const schnitt = registerSchnittIpc({ queue: jobs, profil, tools, hardware, ki: ki.schicht, fenster: mainWindow, starteVideo: thumbnail.starteVideo })
+registerProgrammeIpc({ queue: jobs, profil, tools, fenster: mainWindow, userData: app.getPath('userData') })
 const planung = registerPlanungIpc({ queue: jobs, profil, ki: ki.schicht, fenster: mainWindow, userData: app.getPath('userData'), starteThumbnail: thumbnail.starte, starteImport: schnitt.starteImport })
 medienBedienen(settings)
 

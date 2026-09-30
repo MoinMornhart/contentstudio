@@ -1,0 +1,9 @@
+[
+  { "reiter": "einstellungen", "warte": 2500 },
+  { "js": "[...document.querySelectorAll('.card h2')].find((h) => h.textContent === 'Programme')?.scrollIntoView({ block: 'start' }); 'programme'", "warte": 1500, "name": "einstellungen-programme" },
+  { "js": "(async () => (await window.cs.programmeStatus(true)).programme.length)()", "warte": 300 },
+  { "reiter": "schnitt", "warte": 2500 },
+  { "js": "document.querySelector('.schnitt-projekt')?.click(); 'offen'", "warte": 2500 },
+  { "js": "[...document.querySelectorAll('.schnitt-fertig')].at(-2)?.scrollIntoView(); 'export'", "warte": 1500, "name": "schnitt-programme" },
+  { "js": "(async () => { const p = (await window.cs.schnittProjekte())[0]; const r = await window.cs.schnittProgramm(p.id, 'resolve'); return r.datei?.split(/[\\/]/).pop() })()", "warte": 500 }
+]

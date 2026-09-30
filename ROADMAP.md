@@ -30,7 +30,7 @@ prüfbar; bleibt so markiert, bis ein Selbsttest auf einem passenden Rechner gr�
 | M4 Thumbnail | → 0.4.0 | Vorbilder und Stilbuch je Kanal, 3D-Szene, Foto-Compositing, Vorlagen, Freiform, Selbstprüfung | ✅ |
 | M5 Schnitt | → 0.5.0 | Import bis Export, Effekte in Worten, Stil je Richtung, Hochformat, mehrere Spuren | ✅ |
 | M6 Planung | → 0.6.0 | Board je Konto, Kalender, Ideen mit KI, Plattform-Regeln, Cross-Posting | ✅ |
-| M7 Export | → 0.7.0 | Premiere/After Effects, DaVinci Resolve, CapCut, Photoshop, Selbsttests | ⬜ |
+| M7 Export | → 0.7.0 | Premiere/After Effects, DaVinci Resolve, CapCut, Photoshop, Selbsttests | ✅ |
 | M8 Qualität | → 0.8.0 | Freiform-Tests je Richtung, Vergleich mit Vorbildern, jeder KI-Weg, CPU und GPU | ⬜ |
 | M9 Stabil | **1.0.0** | Politur, Abnahme, Release | ⬜ |
 
@@ -220,12 +220,19 @@ Quelle für alles, was MoinStudio fest eingebaut hat. Jede spätere Funktion lie
 
 ## M7 – Export in fremde Programme → 0.7.0
 
-- [ ] **7.1 Premiere und After Effects:** FCP7-XML mit Zooms, Texten und Markern wie in MoinStudio. ✅ XML-Prüfung per
-  Parser; „ungetestet“ bis Selbsttest mit Adobe.
-- [ ] **7.2 DaVinci Resolve:** FCPXML oder EDL. ✅ Struktur-Prüfung; „ungetestet“ bis Selbsttest mit Resolve.
-- [ ] **7.3 CapCut:** Projektordner mit Clips und Liste, keine Fernsteuerung. ✅ Ordner vollständig.
-- [ ] **7.4 Photoshop:** PSD mit Ebenen. ✅ Ebenen übereinander = PNG (Abweichung 0).
-- [ ] **7.5 Selbsttests:** Einstellungen → Programme → „Selbsttest“ je Programm. ✅ Ohne Programm „übersprungen“.
+- [x] **7.1 Premiere und After Effects:** FCP7-XML mit Zooms, Texten und Markern wie in MoinStudio. ✅ XML-Prüfung per
+  Parser (fast-xml-parser). After Effects liest kein FCP7-XML: dafür ein ExtendScript, das Komposition, Schnitte,
+  Zoom-Keyframes, Texte und Marken anlegt (Syntax geprüft, in einer nachgebauten AE-Umgebung ausgeführt).
+  „Ungetestet“ bis zum Selbsttest mit Adobe (auf dem Entwicklungsrechner nicht installiert).
+- [x] **7.2 DaVinci Resolve:** FCPXML oder EDL. ✅ Beides: FCPXML 1.10 (Parser: lückenlose Zeitleiste, Quellzeiten,
+  Kapitel- und Effekt-Marker) und EDL (CMX 3600); „ungetestet“ bis Selbsttest mit Resolve.
+- [x] **7.3 CapCut:** Projektordner mit Clips und Liste, keine Fernsteuerung. ✅ Ordner vollständig (Clips in
+  Reihenfolge, Untertitel, Liste, Anleitung); Clip-Längen mit ffprobe nachgemessen, auch am echten Schnitt-Projekt.
+- [x] **7.4 Photoshop:** PSD mit Ebenen. ✅ Ebenen übereinander = PNG (Abweichung 0): was die Ebenen allein nicht
+  erklären (Farbangleich nach dem Zusammensetzen), liegt als oberste Ebene „Feinschliff“ darüber.
+- [x] **7.5 Selbsttests:** Einstellungen → Programme → „Selbsttest“ je Programm. ✅ Ohne Programm „übersprungen“ (Unit-
+  und Echttest auf dem Entwicklungsrechner). Photoshop über COM und After Effects über sein Skript prüfen sich selbst;
+  Premiere, Resolve und CapCut bekommen eine Checkliste mit den erwarteten Werten.
 
 ## M8 – Qualität → 0.8.0
 
