@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-30
+
+> Planung: Board je Konto, Kalender, KI-Ideen, Cross-Posting, Upload-Paket
+
 ### Added
 
 - Planungs-Reiter: Board je Konto (Idee, Aufnahme, Schnitt, Thumbnail, Upload, Veröffentlicht) mit Ziehen und Ablegen,
