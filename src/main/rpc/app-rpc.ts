@@ -31,6 +31,10 @@ export interface AppRpcDeps {
   hardware: HardwareController
   jobs: JobQueue
   enqueueProbe: () => Promise<string>
+  /** Thumbnail-Auftrag starten (ROADMAP M4) */
+  starteThumbnail: (start: unknown) => Promise<string>
+  /** Kanäle des Creator-Profils (für die Auswahl im KI-Client) */
+  konten: () => Promise<{ id: string; name: string; plattform: string; richtungen: string[] }[]>
 }
 
 /** Startet den Pipe-Server der App und registriert die Methoden für MCP-Server und Fernsteuerung. */
@@ -73,14 +77,19 @@ export async function startAppRpc(deps: AppRpcDeps): Promise<RpcServer> {
     return deps.jobs.get(String(id)) ?? null
   })
   rpc.handle('jobs.image', (p) => {
-    const id = String((p as { id?: unknown })?.id ?? '')
-    const result = deps.jobs.result<{ image?: string }>(id)
-    if (!result?.image) throw new Error(`Job ${id} has no image (yet)`)
-    const img = imageForAi(result.image)
+    const { id: roh, index } = (p ?? {}) as { id?: unknown; index?: unknown }
+    const id = String(roh ?? '')
+    const result = deps.jobs.result<{ image?: string; varianten?: { bild: string | null }[] }>(id)
+    // Thumbnail-Aufträge liefern mehrere Varianten, andere Aufgaben ein einzelnes Bild
+    const pfad = result?.varianten ? (result.varianten[Number(index ?? 0)]?.bild ?? null) : (result?.image ?? null)
+    if (!pfad) throw new Error(`Job ${id} has no image (yet)`)
+    const img = imageForAi(pfad)
     if (!img) throw new Error('Image could not be read')
-    return { ...img, path: result.image }
+    return { ...img, path: pfad }
   })
   rpc.handle('probe.render', () => deps.enqueueProbe())
+  rpc.handle('channels.list', () => deps.konten())
+  rpc.handle('thumbnail.start', (p) => deps.starteThumbnail(p))
 
   await rpc.listen()
   await writeJsonAtomic(pipeInfoFile(), rpc.info(app.getVersion()))

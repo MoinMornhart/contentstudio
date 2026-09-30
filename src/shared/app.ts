@@ -4,6 +4,7 @@ import type { QueueState } from './jobs'
 import type { Schluessel, Sprache } from './i18n'
 import type { Konto, Profil, Programm } from './profil'
 import type { KiWegStand, McpZiel } from './ki'
+import type { ExportFormat, Stilbuch, ThumbAuftragInfo, ThumbStart, VarianteInfo, VideoErgebnis, Vorbild } from './thumbnail'
 
 /** Reiter der Hauptoberfläche. Reihenfolge = Reihenfolge in der Navigation. */
 export const TABS = [
@@ -64,7 +65,23 @@ export const IPC = {
   mcpZiele: 'mcp:ziele',
   mcpVerbinden: 'mcp:verbinden',
   mcpEintrag: 'mcp:eintrag',
-  werkzeugeNoetig: 'tools:noetig'
+  werkzeugeNoetig: 'tools:noetig',
+  thumbStart: 'thumb:start',
+  thumbDatei: 'thumb:datei',
+  thumbAuftraege: 'thumb:auftraege',
+  thumbErgebnis: 'thumb:ergebnis',
+  thumbAendern: 'thumb:aendern',
+  thumbLoeschen: 'thumb:loeschen',
+  thumbExport: 'thumb:export',
+  thumbKiStand: 'thumb:ki-stand',
+  thumbVideo: 'thumb:video',
+  thumbVideoErgebnis: 'thumb:video-ergebnis',
+  vorbildListe: 'vorbild:liste',
+  vorbildHinzu: 'vorbild:hinzu',
+  vorbildAendern: 'vorbild:aendern',
+  vorbildLoeschen: 'vorbild:loeschen',
+  stilbuch: 'stilbuch:laden',
+  stilbuchErstellen: 'stilbuch:erstellen'
 } as const
 
 /** Wofür eine Datei hochgeladen wird: bestimmt Dateityp-Filter, Mehrfachauswahl und Zielordner im Datenordner. */
@@ -207,4 +224,26 @@ export interface CsApi {
   mcpVerbinden(id: McpZiel['id']): Promise<McpZiel[]>
   /** Eintrag zum Selbst-Eintragen (Befehl, Argumente, Umgebung) */
   mcpEintrag(): Promise<{ command: string; args: string[]; env: Record<string, string> }>
+  /** Thumbnail (ROADMAP M4): Auftrag starten, Dateien wählen, Aufträge, Ergebnisse, Änderung, Export */
+  thumbStart(start: Partial<ThumbStart> & { kontoId: string }): Promise<string>
+  /** Dateidialog; liefert den absoluten Pfad oder null */
+  thumbDatei(zweck: 'bild' | 'video'): Promise<string | null>
+  thumbAuftraege(): Promise<ThumbAuftragInfo[]>
+  thumbErgebnis(jobId: string): Promise<VarianteInfo[] | null>
+  thumbAendern(jobId: string, index: number, wunsch: string): Promise<string>
+  thumbLoeschen(jobId: string): Promise<void>
+  thumbExport(jobId: string, index: number, format: ExportFormat, typ: 'png' | 'jpg' | 'psd'): Promise<string | null>
+  thumbKiStand(): Promise<{ ki: boolean; bildKi: boolean }>
+  thumbVideo(video: string, kontoId: string, titel?: string): Promise<string>
+  thumbVideoErgebnis(jobId: string): Promise<(Omit<VideoErgebnis, 'momente'> & { momente: (VideoErgebnis['momente'][number] & { pfad: string | null })[] }) | null>
+  /** Vorbilder und Stilbuch je Kanal (ROADMAP 4.1) */
+  vorbildListe(kontoId: string): Promise<Vorbild[]>
+  vorbildHinzu(kontoId: string, quelle: { art: 'datei' } | { art: 'zwischenablage' } | { art: 'link'; url: string } | { art: 'ablegen'; pfade: string[] }): Promise<Vorbild[]>
+  vorbildAendern(kontoId: string, id: string, patch: { aktiv?: boolean; gewicht?: number }): Promise<Vorbild[]>
+  vorbildLoeschen(kontoId: string, id: string): Promise<Vorbild[]>
+  stilbuch(kontoId: string): Promise<Stilbuch | null>
+  /** Startet die Aufgabe „Vorbilder ansehen und Stilbuch erstellen“ */
+  stilbuchErstellen(kontoId: string): Promise<string>
+  /** Pfad einer abgelegten Datei (Drag-and-drop) */
+  dateiPfad(datei: File): string
 }

@@ -18,6 +18,10 @@ extraResources:
     to: blender
     filter:
       - '**/*.py'
+  - from: resources/prompts
+    to: prompts
+  - from: resources/stilbuecher
+    to: stilbuecher
 
 asar: true
 

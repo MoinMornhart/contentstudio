@@ -1,0 +1,197 @@
+{
+ "id": "minecraft",
+ "name": "Minecraft",
+ "passtZu": [
+  "minecraft",
+  "gaming"
+ ],
+ "hinweis": "Beispiel-Stilbuch aus MoinStudio: zusammengefasst aus der Analyse von über 250 Thumbnails großer deutscher Minecraft-Kanäle. Enthält nur Regeln sowie öffentliche Videotitel und Video-IDs, keine Bilder.",
+ "regeln": [
+  {
+   "kategorie": "aufbau",
+   "text": "Die Hauptfigur ist groß und am Bildrand angeschnitten, das Thema (Mob, Bauwerk, Item, Gefahr) steht daneben in der anderen Bildhälfte; beide überdecken sich nicht."
+  },
+  {
+   "kategorie": "figur",
+   "text": "Bei Nahaufnahmen füllt der Kopf 35–55 % der Bildhöhe, in der Totalen die ganze Figur 15–35 %."
+  },
+  {
+   "kategorie": "figur",
+   "text": "Der Kopf ist nie starr frontal: 15–35° zum Thema gedreht und 5–20° geneigt, der Rumpf in 3/4-Ansicht."
+  },
+  {
+   "kategorie": "figur",
+   "text": "Kopf, Rumpf und Arm zielen auf denselben Punkt; nichts schaut ins Leere."
+  },
+  {
+   "kategorie": "figur",
+   "text": "Jeder große Armwinkel hat einen Grund (Item halten, zeigen, abstützen); höchstens eine große Geste je Figur, Arme nie spiegelgleich."
+  },
+  {
+   "kategorie": "objekte",
+   "text": "Items liegen flach zur Kamera und diagonal (Schwertklinge 30–50°), die Spitze zeigt vom Gesicht weg; nichts verdeckt das Gesicht."
+  },
+  {
+   "kategorie": "objekte",
+   "text": "Mobs, um die es geht, stehen groß (30–60 % der Bildhöhe) 2–4 Blöcke neben der Figur, nie klein im Hintergrund."
+  },
+  {
+   "kategorie": "kamera",
+   "text": "Weitwinkel nah an der Figur: Nahaufnahme 20–28 mm, Brustbild 30–40 mm; nie exakt frontal auf Augenhöhe."
+  },
+  {
+   "kategorie": "licht",
+   "text": "Sauberer Render mit weicher Sonne, blauem Himmelslicht und sichtbarer Umgebungsverdeckung; feine helle Kantenglanzlinie, kein farbiger Glow-Rand."
+  },
+  {
+   "kategorie": "kamera",
+   "text": "Hintergrund weich (Blende f/2–4, Fokus auf dem Kopf), aber nie leer; ist die Welt das Thema, bleibt sie scharf."
+  },
+  {
+   "kategorie": "farbe",
+   "text": "Kräftige Farben (Sättigung +10–30 %), cyan-blauer Himmel, Komplementärkontrast Türkis gegen Rot/Orange; Bloom nur an echten Lichtquellen."
+  },
+  {
+   "kategorie": "text",
+   "text": "Text ist die Ausnahme (in den meisten Vorbildern fehlt er); wenn, dann 1–3 Wörter in Pixelschrift in einer freien Ecke, nie über Gesicht, Item oder Mob."
+  },
+  {
+   "kategorie": "aufbau",
+   "text": "Reaction: Das Original füllt das Bild, die Figur steht in einer Hälfte auf Brusthöhe angeschnitten, Kopf 55–65 % der Bildhöhe, Kopf 15–35° zum Inhalt gedreht."
+  },
+  {
+   "kategorie": "text",
+   "text": "Reaction: genau ein großes Wort (20–25 % der Bildhöhe) oben auf der Inhaltsseite, dazu höchstens ein roter gebogener Pfeil zum wichtigen Detail."
+  }
+ ],
+ "vorbilder": [
+  {
+   "id": "gomme-helden3-schmockyyy",
+   "kanal": "GommeHD",
+   "titel": "SCHMOCKYYY GREIFT AN… EINER STIRBT (Minecraft Helden 3)",
+   "video": "bcmEo2NBFLI",
+   "zeigt": "Zwei Spieler stürmen aufeinander zu, Ausfallschritt, übergroße Schwerter zur Bildmitte, roter Himmel, Farbduell im Randlicht",
+   "rezept": "Held groß vorn links (Pose sturmangriff, Schwert rechte Hand), Gegner 2–4 Blöcke dahinter rechts (getroffen oder sturmangriff), kamera kampf, himmel blutrot"
+  },
+  {
+   "id": "gomme-helden3-1vs1",
+   "kanal": "GommeHD",
+   "titel": "1 VS 1... GEGEN DEN HELDEN 2 GEWINNER (Minecraft Helden 3)",
+   "video": "LZTR34FkVpk",
+   "zeigt": "Duell bei Nacht, beide mit Schwert, Klingen kreuzen sich in der Mitte",
+   "rezept": "Held pose kreuzen, Gegner pose kreuzen mit blick um −65, beide mit Schwert, kamera kampf, himmel gewitter"
+  },
+  {
+   "id": "tridan-helden-pvp",
+   "kanal": "TriDan (Minecraft Helden)",
+   "titel": "AVIVEHD vs TRIDAN PVP KAMPF! (MINECRAFT HELDEN)",
+   "video": "YByjt2rovCM",
+   "zeigt": "Sprungangriff mit erhobener Waffe gegen taumelnden Gegner, Wiese bei Tag",
+   "rezept": "Held pose sprungangriff mit hoehe 1, Waffe in hand l, Gegner getroffen, kamera kampf mit kopf_anteil 0.2, himmel tag"
+  },
+  {
+   "id": "gomme-lavaescape",
+   "kanal": "GommeHD",
+   "titel": "MINECRAFT LAVAESCAPE & INFOS zu MINECRAFT ALARM",
+   "video": "M2uh8Czcqkk",
+   "zeigt": "Aufsicht auf Lavasee, Held mit Schwert auf einer Säule, Gegner klein auf einer zweiten Säule",
+   "rezept": "welt lavameer, zweite Säule über bloecke, Held pose schwert, kamera gefahr mit hoehe ~34"
+  },
+  {
+   "id": "gomme-helden3-falle",
+   "kanal": "GommeHD",
+   "titel": "MEINE FALLE FÜR SCHMOCKYYY.. ICH BEKOMME EIN HERZ (Minecraft Helden 3)",
+   "video": "PODNyFC6SfI",
+   "zeigt": "Gegner fällt in eine Grube mit TNT, Held schaut von der Kante herunter",
+   "rezept": "Grube über bloecke (luft), TNT unten, Gegner pose weggeschleudert oder taumeln in der Grube, Held pose blick_runter an der Kante, kamera gefahr"
+  },
+  {
+   "id": "gomme-helden3-1herz",
+   "kanal": "GommeHD",
+   "titel": "NUR 1 HERZ… MEIN GEHEIMER PLAN (Minecraft Helden 3)",
+   "video": "2ZmEy4BSD3Q",
+   "zeigt": "Held groß im Vordergrund mit ernstem Blick, Plan im Hintergrund",
+   "rezept": "Held pose blick_zum_ding oder held, Thema in der anderen Bildhälfte, kamera nah"
+  },
+  {
+   "id": "gomme-helden2-elina",
+   "kanal": "GommeHD",
+   "titel": "KAMPF! GOMME vs ELINA in MINECRAFT HELDEN 2",
+   "video": "buP7iHnFyWs",
+   "zeigt": "Schwerthieb diagonal durchs Bild, Gegner mit großem Kopf rechts, Nacht mit Regen",
+   "rezept": "Held pose hieb, Gegner nah rechts, kamera kampf, himmel gewitter"
+  },
+  {
+   "id": "gomme-helden-finale",
+   "kanal": "GommeHD",
+   "titel": "MINECRAFT HELDEN FINALE: 6 GEGEN MICH!",
+   "video": "cNNVpr0oCMM",
+   "zeigt": "Held mit Bogen vorn, viele Gegner im Hintergrund auf der Wiese",
+   "rezept": "Held pose bogen, mehrere Gegner (Figuren oder Mobs) klein im Hintergrund, kamera nah, himmel tag"
+  },
+  {
+   "id": "basti-angst",
+   "kanal": "BastiGHG",
+   "titel": "ICH HABE ANGST... (wirklich)",
+   "video": "WBncxLrU1_4",
+   "zeigt": "Nacht im Wald, Kopf groß vorn mit Lichtquelle in der Hand, Enderman im Dunkeln",
+   "rezept": "welt wiese, himmel nacht, Held pose schwert mit Laterne (item lantern), Mob enderman 3–5 Blöcke dahinter, kamera nah"
+  },
+  {
+   "id": "basti-bedrockwand",
+   "kanal": "BastiGHG",
+   "titel": "DIE BEDROCK WAND DARF MICH NIEMALS EINHOLEN...",
+   "video": "Cof2CIoNpKk",
+   "zeigt": "riesige Bedrock-Wand neben dem flüchtenden Helden",
+   "rezept": "bloecke bedrock als hohe Wand neben der Figur, Held pose rennen mit blick auto, kamera nah"
+  },
+  {
+   "id": "paluten-spinnen",
+   "kanal": "Paluten",
+   "titel": "Minecraft, aber mit gigantischen SPINNEN",
+   "video": "jbLzElfpUq4",
+   "zeigt": "Kopf groß vorn, riesige Spinne im nebligen Hintergrund",
+   "rezept": "Mob spider mit groesse 3–5 weit hinten, Held pose blick_zum_ding, kamera nah, himmel abend"
+  },
+  {
+   "id": "paluten-tnt",
+   "kanal": "Paluten",
+   "titel": "Ich zünde 400-faches TNT in Minecraft",
+   "video": "azAx-kD4rHw",
+   "zeigt": "fliegende TNT-Blöcke und Explosion neben dem Helden",
+   "rezept": "objekte tnt gedreht in der Luft, TNT-Stapel über bloecke, Held pose zeigen mit Feuerzeug, kamera nah"
+  },
+  {
+   "id": "paluten-mobarmee",
+   "kanal": "Paluten",
+   "titel": "Welche Minecraft MOB ARMEE gewinnt das MOB BATTLE?",
+   "video": "eNe8fA-UgqY",
+   "zeigt": "viele echte Mobs sauber gerendert, Figur mittig",
+   "rezept": "mehrere Mobs gleicher Art in Reihen, Held pose stoss oder held, kamera kampf oder nah"
+  },
+  {
+   "id": "paluten-parasiten",
+   "kanal": "Paluten",
+   "titel": "Minecraft, aber VILLAGER haben PARASITEN",
+   "video": "mPI_9PVaKg8",
+   "zeigt": "Held mit Schwert zur Kamera, Dorfbewohner als Thema",
+   "rezept": "welt dorf, Mob villager, Held pose schwert, kamera nah"
+  },
+  {
+   "id": "cast-loch",
+   "kanal": "Castcrafter",
+   "titel": "2000 SPIELER ERSCHAFFEN DAS GRÖSSTE LOCH IN MINECRAFT",
+   "video": "RnIOyeooSWU",
+   "zeigt": "Held zeigt auf eine riesige Grube, Aufsicht",
+   "rezept": "Grube über bloecke (luft mit waende stone, Wasser am Grund) direkt neben der Figur, Held pose zeigen, kamera tiefe mit hoehe ~24 und linse 18"
+  },
+  {
+   "id": "reaction-zarbex-bastian",
+   "kanal": "Bastian (BastiGHG) und zarbexLIVE",
+   "titel": "Reaction-Aufbau: Original als Vollbild, Skin groß an der Seite",
+   "video": "h3r2TAbOq-Y",
+   "zeigt": "Original füllt das Bild, Reagierender auf Brusthöhe groß an der Seite, ein Wort, ein roter Pfeil",
+   "rezept": "nur für Reaction-Aufträge (eigener Ablauf)"
+  }
+ ]
+}

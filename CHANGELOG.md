@@ -8,6 +8,34 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+> Thumbnails: Vorbilder, Stilbuch, 3D, Foto, Vorlagen, Selbstprüfung, Export
+
+### Added
+
+- Thumbnail-Reiter: Beschreibung, Kanal, Freunde, Art (frei, Reaction, Vorlage, aus dem Video), Varianten mit
+  Großansicht, Selbstprüfung, Änderungswünsche in Worten und Export.
+- Vorbilder und Stilbuch je Kanal: per Datei, Ablegen, Zwischenablage oder YouTube-Link (nur das öffentliche
+  Thumbnail); lokale Messung (Farben, Helligkeit, Kontrast, Aufbau) und Beschreibung durch die Bild-KI; automatisches
+  Stilbuch mit Regeln und Belegen; gewichten, deaktivieren, löschen. Beispiel-Stilbuch „Minecraft“ (nur Regeln).
+- Vorbilder nur für einen Auftrag („so ähnlich wie das hier“) mit Auswahl, was übernommen wird; Farben und Licht werden
+  nachprüfbar übertragen, der Aufbau bleibt.
+- Vier Engines: Minecraft-Welt in Blender (aus MoinStudio, Texturen aus der eigenen Spielinstallation), eigenes
+  3D-Modell (GLB, glTF, VRM, FBX) mit Posen für gängige Skelette, Foto-Compositing (lokales Freistellen, Gesichter,
+  Randkante, Licht angleichen) und Grafik ohne Person.
+- Planung durch die gewählte KI: mehrere Varianten, jede nach einem Vorbild; ohne KI ein sicherer Standardaufbau.
+- Text in der Markenschrift und Logo in einer freien Ecke, nie über Gesichtern; Freunde in jeder Art.
+- Selbstprüfung vor dem Zeigen: technisch immer, dazu die Bild-KI, falls vorhanden; bis zu zwei Korrekturen.
+- Reaction- und Vorlagen-Modus für Minecraft-Skins und Fotos; „Aus dem Video“ findet starke Momente lokal und schlägt mit
+  Bild-KI Thumbnail-Ideen vor; Standbilder als Hintergrund nutzbar.
+- Export als PNG oder JPG in 16:9, 9:16 und 1:1 (Text wird fürs neue Format neu gesetzt) und als PSD mit Ebenen.
+- MCP-Werkzeuge `channels_list` und `thumbnail_create`; `job_image` zeigt einzelne Varianten.
+
+### Changed
+
+- Minecraft-Mobs werden nur zur Laufzeit aus Mojangs `bedrock-samples` importiert; aufrechte Wesen wie der Creeper
+  stehen jetzt richtig.
+- Bei Speichermangel rendert Blender automatisch kleiner und mit weniger Samples.
+
 ## [0.3.0] - 2026-09-30
 
 > KI-Schicht für alle Anbieter und MCP

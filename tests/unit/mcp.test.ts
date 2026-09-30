@@ -84,7 +84,7 @@ describe('MCP-Werkzeuge (offizieller Client ↔ Server, App nachgebaut)', () => 
 
   it('listet die Werkzeuge mit Beschreibung', async () => {
     const { tools } = await client.listTools()
-    expect(tools.map((t) => t.name).sort()).toEqual(['job_control', 'job_get', 'job_image', 'jobs_list', 'render_probe', 'status'])
+    expect(tools.map((t) => t.name).sort()).toEqual(['channels_list', 'job_control', 'job_get', 'job_image', 'jobs_list', 'render_probe', 'status', 'thumbnail_create'])
     expect(tools.every((t) => (t.description ?? '').length > 10)).toBe(true)
   })
 

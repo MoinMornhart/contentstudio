@@ -21,6 +21,7 @@ import { registerProfilIpc } from './profil/ipc'
 import { brauchtDreiD } from '@shared/profil'
 import { kiZentrale } from './ki/zentrale'
 import { registerMcpIpc } from './mcp/ipc'
+import { registerThumbnailIpc } from './thumbnail/ipc'
 
 // Tests: eigener Einstellungsordner statt %APPDATA%\ContentStudio (vor allem anderen setzen)
 if (process.env['CS_USERDATA']) app.setPath('userData', process.env['CS_USERDATA'])
@@ -46,6 +47,7 @@ hardware.register()
 // Im Screenshot-Modus den Assistenten nur zeigen, wenn er ausdrücklich aufgenommen werden soll
 registerSetupIpc(settings, !!screenshotDir && !process.argv.includes(SETUP_FLAG))
 const { queue: jobs, enqueueProbe } = setupJobs(localRoot(), tools, hardware, mainWindow)
+const thumbnail = registerThumbnailIpc({ queue: jobs, settings, profil, hardware, tools, ki: ki.schicht, fenster: mainWindow })
 
 // Fester Name für den Autostart-Eintrag (HKCU\...\Run). Ohne ihn leitet Electron den Namen
 // aus der AppUserModelId ab, und Setzen und Abfragen könnten verschiedene Einträge meinen.
@@ -195,7 +197,7 @@ if (toolsArg === 'install' || toolsArg === 'install-all') {
     if (!screenshotDir) {
       void jobs.start()
       // Verbindung für MCP-Server und Fernsteuerung
-      startAppRpc({ settings, hardware, jobs, enqueueProbe }).catch((err: unknown) => console.error('pipe server:', err))
+      startAppRpc({ settings, hardware, jobs, enqueueProbe, starteThumbnail: thumbnail.starte, konten: async () => (await profil.laden()).konten.map((k) => ({ id: k.id, name: k.name, plattform: k.plattform, richtungen: k.richtungen })) }).catch((err: unknown) => console.error('pipe server:', err))
       setupUpdater(mainWindow)
     }
     // Erster Start bzw. geändertes Gerät: Hardware-Test im Hintergrund (nur in der installierten App,

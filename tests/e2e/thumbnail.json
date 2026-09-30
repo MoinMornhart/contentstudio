@@ -1,0 +1,10 @@
+[
+  { "reiter": "thumbnail", "warte": 4000, "name": "thumbnail-start" },
+  {
+    "js": "(async () => { const s = await window.cs.thumbKiStand(); const v = await window.cs.vorbildListe('konto-demo'); const id = await window.cs.thumbStart({ kontoId: 'konto-demo', beschreibung: 'Ich teste das teuerste Handy der Welt', anzahl: 1, engine: 'foto', freunde: ['freund-demo'] }); for (let i = 0; i < 400; i++) { const a = (await window.cs.thumbAuftraege()).find((x) => x.id === id); if (a && ['done', 'failed', 'cancelled'].includes(a.state)) return { ki: s, vorbilder: v.length, state: a.state, error: a.error, id }; await new Promise((r) => setTimeout(r, 1500)); } return 'Zeit abgelaufen' })()",
+    "warte": 1500
+  },
+  { "js": "document.querySelector('.auftrag-kopf')?.click(); 'geöffnet'", "warte": 3000, "name": "thumbnail-ergebnis" },
+  { "js": "(async () => { const a = (await window.cs.thumbAuftraege())[0]; const v = await window.cs.thumbErgebnis(a.id); return v && v.map((x) => ({ titel: x.titel, bild: !!x.bild, pruefung: x.pruefung, fehler: x.fehler })) })()", "warte": 500 },
+  { "js": "document.querySelector('.bild-knopf')?.click(); 'gross'", "warte": 1500, "name": "thumbnail-gross" }
+]

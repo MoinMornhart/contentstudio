@@ -1,22 +1,37 @@
+import { useEffect, useState } from 'react'
 import { PageHeader } from '../components/Panel'
 import { DarstellungEditor } from '../profil/SchrittDarstellung'
 import { neuesKonto } from '../profil/SchrittKonten'
 import { useProfil } from '../profil/useProfil'
+import { AuftragsKarte, type AuftragsVorschlag } from '../thumbnail/Auftrag'
+import { AuftragsListe } from '../thumbnail/Ergebnisse'
+import { VorbilderKarte } from '../thumbnail/Vorbilder'
 import { useI18n } from '../i18n'
 
 /**
- * Thumbnail-Reiter. Die Thumbnail-Erstellung selbst kommt mit ROADMAP M4. Schon jetzt fragt der Reiter nach, was im
- * Assistenten übersprungen wurde und für Thumbnails nötig ist: wie der Creator im Bild aussieht (ROADMAP 2.6).
- * Gibt es noch gar keinen Kanal, lässt sich hier direkt einer anlegen.
+ * Thumbnail-Reiter (ROADMAP M4): neuer Auftrag, Vorbilder und Stilbuch des Kanals, Aufträge mit Varianten.
+ * Fehlt noch, wie der Creator im Bild aussieht, fragt der Reiter das zuerst nach (ROADMAP 2.6).
  */
 export function ThumbnailTab(): React.JSX.Element {
   const { t, sprache } = useI18n()
   const { profil, aendere } = useProfil()
+  const [kontoWahl, setKonto] = useState<string | null>(null)
+  const [offen, setOffen] = useState<string | null>(null)
+  const [ki, setKi] = useState({ ki: false, bildKi: false })
+  const [vorschlag, setVorschlag] = useState<AuftragsVorschlag | null>(null)
+  useEffect(() => {
+    let aktiv = true
+    void window.cs.thumbKiStand().then((s) => aktiv && setKi(s))
+    return () => {
+      aktiv = false
+    }
+  }, [])
   const ohneDarstellung = profil?.konten.filter((k) => k.darstellung.length === 0) ?? []
   const ohneKonto = profil !== null && profil.konten.length === 0
+  const kontoId = kontoWahl && profil?.konten.some((k) => k.id === kontoWahl) ? kontoWahl : (profil?.konten[0]?.id ?? '')
   return (
     <>
-      <PageHeader title={t('leer.thumbnail.titel')} subtitle={t('leer.thumbnail.text')} />
+      <PageHeader title={t('leer.thumbnail.titel')} subtitle={t('thumb.untertitel')} />
       {(ohneDarstellung.length > 0 || ohneKonto) && (
         <section className="card nachfrage">
           <div className="card-head">
@@ -39,6 +54,29 @@ export function ThumbnailTab(): React.JSX.Element {
             </div>
           ))}
         </section>
+      )}
+      {profil && kontoId && (
+        <div className="thumb-layout">
+          <div className="thumb-links">
+            <AuftragsKarte
+              profil={profil}
+              kontoId={kontoId}
+              setzeKonto={setKonto}
+              ki={ki}
+              vorschlag={vorschlag}
+              gestartet={(id) => {
+                setOffen(id)
+              }}
+            />
+            <VorbilderKarte kontoId={kontoId} bildKi={ki.bildKi} />
+          </div>
+          <section className="card">
+            <div className="card-head">
+              <h2>{t('thumb.ergebnis.titel')}</h2>
+            </div>
+            <AuftragsListe offen={offen} setzeOffen={setOffen} vorbildHinweise={profil.einstellungen.vorbildHinweise} vorschlagen={setVorschlag} />
+          </section>
+        </div>
       )}
     </>
   )

@@ -140,9 +140,11 @@ export const ProfilSchema = z.object({
       /** „Orientiert sich an …“ an Varianten zeigen (Standard aus, wie MoinStudio v0.35.1) */
       vorbildHinweise: z.boolean().default(false),
       /** Fertiges Video automatisch hochladen (nur mit verbundenem Konto; Standard aus) */
-      autoUpload: z.boolean().default(false)
+      autoUpload: z.boolean().default(false),
+      /** Person hat bestätigt, Minecraft zu besitzen: die offizielle Spieldatei darf wie im Launcher geladen werden */
+      minecraftBesitz: z.boolean().default(false)
     })
-    .default({ vorbildHinweise: false, autoUpload: false }),
+    .default({ vorbildHinweise: false, autoUpload: false, minecraftBesitz: false }),
   /** Übersprungene Schritte des Assistenten: werden im passenden Moment nachgefragt */
   offen: z.array(z.string()).default([])
 })

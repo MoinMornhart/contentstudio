@@ -36,3 +36,30 @@ Nur nach Zustimmung im Assistenten („Ich möchte, dass ContentStudio einmalig 
   Schnittstelle. ContentStudio speichert nur den Link. Scraping findet nicht statt.
 
 Die Daten landen im Creator-Profil im Datenordner des Nutzers und werden nirgendwohin weitergegeben.
+
+## Minecraft-Texturen, Modelle und Mobs (Thumbnail, ROADMAP 4.3)
+
+Nichts davon liegt im Repo oder im Installer. Alles kommt zur Laufzeit in einen lokalen Zwischenspeicher
+(`%LOCALAPPDATA%\ContentStudio\mc`), nie in den Datenordner:
+
+1. **Spielinstallation des Nutzers:** Die zuletzt gespielte Java-Version aus `%APPDATA%\.minecraft\versions`. Daraus
+   werden nur Texturen, Schrift, Blockmodelle und Blockzustände entpackt.
+2. **Offizielle Spieldatei von Mojang:** Nur wenn keine Installation gefunden wird und die Person in den Einstellungen
+   bestätigt hat, dass sie Minecraft besitzt. Dann lädt ContentStudio dieselbe Datei, die auch der offizielle
+   Launcher lädt (`piston-meta.mojang.com`, per SHA1 geprüft).
+3. **Mobs:** Geometrie, Texturen und Grundhaltung aus Mojangs öffentlichem Repository `Mojang/bedrock-samples`
+   (Zweig `preview`), beim ersten Gebrauch importiert. MoinStudios geprüfte Mob-Tabelle wird bewusst nicht mitgeliefert.
+4. **Skins:** vom Nutzer hochgeladen oder per Accountname (siehe oben).
+
+## Vorbilder per Video-Link (ROADMAP 4.1)
+
+- Nur das öffentliche Thumbnail (`i.ytimg.com/vi/<id>/…`) und Titel samt Kanalname über YouTubes öffentliches
+  oEmbed (`youtube.com/oembed`), ohne Anmeldung und ohne API-Schlüssel, nur wenn der Creator den Link selbst einfügt.
+- Das Bild bleibt im Datenordner des Creators als persönliche Stil-Referenz, wird nie veröffentlicht und lässt sich
+  jederzeit löschen. Aus Vorbildern wird nie etwas ins Thumbnail kopiert (keine Logos, Texte, Figuren, Bildteile).
+
+## 3D-Requisiten (Vorlagen-Modus, ROADMAP 4.5)
+
+- Hält die Person in einer Vorlage einen Gegenstand, sucht ContentStudio ein passendes Modell bei Poly Haven
+  (`api.polyhaven.com`, alle Inhalte CC0) und lädt es in den lokalen Werkzeug-Ordner. Jede Datei wird mit Quelle und
+  Lizenz in `props/lizenzen.md` protokolliert.

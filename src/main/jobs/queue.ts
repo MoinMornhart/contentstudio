@@ -261,7 +261,10 @@ export class JobQueue extends EventEmitter {
 
     const ctx: JobContext = {
       id: job.id,
-      checkpoint: job.checkpoint,
+      // immer der zuletzt gespeicherte Stand (auch nach save im selben Lauf)
+      get checkpoint() {
+        return job.checkpoint
+      },
       signal: r.abort.signal,
       save: async (checkpoint) => {
         job.checkpoint = checkpoint

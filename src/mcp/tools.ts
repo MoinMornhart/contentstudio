@@ -125,12 +125,46 @@ export function createServer(version: string): McpServer {
     }
   )
 
+  server.registerTool('channels_list', { title: 'List channels', description: 'Lists the channels of the creator profile (id, name, platform, directions). Use the id for thumbnail_create.' }, async () => {
+    try {
+      return text(await call('channels.list'))
+    } catch (err) {
+      return fail(err)
+    }
+  })
+
+  server.registerTool(
+    'thumbnail_create',
+    {
+      title: 'Create thumbnail',
+      description:
+        'Starts a thumbnail job in ContentStudio: the app plans variants after the channel’s style guide, renders them (3D scene, 3D model or photo compositing, depending on the creator’s appearance), checks them and returns the task ID. Poll job_get, then look at each variant with job_image (index).',
+      inputSchema: z.object({
+        channelId: z.string().describe('Channel id from channels_list'),
+        description: z.string().describe('What the thumbnail should show, in the creator’s words'),
+        variants: z.number().int().min(1).max(4).optional().describe('Number of variants (default 3)')
+      })
+    },
+    async ({ channelId, description, variants }) => {
+      try {
+        const id = await call<string>('thumbnail.start', { kontoId: channelId, beschreibung: description, anzahl: variants ?? 3 })
+        return text({ jobId: id, hint: 'Use job_get for progress; when done, job_image with index 0, 1, … shows the variants.' })
+      } catch (err) {
+        return fail(err)
+      }
+    }
+  )
+
   server.registerTool(
     'job_image',
-    { title: 'View result image', description: 'Returns the result image of a finished task (downscaled) to look at and assess it.', inputSchema: z.object({ id: z.string() }) },
-    async ({ id }) => {
+    {
+      title: 'View result image',
+      description: 'Returns the result image of a finished task (downscaled) to look at and assess it. Thumbnail tasks have several variants: pass index.',
+      inputSchema: z.object({ id: z.string(), index: z.number().int().min(0).optional().describe('Variant of a thumbnail task (default 0)') })
+    },
+    async ({ id, index }) => {
       try {
-        const img = await call<{ data: string; mimeType: string; width: number; height: number; path: string }>('jobs.image', { id })
+        const img = await call<{ data: string; mimeType: string; width: number; height: number; path: string }>('jobs.image', { id, index })
         return {
           content: [
             { type: 'image', data: img.data, mimeType: img.mimeType },

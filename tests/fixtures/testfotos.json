@@ -1,0 +1,35 @@
+{
+  "_hinweis": "Neutrale Testfotos für die Foto-Engine (ROADMAP 4.4). Alle CC0 von Wikimedia Commons. Die Bilder werden nur zur Testzeit in einen lokalen Ordner geladen, nie ins Repo.",
+  "fotos": [
+    {
+      "id": "frau-pink",
+      "seite": "File:Smiling woman pink shirt.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Smiling_woman_pink_shirt.jpg/1280px-Smiling_woman_pink_shirt.jpg",
+      "lizenz": "CC0"
+    },
+    {
+      "id": "frau-pink-2",
+      "seite": "File:Woman smiling pink shirt2.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Woman_smiling_pink_shirt2.jpg/1280px-Woman_smiling_pink_shirt2.jpg",
+      "lizenz": "CC0"
+    },
+    {
+      "id": "mann-locken",
+      "seite": "File:Curly hair and freckles man (Unsplash).jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Curly_hair_and_freckles_man_%28Unsplash%29.jpg/1280px-Curly_hair_and_freckles_man_%28Unsplash%29.jpg",
+      "lizenz": "CC0"
+    },
+    {
+      "id": "mann-bart",
+      "seite": "File:Black bearded man smiling, 2442565.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Black_bearded_man_smiling%2C_2442565.jpg/1280px-Black_bearded_man_smiling%2C_2442565.jpg",
+      "lizenz": "CC0"
+    },
+    {
+      "id": "gefuehle",
+      "seite": "File:Shades of emotions (Unsplash).jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Shades_of_emotions_%28Unsplash%29.jpg/1280px-Shades_of_emotions_%28Unsplash%29.jpg",
+      "lizenz": "CC0"
+    }
+  ]
+}

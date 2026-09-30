@@ -107,3 +107,15 @@ Ein Auftrag, viele Anbieter (`src/main/ki/`). Welche Wege erlaubt sind und warum
 - **MCP:** `src/mcp/` (stdio) mit Werkzeugen für Status und Aufgaben; Claude Desktop wird mit Sicherung automatisch
   eingetragen, ChatGPT Desktop mit Anleitung zum Selbst-Eintragen. Funktionen der späteren Meilensteine kommen als weitere
   Werkzeuge dazu.
+
+## 9. Thumbnail
+
+- **Engines:** `minecraft` (Blender, `blender/minecraft/`), `modell3d` (Blender, `blender/modell/render_modell.py`,
+  danach Compositing), `foto` und `grafik` (Bild-Umgebung, `blender/bild/komposit.py`). Die Engine folgt aus der
+  Darstellung des Kanals im Creator-Profil und lässt sich je Auftrag ändern.
+- **Ablauf** (`src/main/thumbnail/job.ts`): Auftrags-Vorbilder ansehen → Plan der KI (Zod-Schema, je Variante ein
+  Vorbild) → Render → Nachbearbeitung aus Auftrags-Vorbildern (Farben, Licht) → Text und Logo → Selbstprüfung
+  (technisch + Bild-KI) → bis zu zwei Korrekturen → beste Fassung. Ohne KI gibt es einen sicheren Standardaufbau.
+- **Stil:** Vorbilder und Stilbuch je Kanal unter `vorbilder/<konto-id>/` im Datenordner; Beispiel-Stilbücher unter
+  `resources/stilbuecher/` (nur Regeln und öffentliche Titel).
+- **Ausgabe:** `thumbnails/<art>-<id>/` im Datenordner mit Bildern, Plan, Berichten und Ebenen für den PSD-Export.

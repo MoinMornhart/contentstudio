@@ -1,5 +1,5 @@
 // Herkunft: MoinStudio src/preload/index.ts (MIT).
-import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
+import { contextBridge, ipcRenderer, type IpcRendererEvent, webUtils } from 'electron'
 import { IPC, isTabId, type CsApi, type JobAction, type ProfilDateiZweck, type TabId, type ToolId, type ToolProgressEvent, type UpdateStatus } from '@shared/app'
 import type { Profil } from '@shared/profil'
 import type { HardwareState } from '@shared/hardware'
@@ -65,7 +65,24 @@ const api: CsApi = {
   kiTest: (id: string) => ipcRenderer.invoke(IPC.kiTest, id),
   mcpZiele: () => ipcRenderer.invoke(IPC.mcpZiele),
   mcpVerbinden: (id: string) => ipcRenderer.invoke(IPC.mcpVerbinden, id),
-  mcpEintrag: () => ipcRenderer.invoke(IPC.mcpEintrag)
+  mcpEintrag: () => ipcRenderer.invoke(IPC.mcpEintrag),
+  thumbStart: (start) => ipcRenderer.invoke(IPC.thumbStart, start),
+  thumbDatei: (zweck) => ipcRenderer.invoke(IPC.thumbDatei, zweck),
+  thumbAuftraege: () => ipcRenderer.invoke(IPC.thumbAuftraege),
+  thumbErgebnis: (jobId) => ipcRenderer.invoke(IPC.thumbErgebnis, jobId),
+  thumbAendern: (jobId, index, wunsch) => ipcRenderer.invoke(IPC.thumbAendern, jobId, index, wunsch),
+  thumbLoeschen: (jobId) => ipcRenderer.invoke(IPC.thumbLoeschen, jobId),
+  thumbExport: (jobId, index, format, typ) => ipcRenderer.invoke(IPC.thumbExport, jobId, index, format, typ),
+  thumbKiStand: () => ipcRenderer.invoke(IPC.thumbKiStand),
+  thumbVideo: (video, kontoId, titel) => ipcRenderer.invoke(IPC.thumbVideo, video, kontoId, titel),
+  thumbVideoErgebnis: (jobId) => ipcRenderer.invoke(IPC.thumbVideoErgebnis, jobId),
+  vorbildListe: (kontoId) => ipcRenderer.invoke(IPC.vorbildListe, kontoId),
+  vorbildHinzu: (kontoId, quelle) => ipcRenderer.invoke(IPC.vorbildHinzu, kontoId, quelle),
+  vorbildAendern: (kontoId, id, patch) => ipcRenderer.invoke(IPC.vorbildAendern, kontoId, id, patch),
+  vorbildLoeschen: (kontoId, id) => ipcRenderer.invoke(IPC.vorbildLoeschen, kontoId, id),
+  stilbuch: (kontoId) => ipcRenderer.invoke(IPC.stilbuch, kontoId),
+  stilbuchErstellen: (kontoId) => ipcRenderer.invoke(IPC.stilbuchErstellen, kontoId),
+  dateiPfad: (datei) => webUtils.getPathForFile(datei)
 }
 
 contextBridge.exposeInMainWorld('cs', api)

@@ -17,7 +17,7 @@ describe('Creator-Profil: Schema', () => {
     const p = leeresProfil()
     expect(p.version).toBe(1)
     expect(p.konten).toEqual([])
-    expect(p.einstellungen).toEqual({ vorbildHinweise: false, autoUpload: false })
+    expect(p.einstellungen).toEqual({ vorbildHinweise: false, autoUpload: false, minecraftBesitz: false })
     expect(p.marke).toEqual({ logos: [], farben: [], schrift: null, wasserzeichen: false })
     expect(profilAus(JSON.parse(JSON.stringify(p)))).toEqual(p)
   })

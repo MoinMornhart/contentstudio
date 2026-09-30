@@ -35,6 +35,16 @@ export function ProfilKarte(): React.JSX.Element {
           <span>{t('einst.hinweise')}</span>
         </label>
       )}
+      {profil && (
+        <label className="switch">
+          <input
+            type="checkbox"
+            checked={profil.einstellungen.minecraftBesitz}
+            onChange={(e) => aendere((p) => ({ ...p, einstellungen: { ...p.einstellungen, minecraftBesitz: e.target.checked } }))}
+          />
+          <span>{t('einst.minecraftBesitz')}</span>
+        </label>
+      )}
     </Card>
   )
 }
