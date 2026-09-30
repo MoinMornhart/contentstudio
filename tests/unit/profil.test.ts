@@ -141,3 +141,21 @@ describe('Creator-Profil: Speicher im Datenordner', () => {
     expect(zielOrdner('modell', 'konto-1')).toBe('avatare/modelle')
   })
 })
+
+describe('YouTube-Richtlinie: 30 Tage', () => {
+  it('entfernt öffentliche Kanal-Daten nach 30 Tagen, jüngere bleiben', async () => {
+    const { ohneAlteMetadaten } = await import('../../src/shared/profil')
+    const video = { id: 'v', titel: 't', thumbnail: 'https://i.ytimg.com/x.jpg', veroeffentlicht: '', dauer: null }
+    const p = profilAus({
+      ...leeresProfil(),
+      konten: [
+        { id: 'alt', plattform: 'youtube', metadaten: { zustimmung: true, abgerufen: '2026-08-01T00:00:00Z', videos: [video] } },
+        { id: 'neu', plattform: 'youtube', metadaten: { zustimmung: true, abgerufen: '2026-09-25T00:00:00Z', videos: [video] } }
+      ]
+    })
+    const q = ohneAlteMetadaten(p, Date.parse('2026-09-30T00:00:00Z'))
+    expect(q.konten[0]!.metadaten).toEqual({ zustimmung: true, abgerufen: null, videos: [] })
+    expect(q.konten[1]!.metadaten!.videos).toHaveLength(1)
+    expect(ohneAlteMetadaten(q, Date.parse('2026-09-30T00:00:00Z'))).toBe(q)
+  })
+})

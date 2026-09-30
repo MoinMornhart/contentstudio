@@ -19,6 +19,8 @@ import { setzeHauptSprache } from './i18n'
 import { ProfilStore } from './profil/store'
 import { registerProfilIpc } from './profil/ipc'
 import { brauchtDreiD } from '@shared/profil'
+import { kiZentrale } from './ki/zentrale'
+import { registerMcpIpc } from './mcp/ipc'
 
 // Tests: eigener Einstellungsordner statt %APPDATA%\ContentStudio (vor allem anderen setzen)
 if (process.env['CS_USERDATA']) app.setPath('userData', process.env['CS_USERDATA'])
@@ -37,6 +39,8 @@ const brauchtBlender = async (): Promise<boolean> =>
 const hardware = new HardwareController(tools, localRoot(), mainWindow, brauchtBlender)
 registerDataIpc(settings, mainWindow, () => profil.vergessen())
 registerProfilIpc(profil, mainWindow)
+registerMcpIpc()
+export const ki = kiZentrale({ profil, userData: app.getPath('userData'), localRoot: localRoot(), fenster: mainWindow })
 registerToolsIpc(tools, mainWindow)
 hardware.register()
 // Im Screenshot-Modus den Assistenten nur zeigen, wenn er ausdrücklich aufgenommen werden soll

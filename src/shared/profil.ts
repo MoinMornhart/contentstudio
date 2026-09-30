@@ -124,8 +124,16 @@ export const ProfilSchema = z.object({
     .default({ logos: [], farben: [], schrift: null, wasserzeichen: false }),
   /** KI-Wege in Rückfall-Reihenfolge (ROADMAP M3); leer = keine KI gewählt */
   ki: z
-    .object({ wege: z.array(z.object({ id: z.string().min(1), aktiv: z.boolean() })).default([]), keineKi: z.boolean().default(false) })
-    .default({ wege: [], keineKi: false }),
+    .object({
+      /** Modell je Weg: null = Standard des Anbieters bzw. das erste geladene lokale Modell */
+      wege: z.array(z.object({ id: z.string().min(1), aktiv: z.boolean(), modell: z.string().nullable().default(null) })).default([]),
+      keineKi: z.boolean().default(false),
+      /** Wege, bei denen die Person gesehen hat, was gesendet wird, und zugestimmt hat (ROADMAP 3.8) */
+      zugestimmt: z.array(z.string()).default([]),
+      /** Gemini: Person hat bestätigt, einen bezahlten Schlüssel zu nutzen (Pflicht in EWR, Schweiz, UK) */
+      geminiBezahlt: z.boolean().default(false)
+    })
+    .default({ wege: [], keineKi: false, zugestimmt: [], geminiBezahlt: false }),
   programme: z.array(z.enum(PROGRAMME)).default([]),
   einstellungen: z
     .object({
@@ -175,6 +183,16 @@ export function profilAus(roh: unknown): Profil {
 }
 
 /** Braucht dieses Profil 3D (Blender)? Spiel-Avatare und 3D-Modelle – bei Creator oder Freunden. */
+/** YouTube-Richtlinie: öffentliche Daten ohne Anmeldung höchstens 30 Tage speichern, dann löschen oder neu laden */
+export const META_TAGE = 30
+
+/** Entfernt abgelaufene öffentliche Kanal-Daten (liefert dasselbe Objekt, wenn nichts abgelaufen ist) */
+export function ohneAlteMetadaten(p: Profil, jetzt = Date.now()): Profil {
+  const alt = (k: Profil['konten'][number]): boolean => !!k.metadaten?.abgerufen && jetzt - new Date(k.metadaten.abgerufen).getTime() > META_TAGE * 86400_000
+  if (!p.konten.some(alt)) return p
+  return { ...p, konten: p.konten.map((k) => (alt(k) ? { ...k, metadaten: { zustimmung: k.metadaten!.zustimmung, abgerufen: null, videos: [] } } : k)) }
+}
+
 export function brauchtDreiD(p: Profil): boolean {
   const alle = [...p.konten.flatMap((k) => k.darstellung), ...p.freunde.flatMap((f) => f.darstellung)]
   return alle.some((d) => d.art === 'spielavatar' || d.art === 'modell3d')

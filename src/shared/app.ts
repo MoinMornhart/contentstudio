@@ -3,6 +3,7 @@ import type { HardwareState } from './hardware'
 import type { QueueState } from './jobs'
 import type { Schluessel, Sprache } from './i18n'
 import type { Konto, Profil, Programm } from './profil'
+import type { KiWegStand, McpZiel } from './ki'
 
 /** Reiter der Hauptoberfläche. Reihenfolge = Reihenfolge in der Navigation. */
 export const TABS = [
@@ -56,6 +57,13 @@ export const IPC = {
   /** Ereignis: Profil wurde geändert (auch vom anderen Gerät oder aus den Einstellungen) */
   profilGeaendert: 'profil:geaendert',
   programmeFinden: 'programme:finden',
+  kiWege: 'ki:wege',
+  kiSchluessel: 'ki:schluessel',
+  kiMonat: 'ki:monat',
+  kiTest: 'ki:test',
+  mcpZiele: 'mcp:ziele',
+  mcpVerbinden: 'mcp:verbinden',
+  mcpEintrag: 'mcp:eintrag',
   werkzeugeNoetig: 'tools:noetig'
 } as const
 
@@ -189,4 +197,14 @@ export interface CsApi {
   programmeFinden(): Promise<ProgrammFundInfo[]>
   /** Welche Werkzeuge braucht dieses Profil? */
   werkzeugeNoetig(): Promise<ToolId[]>
+  /** KI-Wege (ROADMAP M3): Zustand aller Wege; Schlüssel setzen (null = löschen); Monatssumme; Test-Aufruf */
+  kiWege(): Promise<KiWegStand[]>
+  kiSchluessel(id: string, schluessel: string | null): Promise<KiWegStand>
+  kiMonat(): Promise<number>
+  kiTest(id: string): Promise<{ modell: string | null; kostenUsd: number | null }>
+  /** MCP (ROADMAP 3.7): Desktop-Apps, die ContentStudio als Werkzeug nutzen können */
+  mcpZiele(): Promise<McpZiel[]>
+  mcpVerbinden(id: McpZiel['id']): Promise<McpZiel[]>
+  /** Eintrag zum Selbst-Eintragen (Befehl, Argumente, Umgebung) */
+  mcpEintrag(): Promise<{ command: string; args: string[]; env: Record<string, string> }>
 }

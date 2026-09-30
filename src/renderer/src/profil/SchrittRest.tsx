@@ -6,20 +6,15 @@ import { HardwareCard, useHardwareState } from '../components/HardwareCard'
 import { ToolsCard } from '../components/ToolsCard'
 import { useSprachName } from './Bausteine'
 import { useProfil } from './useProfil'
+import { KiWege } from './KiWege'
 import { useT } from '../i18n'
 
-export function KiSchritt(): React.JSX.Element | null {
+export function KiSchritt(): React.JSX.Element {
   const t = useT()
-  const { profil, aendere } = useProfil()
-  if (!profil) return null
   return (
     <div className="setup-text">
       <h2>{t('ki.titel')}</h2>
-      <p>{t('ki.bald')}</p>
-      <label className="switch">
-        <input type="checkbox" checked={profil.ki.keineKi} onChange={(e) => aendere((p) => ({ ...p, ki: { ...p.ki, keineKi: e.target.checked } }))} />
-        <span>{t('ki.keine')}</span>
-      </label>
+      <KiWege />
     </div>
   )
 }

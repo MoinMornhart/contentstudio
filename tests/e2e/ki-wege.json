@@ -1,0 +1,5 @@
+[
+  { "js": "[...document.querySelectorAll('.step-link')].find((b) => b.textContent.includes('KI')).click(); true", "warte": 6000, "name": "ki-wege" },
+  { "js": "[...document.querySelectorAll('.ki-weg')].map((w) => w.querySelector('.ki-weg-kopf').innerText.replace(/\n/g, ' ')).join(' | ')", "warte": 200 },
+  { "js": "document.querySelector('.setup-body').scrollTop = 2000; true", "warte": 800, "name": "ki-wege-desktop" }
+]

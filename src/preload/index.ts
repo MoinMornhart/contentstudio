@@ -58,7 +58,14 @@ const api: CsApi = {
   profilMetadaten: (kontoId: string) => ipcRenderer.invoke(IPC.profilMetadaten, kontoId),
   onProfilGeaendert: (handler: (profil: Profil) => void) => ereignis(IPC.profilGeaendert, handler),
   programmeFinden: () => ipcRenderer.invoke(IPC.programmeFinden),
-  werkzeugeNoetig: () => ipcRenderer.invoke(IPC.werkzeugeNoetig)
+  werkzeugeNoetig: () => ipcRenderer.invoke(IPC.werkzeugeNoetig),
+  kiWege: () => ipcRenderer.invoke(IPC.kiWege),
+  kiSchluessel: (id: string, schluessel: string | null) => ipcRenderer.invoke(IPC.kiSchluessel, id, schluessel),
+  kiMonat: () => ipcRenderer.invoke(IPC.kiMonat),
+  kiTest: (id: string) => ipcRenderer.invoke(IPC.kiTest, id),
+  mcpZiele: () => ipcRenderer.invoke(IPC.mcpZiele),
+  mcpVerbinden: (id: string) => ipcRenderer.invoke(IPC.mcpVerbinden, id),
+  mcpEintrag: () => ipcRenderer.invoke(IPC.mcpEintrag)
 }
 
 contextBridge.exposeInMainWorld('cs', api)

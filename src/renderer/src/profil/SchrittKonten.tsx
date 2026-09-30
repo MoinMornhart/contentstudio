@@ -110,6 +110,7 @@ function Metadaten({ konto, setzeKonto }: { konto: Konto; setzeKonto: (fn: (k: K
       {fehler && <p className="warn small">{fehler}</p>}
       {m?.abgerufen && m.videos.length > 0 && (
         <>
+          <p className="muted small">{t('meta.frist')}</p>
           <p className="muted small">{t('meta.ergebnis', { anzahl: m.videos.length, datum: new Date(m.abgerufen).toLocaleDateString(locale) })}</p>
           <div className="meta-videos">
             {m.videos.slice(0, 6).map((v) => (
@@ -120,6 +121,15 @@ function Metadaten({ konto, setzeKonto }: { konto: Konto; setzeKonto: (fn: (k: K
             ))}
           </div>
           {m.videos.every((v) => v.dauer === null) && <p className="muted small">{t('meta.ohneLaenge')}</p>}
+          <p className="muted small">
+            {t('meta.quelle')}{' '}
+            <a href="https://www.youtube.com/t/terms" target="_blank" rel="noreferrer">
+              {t('meta.youtubeBedingungen')}
+            </a>
+          </p>
+          <button type="button" className="btn small" onClick={() => setzeKonto((alt) => ({ ...alt, metadaten: { zustimmung: false, abgerufen: null, videos: [] } }))}>
+            {t('meta.loeschen')}
+          </button>
         </>
       )}
     </div>

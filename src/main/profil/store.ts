@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events'
 import { copyFile, mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, extname, isAbsolute, join, normalize, relative } from 'node:path'
-import { leeresProfil, PROFIL_DATEI, profilAus, ProfilFehler, type Profil } from '@shared/profil'
+import { leeresProfil, ohneAlteMetadaten, PROFIL_DATEI, profilAus, ProfilFehler, type Profil } from '@shared/profil'
 import { ensureDataLayout, resolveDataDir } from '../data/datadir'
 import { liesMitKonfliktkopien, writeJsonAtomic } from '../data/jsonfile'
 import type { SettingsStore } from '../data/settings'
@@ -52,9 +52,12 @@ export class ProfilStore extends EventEmitter {
     } catch (err) {
       throw new ProfilFehler(`creator-profile.json: ${(err as Error).message}`)
     }
-    const profil = profilAus(roh)
+    const gelesen = profilAus(roh)
+    // YouTube-Richtlinie: abgelaufene öffentliche Kanal-Daten sofort entfernen (docs/ki-anbieter.md)
+    const profil = ohneAlteMetadaten(gelesen)
     this.cache = { ordner: dataDir, profil }
-    return profil
+    if (profil !== gelesen) await this.speichern(profil)
+    return this.cache.profil
   }
 
   /** Ganzes Profil speichern (vorher geprüft). Setzt „geaendert“. */

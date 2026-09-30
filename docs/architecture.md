@@ -86,3 +86,24 @@ Werkzeug-Ordner.
 
 Wichtig: Manche Umgebungen (z. B. Erweiterungen von VS Code) setzen `ELECTRON_RUN_AS_NODE=1`. Dann startet Electron als
 reines Node und lehnt die Schalter ab (Exit 9). `npm start` und `scripts/electron.mjs` entfernen die Variable.
+
+## 8. KI-Schicht
+
+Ein Auftrag, viele Anbieter (`src/main/ki/`). Welche Wege erlaubt sind und warum: [ki-anbieter.md](ki-anbieter.md).
+
+- **Auftrag** (`KiAuftrag`): Systemtext, Prompt, optionale Bilder, Zod-Schema, Stufe (`schnell`/`stark`). Aus dem Zod-Schema
+  entsteht das JSON-Schema für den Anbieter.
+- **Anbieter** (`KiAnbieter`): `pruefe()` (installiert, angemeldet – ohne Zugangsdaten zu lesen), `faehigkeiten`, `frage()`,
+  bei API-Schlüsseln `preis()`. Vorhanden: Ollama, LM Studio, llama.cpp (lokal), ChatGPT über die Codex-CLI (Abo),
+  Anthropic (offizielles SDK), OpenAI, Google Gemini, OpenRouter (eigene Schlüssel).
+- **Schicht** (`KiSchicht`): immer nur ein Auftrag gleichzeitig; Wege in der Reihenfolge des Profils; nicht bereite Wege,
+  Limits und Fehler führen zum nächsten Weg; Anbieter ohne Schema bekommen „nur JSON“ und bis zu zwei Reparaturrunden mit
+  den Zod-Fehlern; sind alle Wege am Limit, wartet die Aufgabe bis zum frühesten Reset.
+- **Kosten:** vor jedem Aufruf mit API-Schlüssel die Schätzung zur Freigabe (Anthropic-Preise aus der offiziellen Liste,
+  andere aus der öffentlichen OpenRouter-Modellliste), danach Buchung der echten Nutzung in die Monatssumme.
+- **Schlüssel:** Electron `safeStorage` (Windows DPAPI) in `%APPDATA%\ContentStudio\ki-schluessel.json`, nie im
+  Datenordner, nie in Protokollen (`ohneSchluessel` schwärzt Fehlertexte).
+- **Datenschutz:** Vor dem ersten Senden an einen Weg zeigt die App, was wohin geht; ohne Zustimmung wird nichts gesendet.
+- **MCP:** `src/mcp/` (stdio) mit Werkzeugen für Status und Aufgaben; Claude Desktop wird mit Sicherung automatisch
+  eingetragen, ChatGPT Desktop mit Anleitung zum Selbst-Eintragen. Funktionen der späteren Meilensteine kommen als weitere
+  Werkzeuge dazu.

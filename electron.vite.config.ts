@@ -10,8 +10,8 @@ export default defineConfig({
     resolve: { alias: shared },
     build: {
       rollupOptions: {
-        // Der MCP-Server (mcp.js, eigener Einstieg für MCP-fähige Desktop-Apps) kommt mit ROADMAP M3 dazu.
-        input: { index: resolve(__dirname, 'src/main/index.ts') }
+        // mcp.js: eigener Einstieg, den MCP-fähige Desktop-Apps mit ELECTRON_RUN_AS_NODE=1 starten
+        input: { index: resolve(__dirname, 'src/main/index.ts'), mcp: resolve(__dirname, 'src/mcp/server.ts') }
       }
     }
   },

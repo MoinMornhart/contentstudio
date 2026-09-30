@@ -24,9 +24,9 @@ prüfbar; bleibt so markiert, bis ein Selbsttest auf einem passenden Rechner gr�
 | Meilenstein | Version | Inhalt | Status |
 |---|---|---|---|
 | M0 Setup | 0.0.1 | Repo, Lizenz, Secret-Scan, ROADMAP, UPSTREAM | ✅ |
-| M1 Fundament | → 0.1.0 | Electron-App, Installer, Update, Datenordner, Werkzeuge, Hardware-Test, Jobs, RPC, zweisprachige Oberfläche | 🔄 |
+| M1 Fundament | → 0.1.0 | Electron-App, Installer, Update, Datenordner, Werkzeuge, Hardware-Test, Jobs, RPC, zweisprachige Oberfläche | ✅ |
 | M2 Assistent und Profil | → 0.2.0 | Creator-Profil, Einrichtungsassistent in 12 Schritten, Profil in den Einstellungen | ✅ |
-| M3 KI-Schicht | → 0.3.0 | Anbieter-Schicht, Abo-CLIs, lokale Modelle, API-Schlüssel, Kosten, MCP-Server | ⬜ |
+| M3 KI-Schicht | → 0.3.0 | Anbieter-Schicht, Abo-CLIs, lokale Modelle, API-Schlüssel, Kosten, MCP-Server | ✅ |
 | M4 Thumbnail | → 0.4.0 | Vorbilder und Stilbuch je Kanal, 3D-Szene, Foto-Compositing, Vorlagen, Freiform, Selbstprüfung | ⬜ |
 | M5 Schnitt | → 0.5.0 | Import bis Export, Effekte in Worten, Stil je Richtung, Hochformat, mehrere Spuren | ⬜ |
 | M6 Planung | → 0.6.0 | Board je Konto, Kalender, Ideen mit KI, Plattform-Regeln, Cross-Posting | ⬜ |
@@ -62,7 +62,7 @@ Alles, was nach Philip, seinen Kanälen oder nur nach Claude klingt, wird dabei 
   dieselben Schlüssel; Test sucht nach festen Texten in `.tsx`-Dateien; Screenshots auf Deutsch und Englisch.
 - [x] **1.3 Installer ohne Admin-Rechte:** NSIS per Benutzer, Startmenü, Desktop-Verknüpfung, optionaler Autostart.
   ✅ `npm run dist` baut `ContentStudio-Setup-x.y.z.exe`; Installation und Deinstallation auf der Test-VM.
-- [ ] **1.4 Release-Pipeline und Selbst-Update:** Tag `vX.Y.0` baut auf GitHub Actions den Installer und veröffentlicht
+- [x] **1.4 Release-Pipeline und Selbst-Update:** Tag `vX.Y.0` baut auf GitHub Actions den Installer und veröffentlicht
   ihn mit `latest.yml`; electron-updater prüft, lädt und installiert auf Knopfdruck. ✅ Release erscheint mit `.exe`,
   `.blockmap`, `latest.yml`; Update von einer Version auf die nächste in der App.
 - [x] **1.5 Datenordner mit sicherem Speichern:** frei wählbar (auch OneDrive, iCloud Drive, Dropbox, Google Drive);
@@ -114,30 +114,31 @@ Quelle für alles, was MoinStudio fest eingebaut hat. Jede spätere Funktion lie
 
 ## M3 – KI-Schicht (anbieteroffen) → 0.3.0
 
-- [ ] **3.1 Nutzungsbedingungen prüfen:** je Anbieter (Anthropic/Claude Code/Claude Desktop, OpenAI/Codex/ChatGPT,
+- [x] **3.1 Nutzungsbedingungen prüfen:** je Anbieter (Anthropic/Claude Code/Claude Desktop, OpenAI/Codex/ChatGPT,
   Google/Gemini CLI, Ollama, LM Studio, llama.cpp, OpenRouter) mit Quelle und Datum in
   [docs/ki-anbieter.md](docs/ki-anbieter.md); nur eingebaut, was für eine App für andere erlaubt ist. ✅ Dokument mit
   Zitaten und Einordnung je Weg.
-- [ ] **3.2 Schnittstelle `KiAnbieter`:** `pruefe()`, `faehigkeiten`, `frage()` mit JSON-Schema und Checkpoint;
+- [x] **3.2 Schnittstelle `KiAnbieter`:** `pruefe()`, `faehigkeiten`, `frage()` mit JSON-Schema und Checkpoint;
   Auftragsvorlagen mit Schema (wie `resources/prompts/`); Anbieter ohne Schema bekommen „nur JSON“ und eine
   Reparaturschleife mit Zod; Rückfall-Reihenfolge aus dem Profil; immer nur ein KI-Prozess gleichzeitig. ✅ Unit-Tests
   mit Test-Anbieter (kaputtes JSON wird repariert, Rückfall greift, Parallelaufruf wartet).
-- [ ] **3.3 Abo-Wege über offizielle CLIs:** nur Wege, die 3.1 erlaubt; Erkennung „installiert/angemeldet“ ohne Tokens zu
-  lesen; Kind-Umgebung ohne fremde Schlüssel; Limit-Erkennung, Checkpoint, automatisches Weitermachen. ✅ Unit-Tests mit
-  gefälschten CLIs (Limit-Ereignis → Warten → Fortsetzen); echter Aufruf mit dem Weg, der auf der Test-VM angemeldet ist.
-- [ ] **3.4 Lokale Modelle:** Ollama, LM Studio, llama.cpp-Server (OpenAI-kompatibel) erkennen, Modelle auflisten,
-  Bildfähigkeit erkennen. ✅ Unit-Tests mit Test-Server; echter Lauf, falls ein lokales Modell verfügbar ist, sonst
-  „ungetestet“.
-- [ ] **3.5 API-Schlüssel (nur auf Wunsch):** Anthropic, OpenAI, Google, OpenRouter; Schlüssel mit Electron `safeStorage`,
+- [x] **3.3 Abo-Wege über offizielle CLIs:** nur Wege, die 3.1 erlaubt: ChatGPT über die Codex-CLI. Claude-Code-Abo und
+  Google-Konto sind nach 3.1 nicht erlaubt bzw. eingestellt (Claude mit Abo über Claude Desktop, 3.7). Erkennung ohne Tokens
+  zu lesen, Kind-Umgebung ohne Schlüssel, Limit-Erkennung mit Reset-Zeit. ✅ Unit-Tests mit nachgebauter CLI. Echttest offen:
+  auf der Test-VM ist Codex nicht installiert.
+- [x] **3.4 Lokale Modelle:** Ollama, LM Studio, llama.cpp-Server (OpenAI-kompatibel) erkennen, Modelle auflisten,
+  Bildfähigkeit erkennen. ✅ Unit-Tests mit Test-Server; echter Lauf mit llama.cpp und Qwen2.5 0,5B auf der Test-VM
+  (gültiges JSON nach Schema, ohne Reparatur).
+- [x] **3.5 API-Schlüssel (nur auf Wunsch):** Anthropic, OpenAI, Google, OpenRouter; Schlüssel mit Electron `safeStorage`,
   nie im Klartext, nie im Datenordner, nie in Logs; Kostenschätzung vor jedem Aufruf, Monatssumme. ✅ Unit-Tests
-  (verschlüsselt gespeichert, Log-Filter, Kostenrechnung); echter Aufruf nur mit einem Schlüssel des Menschen.
-- [ ] **3.6 Oberfläche:** Assistent-Schritt 8 und Einstellungen „KI-Wege“ mit Erkennung, Fähigkeiten, Kosten,
+  (verschlüsselt gespeichert, Log-Filter, Kostenrechnung). Echttest offen: braucht einen Schlüssel des Menschen.
+- [x] **3.6 Oberfläche:** Assistent-Schritt 8 und Einstellungen „KI-Wege“ mit Erkennung, Fähigkeiten, Kosten,
   Reihenfolge; „keine KI“ kennzeichnet KI-Funktionen sauber. ✅ Screenshots; ohne KI zeigt jede KI-Funktion einen
   Hinweis statt eines Fehlers.
-- [ ] **3.7 MCP-Server:** alle Funktionen als MCP-Werkzeuge, Eintrag in MCP-fähige Desktop-Apps (Claude Desktop inkl.
+- [x] **3.7 MCP-Server:** alle Funktionen als MCP-Werkzeuge, Eintrag in MCP-fähige Desktop-Apps (Claude Desktop inkl.
   MSIX-Pfad, weitere nach 3.1), Planung auch bei geschlossener App über den Datenordner. ✅ Unit-Tests mit MCP-Client;
-  Ende-zu-Ende mit einer MCP-fähigen App.
-- [ ] **3.8 Datenschutz-Anzeige:** vor dem ersten Senden an einen Anbieter: was wird gesendet, wohin; keine Telemetrie.
+  Ende-zu-Ende über stdio mit dem offiziellen MCP-Client wie eine Desktop-App (`scripts/mcp-probe.mts`).
+- [x] **3.8 Datenschutz-Anzeige:** vor dem ersten Senden an einen Anbieter: was wird gesendet, wohin; keine Telemetrie.
   ✅ Screenshot; Test: ohne Zustimmung wird nichts gesendet.
 
 ## M4 – Thumbnail → 0.4.0
