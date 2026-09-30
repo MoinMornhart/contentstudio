@@ -24,6 +24,7 @@ and English.
 ## Neueste Änderungen
 
 <!-- CHANGELOG:START -->
+- **0.1.0** (2026-09-30): Fundament
 - **0.0.1** (2026-09-30): Projekt angelegt
 <!-- CHANGELOG:END -->
 
