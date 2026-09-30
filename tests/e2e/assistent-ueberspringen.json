@@ -1,0 +1,22 @@
+[
+  { "js": "window.__k = (text) => { const b = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === text); if (!b) throw new Error('Knopf fehlt: ' + text); b.click(); return true }; [...document.querySelectorAll('.step-link')][0].click(); true", "warte": 500 },
+  { "js": "__k('Los geht\\'s')", "warte": 400 },
+  { "js": "__k('Überspringen')", "warte": 400 },
+  { "js": "__k('Überspringen')", "warte": 400 },
+  { "js": "__k('Überspringen')", "warte": 400 },
+  { "js": "__k('Überspringen')", "warte": 400 },
+  { "js": "__k('Überspringen')", "warte": 400 },
+  { "js": "__k('Überspringen')", "warte": 400 },
+  { "js": "__k('Überspringen')", "warte": 400 },
+  { "js": "__k('Überspringen')", "warte": 400 },
+  { "js": "__k('Überspringen')", "warte": 400 },
+  { "js": "__k('Überspringen')", "warte": 1200, "name": "ueberspringen-fertig" },
+  { "js": "document.querySelector('.setup-body').innerText", "warte": 200 },
+  { "js": "__k('ContentStudio starten')", "warte": 1000 },
+  { "js": "!document.querySelector('.setup-overlay')", "warte": 300 },
+  { "reiter": "thumbnail", "js": "document.querySelector('.nachfrage') ? document.querySelector('.nachfrage').innerText.split('\\n')[0] : 'keine Nachfrage'", "warte": 800, "name": "ueberspringen-thumbnail" },
+  { "js": "__k('Kanal hinzufügen')", "warte": 900 },
+  { "js": "[...document.querySelectorAll('.nachfrage .chip')].find((c) => c.textContent.trim() === 'Echtes Foto / Facecam').click(); true", "warte": 1500, "name": "ueberspringen-nachfrage" },
+  { "reiter": "einstellungen", "js": "[...document.querySelectorAll('.profil-bereich summary')].find((s) => s.textContent.includes('Über dich')).click(); true", "warte": 700 },
+  { "js": "const i = document.querySelector('.profil-bereich[open] input.input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(i, 'Geändert in Einstellungen'); i.dispatchEvent(new Event('input', { bubbles: true })); true", "warte": 1500, "name": "einstellungen-profil" }
+]

@@ -8,6 +8,7 @@ import { DataDirCard } from '../components/DataDirCard'
 import { ToolsCard } from '../components/ToolsCard'
 import { HardwareCard } from '../components/HardwareCard'
 import { useI18n, useT } from '../i18n'
+import { ProfilKarte } from '../profil/ProfilKarte'
 
 function AutostartSwitch(): React.JSX.Element {
   const t = useT()
@@ -93,6 +94,7 @@ export function EinstellungenTab({ info }: { info: AppInfo | null }): React.JSX.
   return (
     <>
       <PageHeader title={t('tab.einstellungen')} subtitle={t('einst.untertitel')} />
+      <ProfilKarte />
       <div className="grid">
         <DataDirCard />
         <Card title={t('einst.sprache')}>

@@ -8,6 +8,25 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Added
+
+- Creator-Profil (`creator-profile.json` im Datenordner): versioniert, mit Migration, Standards für alles
+  Übersprungene; ungültige Werte werden abgelehnt statt still übernommen. Jede spätere Funktion liest daraus.
+- Einrichtungsassistent in 12 Schritten: Sprache, Datenordner, Über dich (Sprachen, Team), beliebig viele Kanäle auf
+  allen Plattformen (Richtungen frei wählbar, Spiele, Formate, Upload-Rhythmus), Aussehen im Bild je Kanal (Foto,
+  Spiel-Avatar mit Minecraft-Skin per Datei oder Name, VTuber/3D-Modell, Maskottchen, keine Person), Freunde,
+  Vorbilder, Marke (Logos, Farben, Schrift-Vorschläge je Richtung), KI (folgt), Programme mit Erkennung, Hardware-Test,
+  nur die nötigen Werkzeuge (Blender nur bei 3D), Zusammenfassung mit erstem Vorschlag.
+- Jeder Schritt ist überspringbar; der Thumbnail-Reiter fragt fehlende Angaben im passenden Moment nach.
+- Öffentliche YouTube-Daten per Link, nur mit Zustimmung (eigener API-Schlüssel oder einzelner Feed-Abruf), siehe
+  `docs/datenquellen.md`.
+- Profil in den Einstellungen bearbeitbar, Änderungen wirken sofort.
+- Ende-zu-Ende-Durchläufe des Assistenten (`scripts/e2e.mts`, `tests/e2e/`).
+
+### Fixed
+
+- Schnelle Eingaben hintereinander gingen verloren (Änderungen rechneten aus einem veralteten Stand).
+
 ## [0.1.0] - 2026-09-30
 
 > Fundament

@@ -13,5 +13,5 @@ Der Neubau beruht auf MoinStudio v0.36.2. Neuere MoinStudio-Versionen werden nac
 | v0.36.2 und älter: `config/channels.yaml` | Philip-spezifisch | übersprungen: Philips Kanäle; ersetzt durch Konten im Creator-Profil | – |
 | v0.36.2 und älter: `scripts/progress.mts`, Werkstatt-/Fortschrittsseite | Philip-spezifisch | übersprungen: Philips Fernkontrolle | – |
 | v0.36.2 und älter: `docs/tests/*`, Screenshots | Philip-spezifisch | übersprungen: Testberichte mit Philips Daten; ContentStudio schreibt eigene | – |
-| v0.36.2 und älter: `.github/workflows/vibeworks-check.yml` | Philip-spezifisch | übersprungen: an Philips VibeWorks gebunden | – |
+| v0.36.2 und älter: `.github/workflows/vibeworks-check.yml` | Philip-spezifisch | übersprungen: an Philips VibeWorks gebunden (VibeWorks legt für ContentStudio am 30.09.2026 selbst einen eigenen Check an) | – |
 | v0.36.2 und älter: `config/vorbilder.json`, `docs/research/stilbuch.md` | Richtungsspezifisch | übernommen als Beispiel-Stilbuch der Richtung „Minecraft“, nur Regeln und öffentliche Titel, keine Bilder | ab v0.4.0 |

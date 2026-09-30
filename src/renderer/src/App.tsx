@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { TABS, type AppInfo, type TabId } from '@shared/app'
 import { LeererReiter } from './tabs/LeererReiter'
+import { ThumbnailTab } from './tabs/ThumbnailTab'
 import { EinstellungenTab } from './tabs/EinstellungenTab'
 import { UpdateBanner } from './components/UpdateBanner'
 import { HardwareBanner } from './components/HardwareCard'
@@ -55,7 +56,7 @@ export function App(): React.JSX.Element {
       <main className="content" role="tabpanel">
         <UpdateBanner />
         <HardwareBanner />
-        {tab === 'thumbnail' && <LeererReiter titel="leer.thumbnail.titel" text="leer.thumbnail.text" />}
+        {tab === 'thumbnail' && <ThumbnailTab />}
         {tab === 'schnitt' && <LeererReiter titel="leer.schnitt.titel" text="leer.schnitt.text" />}
         {tab === 'planung' && <LeererReiter titel="leer.planung.titel" text="leer.planung.text" />}
         {tab === 'einstellungen' && <EinstellungenTab info={info} />}

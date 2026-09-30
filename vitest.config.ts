@@ -6,6 +6,7 @@ export default defineConfig({
   test: {
     include: ['tests/unit/**/*.test.ts'],
     environment: 'node',
-    globalSetup: ['tests/aufraeumen.ts']
+    globalSetup: ['tests/aufraeumen.ts'],
+    setupFiles: ['tests/sprache.ts']
   }
 })

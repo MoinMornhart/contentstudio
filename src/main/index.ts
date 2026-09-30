@@ -16,6 +16,12 @@ import { setupJobs } from './jobs/setup'
 import { startAppRpc } from './rpc/app-rpc'
 import { erzwingeSprache, registerSetupIpc, spracheStand } from './setup/ipc'
 import { setzeHauptSprache } from './i18n'
+import { ProfilStore } from './profil/store'
+import { registerProfilIpc } from './profil/ipc'
+import { brauchtDreiD } from '@shared/profil'
+
+// Tests: eigener Einstellungsordner statt %APPDATA%\ContentStudio (vor allem anderen setzen)
+if (process.env['CS_USERDATA']) app.setPath('userData', process.env['CS_USERDATA'])
 
 const arg = (name: string): string | undefined => process.argv.find((a) => a.startsWith(`--cs-${name}=`))?.split('=').slice(1).join('=')
 const screenshotDir = parseScreenshotArg(process.argv)
@@ -24,10 +30,13 @@ const spracheArg = arg('sprache')
 const mainWindow = (): BrowserWindow | undefined => BrowserWindow.getAllWindows()[0]
 const settings = new SettingsStore(app.getPath('userData'))
 const tools = new ToolManager(werkzeugRoot())
-// Blender nur, wenn 3D gebraucht wird. Bis zum Creator-Profil (ROADMAP M2): wenn es schon installiert ist.
-const brauchtBlender = async (): Promise<boolean> => (await tools.exePath(BLENDER_PRIMARY)) !== null || (await tools.exePath(BLENDER_FALLBACK)) !== null
+const profil = new ProfilStore(settings)
+// Blender nur, wenn das Profil 3D braucht (Spiel-Avatar, 3D-Modell) oder es schon installiert ist.
+const brauchtBlender = async (): Promise<boolean> =>
+  (await profil.laden().then(brauchtDreiD, () => false)) || (await tools.exePath(BLENDER_PRIMARY)) !== null || (await tools.exePath(BLENDER_FALLBACK)) !== null
 const hardware = new HardwareController(tools, localRoot(), mainWindow, brauchtBlender)
-registerDataIpc(settings, mainWindow)
+registerDataIpc(settings, mainWindow, () => profil.vergessen())
+registerProfilIpc(profil, mainWindow)
 registerToolsIpc(tools, mainWindow)
 hardware.register()
 // Im Screenshot-Modus den Assistenten nur zeigen, wenn er ausdrücklich aufgenommen werden soll

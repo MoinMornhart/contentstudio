@@ -2,6 +2,7 @@
 import type { HardwareState } from './hardware'
 import type { QueueState } from './jobs'
 import type { Schluessel, Sprache } from './i18n'
+import type { Konto, Profil, Programm } from './profil'
 
 /** Reiter der Hauptoberfläche. Reihenfolge = Reihenfolge in der Navigation. */
 export const TABS = [
@@ -45,8 +46,34 @@ export const IPC = {
   jobsImage: 'jobs:image',
   setupState: 'setup:state',
   setupComplete: 'setup:complete',
-  setupStep: 'ui:setup-step'
+  setupStep: 'ui:setup-step',
+  profilLaden: 'profil:laden',
+  profilSpeichern: 'profil:speichern',
+  profilDateien: 'profil:dateien',
+  profilSkinName: 'profil:skin-name',
+  profilBild: 'profil:bild',
+  profilMetadaten: 'profil:metadaten',
+  /** Ereignis: Profil wurde geändert (auch vom anderen Gerät oder aus den Einstellungen) */
+  profilGeaendert: 'profil:geaendert',
+  programmeFinden: 'programme:finden',
+  werkzeugeNoetig: 'tools:noetig'
 } as const
+
+/** Wofür eine Datei hochgeladen wird: bestimmt Dateityp-Filter, Mehrfachauswahl und Zielordner im Datenordner. */
+export type ProfilDateiZweck = 'foto' | 'skin' | 'bilder' | 'modell' | 'maskottchen' | 'logo' | 'schrift' | 'vorbild'
+
+export interface ProfilStand {
+  profil: Profil
+  /** Fehler beim Lesen einer vorhandenen Datei (Profil bleibt dann leer, die Datei unangetastet) */
+  fehler: string | null
+}
+
+/** Gefundenes Programm (Premiere, Resolve, OBS …) */
+export interface ProgrammFundInfo {
+  id: Programm
+  pfad: string
+  version: string | null
+}
 
 export type JobAction = 'pause' | 'resume' | 'cancel' | 'pauseAll' | 'resumeAll'
 
@@ -147,4 +174,19 @@ export interface CsApi {
   setupState(): Promise<boolean>
   setupComplete(done: boolean): Promise<boolean>
   onSetupStep(handler: (step: number) => void): () => void
+  /** Creator-Profil (ROADMAP M2) */
+  profilLaden(): Promise<ProfilStand>
+  profilSpeichern(profil: Profil): Promise<Profil>
+  /** Dateidialog: kopiert gewählte Dateien in den Datenordner und liefert relative Pfade (leer bei Abbruch) */
+  profilDateien(zweck: ProfilDateiZweck, kontoId?: string): Promise<string[]>
+  /** Minecraft-Skin per Accountname laden und ablegen */
+  profilSkinName(name: string): Promise<{ datei: string; slim: boolean; name: string }>
+  /** Bild aus dem Datenordner als Data-URL */
+  profilBild(datei: string): Promise<string | null>
+  /** Öffentliche Metadaten eines Kontos abrufen (nur mit gespeicherter Zustimmung); liefert das aktualisierte Konto */
+  profilMetadaten(kontoId: string): Promise<Konto>
+  onProfilGeaendert(handler: (profil: Profil) => void): () => void
+  programmeFinden(): Promise<ProgrammFundInfo[]>
+  /** Welche Werkzeuge braucht dieses Profil? */
+  werkzeugeNoetig(): Promise<ToolId[]>
 }

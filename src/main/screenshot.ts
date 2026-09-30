@@ -6,7 +6,7 @@ import { IPC, TABS } from '@shared/app'
 const FLAG = '--cs-screenshot='
 /** Zusätzlich zu `--cs-screenshot=`: statt der Reiter die Schritte des Einrichtungsassistenten aufnehmen */
 export const SETUP_FLAG = '--cs-screenshot-setup'
-export const SETUP_STEPS = 4
+export const SETUP_STEPS = 12
 
 /** Liest `--cs-screenshot=<ordner>` aus den Startargumenten (für Selbstprüfung und README-Bilder). */
 export function parseScreenshotArg(argv: readonly string[]): string | null {
@@ -31,6 +31,8 @@ export async function runScreenshotMode(win: BrowserWindow, dir: string): Promis
       await wait(1500)
       await writeFile(join(dir, `setup-${step + 1}.png`), (await win.webContents.capturePage()).toPNG())
     }
+    // Durchlauf-Tests im Assistenten (CS_SCREENSHOT_SCHRITTE)
+    await zusatzSchritte(win, dir)
     return
   }
   for (const tab of TABS) {
@@ -54,7 +56,9 @@ async function zusatzSchritte(win: BrowserWindow, dir: string): Promise<void> {
   const ergebnisse: unknown[] = []
   for (const s of schritte) {
     if (s.reiter) win.webContents.send(IPC.selectTab, s.reiter)
-    ergebnisse.push(s.js ? await win.webContents.executeJavaScript(s.js, true).catch((e: Error) => `Fehler: ${e.message}`) : null)
+    // try/catch im Skript selbst, damit die echte Fehlermeldung zurückkommt (Electron meldet sonst nur „Script failed“)
+    const code = s.js ? `try { ${s.js} } catch (e) { 'Fehler: ' + (e && e.message) }` : null
+    ergebnisse.push(code ? await win.webContents.executeJavaScript(code, true).catch((e: Error) => `Fehler: ${e.message}`) : null)
     await wait(s.warte ?? 800)
     if (s.name) await writeFile(join(dir, `${s.name}.png`), (await aufnahme(win)).toPNG())
   }

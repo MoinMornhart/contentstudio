@@ -1,84 +1,68 @@
-// Herkunft: MoinStudio src/renderer/src/components/SetupWizard.tsx (MIT). Fundament-Fassung; die vollständigen
-// 12 Schritte mit Creator-Profil folgen in ROADMAP M2.
+// Herkunft: MoinStudio src/renderer/src/components/SetupWizard.tsx (MIT), erweitert auf 12 Schritte mit Creator-Profil
+// (ROADMAP M2). Jeder Schritt ist überspringbar; Übersprungenes wird im passenden Moment nachgefragt.
 import { useEffect, useState } from 'react'
 import type { Schluessel } from '@shared/i18n'
 import { DataDirCard } from './DataDirCard'
-import { HardwareCard, useHardwareState } from './HardwareCard'
-import { ToolsCard } from './ToolsCard'
 import { SpracheWahl } from '../tabs/EinstellungenTab'
+import { PersonSchritt, KontenSchritt } from '../profil/SchrittKonten'
+import { DarstellungSchritt } from '../profil/SchrittDarstellung'
+import { MarkeSchritt, VorbilderSchritt } from '../profil/SchrittMarke'
+import { HardwareSchritt, KiSchritt, ProgrammeSchritt, WerkzeugeSchritt, Zusammenfassung } from '../profil/SchrittRest'
+import { useProfil } from '../profil/useProfil'
 import { useT } from '../i18n'
 
-const STEPS: Schluessel[] = ['setup.schritt.willkommen', 'setup.schritt.datenordner', 'setup.schritt.werkzeuge', 'setup.schritt.fertig']
+interface Schritt {
+  id: string
+  titel: Schluessel
+  /** false: Schritt lässt sich nicht überspringen (Willkommen, Zusammenfassung) */
+  ueberspringbar: boolean
+  inhalt: () => React.JSX.Element | null
+}
 
-function Welcome(): React.JSX.Element {
+function Willkommen(): React.JSX.Element {
   const t = useT()
   return (
     <div className="setup-text">
       <h2>{t('setup.willkommen.titel')}</h2>
       <p>{t('setup.willkommen.text')}</p>
-      <label className="feld">
+      <div className="feld">
         <span>{t('einst.sprache')}</span>
         <SpracheWahl />
-      </label>
+      </div>
       <p className="muted">{t('setup.willkommen.ueberspringen')}</p>
     </div>
   )
 }
 
-function ToolsStep(): React.JSX.Element {
-  const t = useT()
-  const hw = useHardwareState()
-  const [starting, setStarting] = useState(false)
-  const running = hw?.state === 'running'
-  const start = async (): Promise<void> => {
-    setStarting(true)
-    try {
-      await window.cs.installTool('uv')
-      await window.cs.runHardwareTest()
-    } finally {
-      setStarting(false)
-    }
-  }
-  return (
-    <>
-      <div className="setup-text">
-        <p>{t('setup.werkzeuge.text')}</p>
-        {hw?.state !== 'done' && (
-          <button className="btn primary" disabled={running || starting} onClick={() => void start()}>
-            {running || starting ? t('setup.werkzeuge.laeuft') : t('setup.werkzeuge.start')}
-          </button>
-        )}
-      </div>
-      <div className="grid">
-        <HardwareCard />
-        <ToolsCard />
-      </div>
-    </>
-  )
-}
-
-function Done(): React.JSX.Element {
-  const t = useT()
-  return (
-    <div className="setup-text">
-      <h2>{t('setup.fertig.titel')}</h2>
-      <p>{t('setup.fertig.gutZuWissen')}</p>
-      <ul>
-        <li>{t('setup.fertig.updates')}</li>
-        <li>{t('setup.fertig.smartscreen')}</li>
-        <li>{t('setup.fertig.rechenlast')}</li>
-      </ul>
-    </div>
-  )
-}
+export const SCHRITTE: Schritt[] = [
+  { id: 'willkommen', titel: 'assi.schritt.willkommen', ueberspringbar: false, inhalt: Willkommen },
+  { id: 'datenordner', titel: 'assi.schritt.datenordner', ueberspringbar: true, inhalt: DataDirCard },
+  { id: 'person', titel: 'assi.schritt.person', ueberspringbar: true, inhalt: PersonSchritt },
+  { id: 'konten', titel: 'assi.schritt.konten', ueberspringbar: true, inhalt: KontenSchritt },
+  { id: 'darstellung', titel: 'assi.schritt.darstellung', ueberspringbar: true, inhalt: DarstellungSchritt },
+  { id: 'vorbilder', titel: 'assi.schritt.vorbilder', ueberspringbar: true, inhalt: VorbilderSchritt },
+  { id: 'marke', titel: 'assi.schritt.marke', ueberspringbar: true, inhalt: MarkeSchritt },
+  { id: 'ki', titel: 'assi.schritt.ki', ueberspringbar: true, inhalt: KiSchritt },
+  { id: 'programme', titel: 'assi.schritt.programme', ueberspringbar: true, inhalt: ProgrammeSchritt },
+  { id: 'hardware', titel: 'assi.schritt.hardware', ueberspringbar: true, inhalt: HardwareSchritt },
+  { id: 'werkzeuge', titel: 'assi.schritt.werkzeuge', ueberspringbar: true, inhalt: WerkzeugeSchritt },
+  { id: 'fertig', titel: 'assi.schritt.fertig', ueberspringbar: false, inhalt: Zusammenfassung }
+]
 
 /** Einrichtungsassistent beim ersten Start (liegt über der ganzen App). */
 export function SetupWizard({ onDone }: { onDone: () => void }): React.JSX.Element {
   const t = useT()
-  const [step, setStep] = useState(0)
-  useEffect(() => window.cs.onSetupStep(setStep), [])
-  const last = step === STEPS.length - 1
-  const finish = async (): Promise<void> => {
+  const { profil, offen, status, fehler } = useProfil()
+  const [nr, setNr] = useState(0)
+  useEffect(() => window.cs.onSetupStep(setNr), [])
+  const schritt = SCHRITTE[nr]!
+  const letzter = nr === SCHRITTE.length - 1
+  const Inhalt = schritt.inhalt
+  const weiter = (uebersprungen: boolean): void => {
+    if (schritt.ueberspringbar) offen(schritt.id, uebersprungen)
+    setNr(nr + 1)
+  }
+  const fertig = async (): Promise<void> => {
     await window.cs.setupComplete(true)
     onDone()
   }
@@ -86,33 +70,46 @@ export function SetupWizard({ onDone }: { onDone: () => void }): React.JSX.Eleme
     <div className="setup-overlay" role="dialog" aria-modal="true" aria-label={t('setup.titel')}>
       <div className="setup-panel">
         <ol className="setup-steps">
-          {STEPS.map((s, i) => (
-            <li key={s} className={i === step ? 'active' : i < step ? 'done' : ''}>
-              <span className="num">{i < step ? '✓' : i + 1}</span>
-              {t(s)}
-            </li>
-          ))}
+          {SCHRITTE.map((s, i) => {
+            const uebersprungen = profil?.offen.includes(s.id)
+            return (
+              <li key={s.id} className={i === nr ? 'active' : i < nr ? (uebersprungen ? 'skipped' : 'done') : ''} title={uebersprungen ? t('assi.uebersprungen') : undefined}>
+                <button type="button" className="step-link" onClick={() => setNr(i)}>
+                  <span className="num">{i < nr && !uebersprungen ? '✓' : i + 1}</span>
+                  {t(s.titel)}
+                </button>
+              </li>
+            )
+          })}
         </ol>
         <div className="setup-body">
-          {step === 0 && <Welcome />}
-          {step === 1 && <DataDirCard />}
-          {step === 2 && <ToolsStep />}
-          {step === 3 && <Done />}
+          {fehler && <p className="warn">{t('profil.fehlerLaden', { text: fehler })}</p>}
+          <Inhalt />
         </div>
         <div className="setup-nav">
-          <button className="btn" disabled={step === 0} onClick={() => setStep(step - 1)}>
+          <button className="btn" disabled={nr === 0} onClick={() => setNr(nr - 1)}>
             {t('setup.zurueck')}
           </button>
-          <span className="muted small">{t('setup.schrittVon', { nr: step + 1, gesamt: STEPS.length })}</span>
-          {last ? (
-            <button className="btn primary" onClick={() => void finish()}>
-              {t('setup.starten')}
-            </button>
-          ) : (
-            <button className="btn primary" onClick={() => setStep(step + 1)}>
-              {step === 0 ? t('setup.los') : t('setup.weiter')}
-            </button>
-          )}
+          <span className="muted small">
+            {t('setup.schrittVon', { nr: nr + 1, gesamt: SCHRITTE.length })}
+            {status === 'speichert' ? ` · ${t('profil.speichert')}` : status === 'gespeichert' ? ` · ${t('profil.gespeichert')}` : ''}
+          </span>
+          <span className="row" style={{ marginTop: 0 }}>
+            {schritt.ueberspringbar && (
+              <button className="btn" onClick={() => weiter(true)}>
+                {t('assi.ueberspringen')}
+              </button>
+            )}
+            {letzter ? (
+              <button className="btn primary" onClick={() => void fertig()}>
+                {t('setup.starten')}
+              </button>
+            ) : (
+              <button className="btn primary" onClick={() => weiter(false)}>
+                {nr === 0 ? t('setup.los') : t('setup.weiter')}
+              </button>
+            )}
+          </span>
         </div>
       </div>
     </div>

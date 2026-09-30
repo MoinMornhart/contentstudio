@@ -25,7 +25,7 @@ prüfbar; bleibt so markiert, bis ein Selbsttest auf einem passenden Rechner gr�
 |---|---|---|---|
 | M0 Setup | 0.0.1 | Repo, Lizenz, Secret-Scan, ROADMAP, UPSTREAM | ✅ |
 | M1 Fundament | → 0.1.0 | Electron-App, Installer, Update, Datenordner, Werkzeuge, Hardware-Test, Jobs, RPC, zweisprachige Oberfläche | 🔄 |
-| M2 Assistent und Profil | → 0.2.0 | Creator-Profil, Einrichtungsassistent in 12 Schritten, Profil in den Einstellungen | ⬜ |
+| M2 Assistent und Profil | → 0.2.0 | Creator-Profil, Einrichtungsassistent in 12 Schritten, Profil in den Einstellungen | ✅ |
 | M3 KI-Schicht | → 0.3.0 | Anbieter-Schicht, Abo-CLIs, lokale Modelle, API-Schlüssel, Kosten, MCP-Server | ⬜ |
 | M4 Thumbnail | → 0.4.0 | Vorbilder und Stilbuch je Kanal, 3D-Szene, Foto-Compositing, Vorlagen, Freiform, Selbstprüfung | ⬜ |
 | M5 Schnitt | → 0.5.0 | Import bis Export, Effekte in Worten, Stil je Richtung, Hochformat, mehrere Spuren | ⬜ |
@@ -89,27 +89,27 @@ Alles, was nach Philip, seinen Kanälen oder nur nach Claude klingt, wird dabei 
 Das Creator-Profil (`creator-profile.json` im Datenordner, Zod-Schema mit Versionsnummer und Migration) ist die einzige
 Quelle für alles, was MoinStudio fest eingebaut hat. Jede spätere Funktion liest daraus.
 
-- [ ] **2.1 Profil-Schema:** Person/Team, Sprachen, Konten (Plattform, Handle, Sprache, Richtungen, Formate, Rhythmus,
+- [x] **2.1 Profil-Schema:** Person/Team, Sprachen, Konten (Plattform, Handle, Sprache, Richtungen, Formate, Rhythmus,
   Link), Darstellung je Kanal, Freunde, Vorbilder, Marke, KI-Wege, Programme, Einstellungen; Standardwerte für alles
   Übersprungene; Migration älterer Versionen. ✅ Unit-Tests: leeres Profil gültig, jede Migration, ungültige Werte werden
   abgelehnt statt still übernommen.
-- [ ] **2.2 Assistent Schritte 1–4:** Willkommen und Sprache, Datenordner, Wer bist du?, Kanäle und Konten (beliebig
+- [x] **2.2 Assistent Schritte 1–4:** Willkommen und Sprache, Datenordner, Wer bist du?, Kanäle und Konten (beliebig
   viele, alle Plattformen aus dem Auftrag, Richtungen mehrfach oder frei). ✅ Durchlauf mit drei Konten auf zwei
   Plattformen; Profil stimmt; Screenshots DE/EN.
-- [ ] **2.3 Öffentliche Metadaten per Link (nur mit Zustimmung):** Titel, Thumbnails und Längen der letzten Videos ohne
+- [x] **2.3 Öffentliche Metadaten per Link (nur mit Zustimmung):** Titel, Thumbnails und Längen der letzten Videos ohne
   Anmeldung und ohne API-Schlüssel (YouTube-Feed, sonst Seite ohne Login), klare Zustimmungsfrage vorher. ✅ Unit-Test
   mit gespeicherter Beispielantwort; echter Abruf eines öffentlichen Test-Kanals.
-- [ ] **2.4 Assistent Schritte 5–7:** Darstellung je Kanal (Foto/Facecam, Spiel-Avatar inkl. Minecraft-Skin per Datei oder
+- [x] **2.4 Assistent Schritte 5–7:** Darstellung je Kanal (Foto/Facecam, Spiel-Avatar inkl. Minecraft-Skin per Datei oder
   Name, VTuber/3D-Modell VRM/GLB/FBX, Maskottchen/Logo, keine Person), Freunde und Mitspieler, Vorbilder (Kanäle nennen,
   Bilder hochladen), Marke (Logos, Farben, Schrift mit Vorschlägen je Richtung, Wasserzeichen). ✅ Durchlauf mit jeder
   Darstellungsart; Dateien landen im Datenordner, nie im Repo.
-- [ ] **2.5 Assistent Schritte 8–12:** KI-Wege (Erkennung aus M3, bis dahin Platzhalter „keine KI“), Programme,
+- [x] **2.5 Assistent Schritte 8–12:** KI-Wege (Erkennung aus M3, bis dahin Platzhalter „keine KI“), Programme,
   Hardware-Test, Werkzeuge nur nach Bedarf (Blender nur bei 3D), Zusammenfassung „Das kann ContentStudio jetzt für dich“
   mit erstem Vorschlag. ✅ Profil ohne 3D lädt kein Blender; Zusammenfassung nennt nur verfügbare Funktionen.
-- [ ] **2.6 Überspringen und später nachfragen:** jeder Schritt überspringbar; fehlende Angaben werden im passenden Moment
+- [x] **2.6 Überspringen und später nachfragen:** jeder Schritt überspringbar; fehlende Angaben werden im passenden Moment
   nachgefragt (z. B. beim ersten Thumbnail). ✅ Kompletter Durchlauf mit „Überspringen“ überall → App nutzbar, sinnvolle
   Standards; Nachfrage erscheint beim ersten Thumbnail.
-- [ ] **2.7 Profil in den Einstellungen:** Profil, Konten, Darstellung, Marke, Programme, Sprache änderbar. ✅ Änderung in
+- [x] **2.7 Profil in den Einstellungen:** Profil, Konten, Darstellung, Marke, Programme, Sprache änderbar. ✅ Änderung in
   den Einstellungen wirkt ohne Neustart.
 
 ## M3 – KI-Schicht (anbieteroffen) → 0.3.0

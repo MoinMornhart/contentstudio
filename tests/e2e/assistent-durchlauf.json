@@ -1,0 +1,21 @@
+[
+  { "js": "window.__h = { knopf: (text, nr = 0) => { const b = [...document.querySelectorAll('button')].filter((x) => x.textContent.trim() === text)[nr]; if (!b) throw new Error('Knopf fehlt: ' + text); b.click(); return true }, wert: (el, v) => { const p = el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(p, 'value').set.call(el, v); el.dispatchEvent(new Event(el instanceof HTMLSelectElement ? 'change' : 'input', { bubbles: true })); return true }, schritt: (text) => { const b = [...document.querySelectorAll('.step-link')].find((x) => x.textContent.includes(text)); b.click(); return true }, karten: () => [...document.querySelectorAll('.konto')] }; true", "warte": 200 },
+  { "js": "__h.schritt('Über dich')", "warte": 500 },
+  { "js": "__h.wert(document.querySelector('.setup-body input.input'), 'Test Kim'); __h.knopf('Deutsch'); __h.knopf('Englisch'); true", "warte": 800 },
+  { "js": "__h.schritt('Kanäle & Konten')", "warte": 500 },
+  { "js": "__h.knopf('Kanal hinzufügen'); true", "warte": 700 },
+  { "js": "__h.knopf('Kanal hinzufügen'); true", "warte": 700 },
+  { "js": "__h.knopf('Kanal hinzufügen'); true", "warte": 900 },
+  { "js": "const k = __h.karten(); const f = (i) => k[i].querySelectorAll('input.input'); __h.wert(f(0)[0], '@kochmitkim'); __h.wert(k[1].querySelector('select'), 'tiktok'); __h.wert(f(1)[0], 'kim.kocht'); __h.wert(f(2)[0], '@kimspielt'); true", "warte": 900 },
+  { "js": "const k = __h.karten(); const chip = (i, text) => [...k[i].querySelectorAll('.chip')].find((c) => c.textContent.trim() === text).click(); chip(0, 'Kochen'); chip(0, 'Langvideo'); chip(0, 'Mi'); chip(1, 'Kochen'); chip(1, 'Short'); chip(2, 'Gaming'); chip(2, 'Langvideo'); chip(2, 'Sa'); true", "warte": 900 },
+  { "js": "const k = __h.karten(); const felder = k[2].querySelectorAll('.freie-eintraege input.input'); __h.wert(felder[felder.length - 1], 'Minecraft'); true", "warte": 400 },
+  { "js": "const k = __h.karten(); const knoepfe = [...k[2].querySelectorAll('.freie-eintraege button')].filter((b) => b.textContent.trim() === 'Hinzufügen'); knoepfe[knoepfe.length - 1].click(); true", "warte": 900, "name": "durchlauf-konten" },
+  { "js": "__h.schritt('Du im Bild')", "warte": 600 },
+  { "js": "const karten = [...document.querySelectorAll('.setup-body .card')]; const chip = (i, text) => [...karten[i].querySelectorAll('.chip')].find((c) => c.textContent.trim() === text).click(); chip(0, 'Echtes Foto / Facecam'); chip(1, 'Keine Person im Bild'); chip(2, 'Spiel-Avatar'); true", "warte": 1000, "name": "durchlauf-darstellung" },
+  { "js": "__h.schritt('Marke')", "warte": 600 },
+  { "js": "__h.knopf('Farbe hinzufügen'); [...document.querySelectorAll('.setup-body .chip')].find((c) => c.textContent.trim() === 'Minecraft').click(); true", "warte": 900, "name": "durchlauf-marke" },
+  { "js": "__h.schritt('Programme')", "warte": 900 },
+  { "js": "[...document.querySelectorAll('.programme label')].find((l) => l.textContent.includes('DaVinci Resolve')).querySelector('input').click(); true", "warte": 900 },
+  { "js": "__h.schritt('Zusammenfassung')", "warte": 1500, "name": "durchlauf-fertig" },
+  { "js": "document.querySelector('.setup-body').innerText", "warte": 200 }
+]

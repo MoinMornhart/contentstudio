@@ -1,6 +1,7 @@
 // Herkunft: MoinStudio src/preload/index.ts (MIT).
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import { IPC, isTabId, type CsApi, type JobAction, type TabId, type ToolId, type ToolProgressEvent, type UpdateStatus } from '@shared/app'
+import { IPC, isTabId, type CsApi, type JobAction, type ProfilDateiZweck, type TabId, type ToolId, type ToolProgressEvent, type UpdateStatus } from '@shared/app'
+import type { Profil } from '@shared/profil'
 import type { HardwareState } from '@shared/hardware'
 import type { Sprache } from '@shared/i18n'
 import type { QueueState } from '@shared/jobs'
@@ -48,7 +49,16 @@ const api: CsApi = {
     return ereignis<unknown>(IPC.setupStep, (step) => {
       if (typeof step === 'number') handler(step)
     })
-  }
+  },
+  profilLaden: () => ipcRenderer.invoke(IPC.profilLaden),
+  profilSpeichern: (profil: Profil) => ipcRenderer.invoke(IPC.profilSpeichern, profil),
+  profilDateien: (zweck: ProfilDateiZweck, kontoId?: string) => ipcRenderer.invoke(IPC.profilDateien, zweck, kontoId),
+  profilSkinName: (name: string) => ipcRenderer.invoke(IPC.profilSkinName, name),
+  profilBild: (datei: string) => ipcRenderer.invoke(IPC.profilBild, datei),
+  profilMetadaten: (kontoId: string) => ipcRenderer.invoke(IPC.profilMetadaten, kontoId),
+  onProfilGeaendert: (handler: (profil: Profil) => void) => ereignis(IPC.profilGeaendert, handler),
+  programmeFinden: () => ipcRenderer.invoke(IPC.programmeFinden),
+  werkzeugeNoetig: () => ipcRenderer.invoke(IPC.werkzeugeNoetig)
 }
 
 contextBridge.exposeInMainWorld('cs', api)

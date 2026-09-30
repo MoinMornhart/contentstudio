@@ -39,7 +39,7 @@ describe('Wörterbücher', () => {
 
 describe('Keine fest verdrahteten Texte in der Oberfläche', () => {
   // Erlaubt: Eigennamen, die in jeder Sprache gleich sind
-  const ERLAUBT = new Set(['Electron', 'Chromium', 'Node'])
+  const ERLAUBT = new Set(['Electron', 'Chromium', 'Node', 'Minecraft'])
   const buchstaben = /[A-Za-zÄÖÜäöüß]{2,}/
   const SICHTBAR = new Set(['title', 'placeholder', 'aria-label', 'alt'])
 

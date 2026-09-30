@@ -16,7 +16,7 @@ export async function dataDirStatus(settings: SettingsStore): Promise<DataDirSta
   return { dataDir, available, conflicts: available ? await findSyncConflicts(dataDir) : [] }
 }
 
-export function registerDataIpc(settings: SettingsStore, getWindow: () => BrowserWindow | undefined): void {
+export function registerDataIpc(settings: SettingsStore, getWindow: () => BrowserWindow | undefined, gewechselt: () => void = () => undefined): void {
   ipcMain.handle(IPC.dataStatus, () => dataDirStatus(settings))
 
   ipcMain.handle(IPC.dataChoose, async (): Promise<DataDirStatus | null> => {
@@ -32,6 +32,7 @@ export function registerDataIpc(settings: SettingsStore, getWindow: () => Browse
     const dataDir = await resolveDataDir(chosen)
     await ensureDataLayout(dataDir)
     await settings.update({ dataDir })
+    gewechselt()
     return dataDirStatus(settings)
   })
 
