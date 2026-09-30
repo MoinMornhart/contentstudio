@@ -94,6 +94,10 @@ def gesicht_box(rgba):
     (nur in OpenCV 4)."""
     try:
         import cv2
+
+        # OpenCV neben onnxruntime (rembg) im selben Prozess: ohne diese Einstellung zufällig „Unknown C++ exception“
+        cv2.ocl.setUseOpenCL(False)
+        cv2.setNumThreads(1)
     except ImportError:
         return None
     rgb = np.asarray(rgba.convert("RGB"))
@@ -121,12 +125,16 @@ def gesicht_box(rgba):
             _DETEKTOR.pop("yunet", None)
             print(f"CS_HINWEIS YuNet fehlgeschlagen, nehme Haar-Kaskade: {e}", file=sys.stderr)
     if not yunet_ok and hasattr(cv2, "CascadeClassifier"):
-        grau = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
-        for name in ("haarcascade_frontalface_default.xml", "haarcascade_profileface.xml"):
-            kaskade = cv2.CascadeClassifier(os.path.join(cv2.data.haarcascades, name))
-            mindest = max(24, int(min(grau.shape) * 0.06))
-            for (x, y, w, h) in kaskade.detectMultiScale(grau, scaleFactor=1.1, minNeighbors=6, minSize=(mindest, mindest)):
-                kandidaten.append((w * h, (int(x), int(y), int(x + w), int(y + h))))
+        try:
+            grau = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+            for name in ("haarcascade_frontalface_default.xml", "haarcascade_profileface.xml"):
+                kaskade = cv2.CascadeClassifier(os.path.join(cv2.data.haarcascades, name))
+                mindest = max(24, int(min(grau.shape) * 0.06))
+                for (x, y, w, h) in kaskade.detectMultiScale(grau, scaleFactor=1.1, minNeighbors=6, minSize=(mindest, mindest)):
+                    kandidaten.append((w * h, (int(x), int(y), int(x + w), int(y + h))))
+        except cv2.error as e:
+            # ohne Gesicht geht es weiter: der Aufbau nimmt dann die Figur als Ganzes
+            print(f"CS_HINWEIS Gesichtserkennung fehlgeschlagen: {e}", file=sys.stderr)
     if not kandidaten:
         return None
     return max(kandidaten)[1]

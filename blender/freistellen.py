@@ -11,6 +11,10 @@ import os
 import sys
 
 import cv2
+
+# OpenCV neben onnxruntime (rembg) im selben Prozess: ohne diese Einstellung zufällig „Unknown C++ exception“
+cv2.ocl.setUseOpenCL(False)
+cv2.setNumThreads(1)
 import numpy as np
 from PIL import Image
 from rembg import new_session, remove

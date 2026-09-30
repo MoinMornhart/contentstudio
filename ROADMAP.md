@@ -239,12 +239,16 @@ Quelle für alles, was MoinStudio fest eingebaut hat. Jede spätere Funktion lie
 - [ ] **8.1 Freiform-Tests je Richtung:** je Inhaltsrichtung mindestens 20 ungewöhnliche Thumbnail-Beschreibungen und 20
   Schnittwünsche mit neutralen Test-Avataren und Testvideos, Bewertung gut/mittel/schwach in `docs/tests/`; Fehler werden
   behoben, nicht gestrichen. ✅ Mindestens fünf Richtungen (darunter Minecraft-Gaming, echte Person/Vlog, Kochen oder
-  Bildung) überwiegend „gut“.
+  Bildung) überwiegend „gut“. Stand: Aufgaben und Lauf fertig (`docs/tests/freiform.md`), mit „ohne KI“ geprüft (dabei
+  einen zufälligen OpenCV-Absturz gefunden und behoben); die Bewertung wartet auf einen starken KI-Weg.
 - [ ] **8.2 Vergleich mit Vorbildern:** Ergebnisse neben die Referenzen des Stilbuchs, verbessern bis sie mithalten.
   ✅ Vergleichsbilder und strenge Bewertung in `docs/tests/`.
 - [ ] **8.3 Jeder KI-Weg und ohne KI:** jede Funktion mit jedem Weg, der sie kann, und ohne KI (Hinweis statt Absturz).
-  ✅ Testmatrix in `docs/tests/ki-wege.md`.
+  ✅ Testmatrix in `docs/tests/ki-wege.md`. Stand: „ohne KI“ und Test-KI für alle 18 Funktionen erledigt; echte Wege
+  warten auf einen Zugang (API-Schlüssel oder lokales Modell ab ~8B).
 - [ ] **8.4 Hardware:** ein Lauf nur mit CPU (Software-OpenGL), einer mit GPU. ✅ Beide Berichte in `docs/tests/`.
+  Stand: CPU-Bericht fertig (`docs/tests/hardware-cpu.md`); der GPU-Lauf braucht einen Rechner mit Grafikkarte
+  (Einstellungen → Hardware → Leistungsbericht).
 
 ## M9 – Stabil → 1.0.0
 

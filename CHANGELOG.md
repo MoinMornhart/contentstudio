@@ -20,6 +20,11 @@ Kurzbeschreibung für die README.
 
 - Datumsangaben in Kalender und Wochenplan im Format der Oberflächensprache.
 
+### Fixed
+
+- Foto-Thumbnails, Vorlagen und Facecam-Suche: OpenCV brach nach dem Freistellen zufällig ab (etwa jeder vierte Lauf).
+  OpenCV läuft jetzt ohne OpenCL mit einem Thread; scheitert die Gesichtserkennung trotzdem, geht es ohne Gesicht weiter.
+
 ## [0.7.0] - 2026-09-30
 
 > Export: Premiere, After Effects, DaVinci Resolve, CapCut, Photoshop, Selbsttests
