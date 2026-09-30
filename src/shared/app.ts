@@ -2,9 +2,10 @@
 import type { HardwareState } from './hardware'
 import type { QueueState } from './jobs'
 import type { Schluessel, Sprache } from './i18n'
-import type { Konto, Profil, Programm } from './profil'
+import type { Konto, Plattform, Profil, Programm } from './profil'
 import type { KiWegStand, McpZiel } from './ki'
 import type { ExportFormat, Stilbuch, ThumbAuftragInfo, ThumbStart, VarianteInfo, VideoErgebnis, Vorbild } from './thumbnail'
+import type { SchnittAbschnitt, SchnittEffekt, SchnittExport, SchnittHighlight, SchnittListe, SchnittProjekt, SpurArt } from './schnitt'
 
 /** Reiter der Hauptoberfläche. Reihenfolge = Reihenfolge in der Navigation. */
 export const TABS = [
@@ -81,7 +82,33 @@ export const IPC = {
   vorbildAendern: 'vorbild:aendern',
   vorbildLoeschen: 'vorbild:loeschen',
   stilbuch: 'stilbuch:laden',
-  stilbuchErstellen: 'stilbuch:erstellen'
+  stilbuchErstellen: 'stilbuch:erstellen',
+  schnittProjekte: 'schnitt:projekte',
+  schnittImport: 'schnitt:import',
+  schnittWellenform: 'schnitt:wellenform',
+  schnittLoeschen: 'schnitt:loeschen',
+  schnittTranskript: 'schnitt:transkript',
+  schnittTranskriptStart: 'schnitt:transkript-start',
+  schnittRohschnittStart: 'schnitt:rohschnitt-start',
+  schnittListe: 'schnitt:liste',
+  schnittUmschalten: 'schnitt:umschalten',
+  schnittBereich: 'schnitt:bereich',
+  schnittWunsch: 'schnitt:wunsch',
+  schnittEinstellungen: 'schnitt:einstellungen',
+  schnittVorschau: 'schnitt:vorschau',
+  schnittExport: 'schnitt:export',
+  schnittExportInfo: 'schnitt:export-info',
+  schnittExportSpeichern: 'schnitt:export-speichern',
+  schnittThumbnail: 'schnitt:thumbnail',
+  schnittHighlightsStart: 'schnitt:highlights-start',
+  schnittHighlights: 'schnitt:highlights',
+  schnittClips: 'schnitt:clips',
+  schnittClipDateien: 'schnitt:clip-dateien',
+  schnittClipOrdner: 'schnitt:clip-ordner',
+  schnittEffekte: 'schnitt:effekte',
+  schnittEffektAendern: 'schnitt:effekt-aendern',
+  schnittSpurHinzu: 'schnitt:spur-hinzu',
+  schnittSpurAendern: 'schnitt:spur-aendern'
 } as const
 
 /** Wofür eine Datei hochgeladen wird: bestimmt Dateityp-Filter, Mehrfachauswahl und Zielordner im Datenordner. */
@@ -246,4 +273,33 @@ export interface CsApi {
   stilbuchErstellen(kontoId: string): Promise<string>
   /** Pfad einer abgelegten Datei (Drag-and-drop) */
   dateiPfad(datei: File): string
+  /** Schnitt (ROADMAP M5): Projekte, Import per Dateidialog für ein Konto (null bei Abbruch), Wellenform, Löschen */
+  schnittProjekte(): Promise<SchnittProjekt[]>
+  schnittImport(kontoId: string): Promise<string | null>
+  schnittWellenform(id: string): Promise<{ aufloesung: number; werte: number[] } | null>
+  schnittLoeschen(id: string): Promise<void>
+  schnittTranskript(id: string): Promise<SchnittAbschnitt[] | null>
+  schnittTranskriptStart(id: string): Promise<string>
+  schnittRohschnittStart(id: string): Promise<string>
+  schnittListe(id: string): Promise<SchnittListe | null>
+  schnittUmschalten(id: string, index: number): Promise<SchnittListe>
+  schnittBereich(id: string, start: number, ende: number, raus: boolean, text?: string): Promise<SchnittListe>
+  schnittWunsch(id: string, wunsch: string): Promise<string>
+  /** Untertitel, Zooms, Format (16:9/9:16) und Stil-Richtung einstellen */
+  schnittEinstellungen(id: string, patch: { untertitel?: 'aus' | 'an' | 'karaoke'; zooms?: boolean; format?: '16:9' | '9:16'; richtung?: string; plattform?: Plattform }): Promise<void>
+  schnittVorschau(id: string): Promise<string>
+  schnittExport(id: string): Promise<string>
+  schnittExportInfo(id: string): Promise<SchnittExport | null>
+  schnittExportSpeichern(id: string): Promise<string | null>
+  schnittThumbnail(id: string): Promise<string>
+  schnittHighlightsStart(id: string): Promise<string>
+  schnittHighlights(id: string): Promise<SchnittHighlight[] | null>
+  schnittClips(id: string, auswahl: { index: number; art: 'clip' | 'short' }[]): Promise<string>
+  schnittClipDateien(id: string): Promise<{ name: string; url: string }[]>
+  schnittClipOrdner(id: string): Promise<void>
+  schnittEffekte(id: string): Promise<SchnittEffekt[]>
+  schnittEffektAendern(id: string, index: number, aenderung: { aus: boolean } | null): Promise<SchnittEffekt[]>
+  /** Weitere Spur (Facecam, Gameplay, Ton) hinzufügen → Auftrag „ausrichten“; Versatz von Hand oder Spur entfernen (null) */
+  schnittSpurHinzu(id: string, art: SpurArt): Promise<string | null>
+  schnittSpurAendern(id: string, index: number, aenderung: { versatz: number } | null): Promise<void>
 }

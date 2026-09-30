@@ -24,7 +24,7 @@ ContentStudio ist der verallgemeinerte Nachbau von [MoinStudio](https://github.c
 Funktionsumfang, aber für **jeden** Creator – Gaming, Vlog, Kochen, Bildung, Tech, Musik, Reactions, Streams –, jede
 Plattform, jeden KI-Anbieter und fast jede Hardware. Die Oberfläche gibt es auf Deutsch und Englisch.
 
-> **Stand:** Fundament, Creator-Profil, KI-Schicht und Thumbnails sind fertig. Schnitt und Planung folgen.
+> **Stand:** Fundament, Creator-Profil, KI-Schicht, Thumbnails und Schnitt sind fertig. Planung folgt.
 > Fortschritt: [ROADMAP](ROADMAP.md) · Änderungen: [CHANGELOG](CHANGELOG.md)
 
 ## Thumbnails
@@ -63,6 +63,28 @@ baut sie, prüft sie selbst und zeigt dir nur, was die Prüfung besteht.
 - **Selbstprüfung:** Gesicht frei und im Bild, nichts Wichtiges angeschnitten, Text nie über Gesichtern, nicht leer
   oder überstrahlt – dazu die Bild-KI, wenn du eine hast. Fehler korrigiert die App vor dem Zeigen.
 - **Änderungen in Worten:** „mehr Rot“, „Text größer“, „schau zur Kamera“.
+
+## Schnitt
+
+Rohvideo rein, fertiges Video raus. ContentStudio schneidet im Stil deiner Richtung, du schaust nur noch drüber.
+
+<p align="center">
+  <img src="docs/bilder/app-schnitt.png" width="900" alt="Schnitt-Reiter mit Vorschau, Wellenform, Rohschnitt und Export">
+</p>
+
+- **Transkript lokal:** faster-whisper in der Sprache deines Kontos, ohne Cloud; Kanalname und Fachbegriffe helfen beim
+  Schreiben.
+- **Rohschnitt nach Stil:** Pausen, Füllwörter, abgebrochene Sätze fliegen raus – bei Gaming und Comedy eng, bei Kochen,
+  Bildung und Podcasts mit Luft. Jeder Schnitt lässt sich per Klick zurückholen.
+- **Wünsche in Worten:** „Mach ein spannendes Intro“, „Zeitlupe beim lustigsten Moment“, „am Ende schwarz ausblenden“.
+  Tempo, Standbild, Zoom, Wackeln, Farbe, Blitz, Blenden, Text, Bild, Geräusch, Zensur, Lautstärke und Intro – Texte in
+  der Schrift deiner Marke.
+- **Hochformat:** 9:16 für Shorts, Reels und TikTok; der Ausschnitt folgt Gesicht oder Bewegung, mit Facecam oben
+  Gesicht und unten Bild.
+- **Mehrere Spuren:** Facecam, Gameplay oder getrennter Ton werden am Ton automatisch ausgerichtet.
+- **Export je Plattform:** YouTube, Shorts, TikTok, Reels, Facebook, X, Twitch, Kick, Podcast (M4A mit Kapiteln) –
+  geprüft nach den Vorgaben der Plattform, mit Titel-, Text- und Kapitelvorschlag. Dazu Höhepunkte und Kurzvideos aus
+  langen Streams.
 
 ## Grundsätze
 

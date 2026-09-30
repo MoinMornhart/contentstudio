@@ -323,8 +323,8 @@ code { font-family: 'Cascadia Mono', Consolas, monospace; font-size: 12px; }
 .claude-verbinden .btn { justify-self: start; }
 .claude-hinweis { display: grid; gap: 4px; margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent-soft); }
 
-/* Schnitt-Reiter (ROADMAP 6.2) */
-.schnitt-player { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; display: block; }
+/* Schnitt-Reiter (ROADMAP M5) */
+.schnitt-player { width: 100%; aspect-ratio: 16 / 9; max-height: 56vh; object-fit: contain; background: #000; border-radius: 8px; display: block; }
 .wellenform { width: 100%; height: 64px; margin-top: 8px; cursor: pointer; display: block; }
 .schnitt-leiste { width: 100%; height: 48px; object-fit: fill; margin-top: 6px; border-radius: 4px; cursor: pointer; display: block; }
 .schnitt-projekt { display: grid; grid-template-columns: 160px 1fr; gap: 12px; align-items: center; width: 100%; text-align: left; background: none; border: 0; border-top: 1px solid var(--border); padding: 10px 0; color: var(--text); font: inherit; cursor: pointer; }

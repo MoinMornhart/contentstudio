@@ -1,4 +1,4 @@
-"""Text als Bild in Minecraft-Schrift für den Schnitt (ROADMAP E.2): läuft in Python mit Pillow und numpy, ohne Blender.
+"""Text als Bild in Minecraft-Schrift für den Schnitt (ROADMAP 5.4): läuft in Python mit Pillow und numpy, ohne Blender.
 
     python text_bild.py <assets> <ausgabe.png> <text> [farbe=#ffffff] [pixel=8]
 

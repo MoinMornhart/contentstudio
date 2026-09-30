@@ -63,3 +63,30 @@ Nichts davon liegt im Repo oder im Installer. Alles kommt zur Laufzeit in einen 
 - Hält die Person in einer Vorlage einen Gegenstand, sucht ContentStudio ein passendes Modell bei Poly Haven
   (`api.polyhaven.com`, alle Inhalte CC0) und lädt es in den lokalen Werkzeug-Ordner. Jede Datei wird mit Quelle und
   Lizenz in `props/lizenzen.md` protokolliert.
+
+## Spracherkennung (Schnitt, ROADMAP 5.1)
+
+- Das Transkript entsteht lokal mit faster-whisper; Ton und Text verlassen den Rechner nicht. Einmalig lädt
+  ContentStudio das passende Whisper-Modell von Hugging Face (`huggingface.co/Systran`, MIT, ohne Anmeldung).
+- An die KI geht nur Text (Transkript mit Zeiten), und nur, wenn ein KI-Weg eingerichtet ist und der Creator einen
+  Schnitt, Wunsch oder Text anfordert. Standbilder für den Sichtbogen gehen nur an eine Bild-KI, wenn es eine gibt.
+
+## Plattform-Vorgaben für den Export (ROADMAP 5.7)
+
+Die Grenzen je Plattform stehen an einer Stelle (`PLATTFORM_VORGABEN` in `src/shared/schnitt.ts`), Stand 30.09.2026,
+aus den öffentlichen Hilfeseiten der Plattformen. Es wird nichts abgefragt; ändert eine Plattform ihre Regeln, wird nur
+diese Tabelle angepasst.
+
+| Plattform | Format | Längste Länge | Titel | Text | Kapitel |
+|---|---|---|---|---|---|
+| YouTube | 16:9 | 12 h | 100 Zeichen | 5000 | ja (ab 0:00, mind. 3, je ≥ 10 s) |
+| YouTube Shorts | 9:16 | 3 min | 100 | 5000 | nein |
+| TikTok | 9:16 | 10 min | – (nur Text) | 4000 | nein |
+| Instagram Reels | 9:16 | 3 min | – (nur Text) | 2200 | nein |
+| Facebook | 16:9 | 4 h | 255 | 5000 | nein |
+| X | 16:9 | 2:20 min | – (nur Text) | 280 | nein |
+| Twitch, Kick | 16:9 | 48 h | 140 | 5000 | nein |
+| Podcast | nur Ton (M4A, AAC) | – | 200 | 4000 | ja (im Audio) |
+| Website, Andere | 16:9 | – | 200 | 5000 | Website ja |
+
+Technisch prüft der Export jede Datei nach der Upload-Empfehlung: H.264 High, 4:2:0, BT.709, Fast Start, AAC 48 kHz.

@@ -28,7 +28,7 @@ prüfbar; bleibt so markiert, bis ein Selbsttest auf einem passenden Rechner gr�
 | M2 Assistent und Profil | → 0.2.0 | Creator-Profil, Einrichtungsassistent in 12 Schritten, Profil in den Einstellungen | ✅ |
 | M3 KI-Schicht | → 0.3.0 | Anbieter-Schicht, Abo-CLIs, lokale Modelle, API-Schlüssel, Kosten, MCP-Server | ✅ |
 | M4 Thumbnail | → 0.4.0 | Vorbilder und Stilbuch je Kanal, 3D-Szene, Foto-Compositing, Vorlagen, Freiform, Selbstprüfung | ✅ |
-| M5 Schnitt | → 0.5.0 | Import bis Export, Effekte in Worten, Stil je Richtung, Hochformat, mehrere Spuren | ⬜ |
+| M5 Schnitt | → 0.5.0 | Import bis Export, Effekte in Worten, Stil je Richtung, Hochformat, mehrere Spuren | ✅ |
 | M6 Planung | → 0.6.0 | Board je Konto, Kalender, Ideen mit KI, Plattform-Regeln, Cross-Posting | ⬜ |
 | M7 Export | → 0.7.0 | Premiere/After Effects, DaVinci Resolve, CapCut, Photoshop, Selbsttests | ⬜ |
 | M8 Qualität | → 0.8.0 | Freiform-Tests je Richtung, Vergleich mit Vorbildern, jeder KI-Weg, CPU und GPU | ⬜ |
@@ -173,21 +173,29 @@ Quelle für alles, was MoinStudio fest eingebaut hat. Jede spätere Funktion lie
 
 ## M5 – Schnitt → 0.5.0
 
-- [ ] **5.1 Import, Proxy, Transkript lokal:** wie MoinStudio (ffprobe, 540p-Proxy, Wellenform, faster-whisper nach
-  Hardware-Profil, Sprache aus dem Konto). ✅ Testvideos in Deutsch und Englisch.
-- [ ] **5.2 Rohschnitt, prüfen, ändern:** Pausen, Versprecher, Wiederholungen; Änderungen in Worten über die KI-Schicht,
-  ohne KI nur die technischen Schritte. ✅ Testvideo wird kürzer, kein Wort abgeschnitten.
-- [ ] **5.3 Stil je Richtung:** Tempo, Schnitthärte, Untertitel-Stil, Effekt-Dichte aus dem Profil (Kochen/Bildung ruhiger
-  als Gaming). ✅ Unit-Tests: gleiche Eingabe, unterschiedliche Richtung → unterschiedliche Schnittliste.
-- [ ] **5.4 Untertitel, Zooms, Effekte und Intros in Worten:** alle Bausteine aus MoinStudio (Tempo, Standbild, Zoom,
+- [x] **5.1 Import, Proxy, Transkript lokal:** wie MoinStudio (ffprobe, 540p-Proxy, Wellenform, faster-whisper nach
+  Hardware-Profil, Sprache aus dem Konto). ✅ Testvideos in Deutsch und Englisch (Windows-Sprachausgabe) wortgenau
+  transkribiert, `tests/echt/schnitt.test.ts`.
+- [x] **5.2 Rohschnitt, prüfen, ändern:** Pausen, Versprecher, Wiederholungen; Änderungen in Worten über die KI-Schicht,
+  ohne KI nur die technischen Schritte. ✅ Testvideos 51 % (Deutsch) bzw. 44 % (Englisch) kürzer, Füllwort und abgebrochener Satz in beiden
+  Sprachen erkannt (neu auch mitten in einem Abschnitt), kein Wort abgeschnitten. Änderungen in Worten mit echter KI:
+  Unit-Tests für Prompt und Schema; der Echttest mit einer KI folgt mit den Freiform-Tests in M8 (auf dem
+  Entwicklungsrechner ist kein KI-Weg eingerichtet).
+- [x] **5.3 Stil je Richtung:** Tempo, Schnitthärte, Untertitel-Stil, Effekt-Dichte aus dem Profil (Kochen/Bildung ruhiger
+  als Gaming). ✅ Unit-Tests: gleiche Eingabe, unterschiedliche Richtung → unterschiedliche Schnittliste; echt: dasselbe
+  Video (44,7 s) als Gaming 21,8 s, als Kochen 26,1 s.
+- [x] **5.4 Untertitel, Zooms, Effekte und Intros in Worten:** alle Bausteine aus MoinStudio (Tempo, Standbild, Zoom,
   Wackeln, Farbe, Blitz, Blenden, Text, Bild, Geräusch, Zensur, Lautstärke, Intro), Sichtbogen, Effektliste, Geräusche
-  lizenzfrei erzeugt; Schrift aus der Marke. ✅ Unit-Tests je Baustein; Echt-Render mit allen Bausteinen.
-- [ ] **5.5 Hochformat mit Bildausschnitt-Verfolgung:** 9:16 für Shorts, Reels, TikTok; Ausschnitt folgt Gesicht oder
-  Aktion. ✅ Testvideo mit wanderndem Motiv bleibt im Bild.
-- [ ] **5.6 Mehrere Spuren:** Facecam und Gameplay als getrennte Dateien, automatisch ausgerichtet. ✅ Zwei Testdateien mit
-  Versatz werden synchron.
-- [ ] **5.7 Export je Plattform:** Encoder aus dem Hardware-Profil, Vorgaben der Plattform des Kontos, Titel,
-  Beschreibung, Kapitel nach Plattform-Regeln; Stream-Highlights und Shorts. ✅ Prüfpunkte je Plattform grün.
+  lizenzfrei erzeugt; Schrift aus der Marke. ✅ Unit-Tests je Baustein; Echt-Render mit allen Bausteinen samt
+  Karaoke-Untertiteln, Länge auf 0,4 s genau, Standbilder geprüft.
+- [x] **5.5 Hochformat mit Bildausschnitt-Verfolgung:** 9:16 für Shorts, Reels, TikTok; Ausschnitt folgt Gesicht oder
+  Aktion. ✅ Testvideo mit wanderndem Motiv bleibt an allen geprüften Stellen im Bild (TikTok-Export 1080×1920).
+- [x] **5.6 Mehrere Spuren:** Facecam und Gameplay als getrennte Dateien, automatisch ausgerichtet. ✅ Zwei Testdateien mit
+  Versatz werden synchron (2,70 s gefunden, Sicherheit 1,0; Unit-Tests auch für frühere Spur und fremden Ton).
+- [x] **5.7 Export je Plattform:** Encoder aus dem Hardware-Profil, Vorgaben der Plattform des Kontos, Titel,
+  Beschreibung, Kapitel nach Plattform-Regeln; Stream-Highlights und Shorts. ✅ Prüfpunkte grün für YouTube, TikTok,
+  X und Podcast (M4A); Vorgaben aller Plattformen in [docs/datenquellen.md](docs/datenquellen.md). Titel und Texte mit
+  echter KI folgen mit M8; „Für Premiere“ kommt mit M7.
 
 ## M6 – Planung → 0.6.0
 

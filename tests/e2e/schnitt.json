@@ -1,0 +1,9 @@
+[
+  { "reiter": "schnitt", "warte": 3000, "name": "schnitt-projekte" },
+  { "js": "document.querySelector('.schnitt-projekt')?.click(); 'geöffnet'", "warte": 2000 },
+  { "js": "(async () => { const v = document.querySelector('video.schnitt-player'); for (let i = 0; i < 50 && (!v || v.readyState < 2); i++) await new Promise((r) => setTimeout(r, 200)); if (v) v.currentTime = 12; await new Promise((r) => setTimeout(r, 800)); document.querySelector('.wellenform')?.scrollIntoView({ block: 'center' }); return v ? v.readyState : 'kein Video' })()", "warte": 2000, "name": "schnitt-projekt" },
+  { "js": "(async () => { const p = await window.cs.schnittProjekte(); return p.map((x) => ({ name: x.name, plattform: x.plattform, richtung: x.richtung, transkript: x.transkript, rohschnitt: x.rohschnitt, exportiert: x.exportiert, spuren: x.spuren.length })) })()", "warte": 500 },
+  { "js": "document.querySelector('.rohschnitt')?.scrollIntoView(); 'gescrollt'", "warte": 1500, "name": "schnitt-rohschnitt" },
+  { "js": "(async () => { const f = [...document.querySelectorAll('.schnitt-fertig')]; const v = f[0]?.querySelector('video'); for (let i = 0; i < 50 && v && v.readyState < 2; i++) await new Promise((r) => setTimeout(r, 200)); if (v) v.currentTime = 2.5; await new Promise((r) => setTimeout(r, 800)); f[0]?.scrollIntoView(); return f.length })()", "warte": 1500, "name": "schnitt-fertig" },
+  { "js": "[...document.querySelectorAll('.schnitt-fertig')].at(-2)?.scrollIntoView(); 'export'", "warte": 1500, "name": "schnitt-export" }
+]

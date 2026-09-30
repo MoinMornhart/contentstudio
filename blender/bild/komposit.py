@@ -86,6 +86,7 @@ def freistellen(bild, modell):
 
 
 GESICHT_MODELL = os.environ.get("CS_GESICHT_MODELL", "")
+_DETEKTOR = {}
 
 
 def gesicht_box(rgba):
@@ -102,7 +103,12 @@ def gesicht_box(rgba):
         f = min(1.0, 640 / max(rgb.shape[:2]))
         klein = cv2.resize(rgb, (max(1, int(rgb.shape[1] * f)), max(1, int(rgb.shape[0] * f))))
         bgr = cv2.cvtColor(klein, cv2.COLOR_RGB2BGR)
-        det = cv2.FaceDetectorYN.create(GESICHT_MODELL, "", (bgr.shape[1], bgr.shape[0]), 0.7, 0.3, 5000)
+        # Einmal laden, dann nur die Bildgröße anpassen (Verfolgung ruft das für tausende Bilder auf)
+        det = _DETEKTOR.get("yunet")
+        if det is None:
+            det = cv2.FaceDetectorYN.create(GESICHT_MODELL, "", (bgr.shape[1], bgr.shape[0]), 0.7, 0.3, 5000)
+            _DETEKTOR["yunet"] = det
+        det.setInputSize((bgr.shape[1], bgr.shape[0]))
         _, faces = det.detect(bgr)
         for fc in faces if faces is not None else []:
             x, y, w, h = (float(v) / f for v in fc[:4])

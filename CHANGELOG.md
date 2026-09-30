@@ -8,9 +8,23 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
-## [0.4.0] - 2026-09-30
+### Added
 
-> Thumbnails: Vorbilder, Stilbuch, 3D, Foto, Vorlagen, Selbstprüfung, Export
+- Schnitt-Reiter: Rohvideo für ein Konto wählen, Vorschau mit Wellenform und Standbild-Leiste, Transkript lokal mit
+  faster-whisper in der Sprache des Kontos (Fachbegriffe des Kanals als Hilfe), Rohschnitt mit Pausen, Füllwörtern und
+  abgebrochenen Sätzen, Sätze und Schnitte per Klick rein und raus.
+- Stil je Richtung: Gaming, Comedy und Streams schneiden eng mit vielen Akzenten, Kochen, Bildung und Podcasts lassen
+  Pausen stehen; freie Richtungen bekommen den Stil der ähnlichsten. Richtung je Projekt änderbar.
+- Wünsche in Worten über die KI-Schicht („Zeitlupe beim lustigsten Moment“): Schnitt und alle Effekt-Bausteine aus
+  MoinStudio (Tempo, Standbild, Zoom, Wackeln, Farbe, Blitz, Blenden, Text, Bild, Geräusch, Zensur, Lautstärke, Intro),
+  Effektliste zum An- und Ausschalten; Texte in der Schrift der Marke, Geräusche lizenzfrei erzeugt.
+- Hochformat 9:16: mit Facecam oben Gesicht und unten Bild, sonst folgt der Ausschnitt Gesicht oder Bewegung.
+- Weitere Spuren (Facecam, Gameplay, getrennter Ton), automatisch am Ton ausgerichtet, Versatz von Hand korrigierbar.
+- Export je Plattform (YouTube, Shorts, TikTok, Reels, Facebook, X, Twitch, Kick, Podcast als M4A mit Kapiteln,
+  Website) mit Prüfliste nach den Vorgaben der Plattform, Titel-, Text- und Kapitelvorschlag; Höhepunkte und
+  Kurzvideos aus langen Videos und Streams.
+
+## [0.4.0] - 2026-09-30
 
 > Thumbnails: Vorbilder, Stilbuch, 3D, Foto, Vorlagen, Selbstprüfung, Export
 

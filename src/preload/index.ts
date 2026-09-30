@@ -13,7 +13,7 @@ function ereignis<T>(kanal: string, handler: (wert: T) => void): () => void {
   return () => ipcRenderer.removeListener(kanal, listener)
 }
 
-const api: CsApi = {
+const api = {
   appInfo: () => ipcRenderer.invoke(IPC.appInfo),
   onSelectTab(handler: (tab: TabId) => void) {
     return ereignis<unknown>(IPC.selectTab, (tab) => {
@@ -82,7 +82,33 @@ const api: CsApi = {
   vorbildLoeschen: (kontoId, id) => ipcRenderer.invoke(IPC.vorbildLoeschen, kontoId, id),
   stilbuch: (kontoId) => ipcRenderer.invoke(IPC.stilbuch, kontoId),
   stilbuchErstellen: (kontoId) => ipcRenderer.invoke(IPC.stilbuchErstellen, kontoId),
-  dateiPfad: (datei) => webUtils.getPathForFile(datei)
-}
+  dateiPfad: (datei) => webUtils.getPathForFile(datei),
+  schnittProjekte: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittProjekte, ...a),
+  schnittImport: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittImport, ...a),
+  schnittWellenform: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittWellenform, ...a),
+  schnittLoeschen: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittLoeschen, ...a),
+  schnittTranskript: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittTranskript, ...a),
+  schnittTranskriptStart: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittTranskriptStart, ...a),
+  schnittRohschnittStart: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittRohschnittStart, ...a),
+  schnittListe: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittListe, ...a),
+  schnittUmschalten: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittUmschalten, ...a),
+  schnittBereich: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittBereich, ...a),
+  schnittWunsch: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittWunsch, ...a),
+  schnittEinstellungen: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittEinstellungen, ...a),
+  schnittVorschau: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittVorschau, ...a),
+  schnittExport: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittExport, ...a),
+  schnittExportInfo: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittExportInfo, ...a),
+  schnittExportSpeichern: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittExportSpeichern, ...a),
+  schnittThumbnail: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittThumbnail, ...a),
+  schnittHighlightsStart: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittHighlightsStart, ...a),
+  schnittHighlights: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittHighlights, ...a),
+  schnittClips: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittClips, ...a),
+  schnittClipDateien: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittClipDateien, ...a),
+  schnittClipOrdner: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittClipOrdner, ...a),
+  schnittEffekte: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittEffekte, ...a),
+  schnittEffektAendern: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittEffektAendern, ...a),
+  schnittSpurHinzu: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittSpurHinzu, ...a),
+  schnittSpurAendern: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittSpurAendern, ...a)
+} as CsApi
 
 contextBridge.exposeInMainWorld('cs', api)

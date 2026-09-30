@@ -75,7 +75,7 @@ export function registerThumbnailIpc(o: {
   tools: ToolManager
   ki: KiSchicht
   fenster: () => BrowserWindow | undefined
-}): { starte: (roh: unknown) => Promise<string>; vorbilder: VorbildStore } {
+}): { starte: (roh: unknown) => Promise<string>; starteVideo: (video: string, kontoId: string, titel?: string) => Promise<string>; vorbilder: VorbildStore } {
   const { queue, profil, tools } = o
   const vorbilder = new VorbildStore(profil)
   const d = { ki: o.ki }
@@ -267,7 +267,7 @@ export function registerThumbnailIpc(o: {
   ipcMain.handle(IPC.thumbKiStand, async () => ({ ki: (await o.ki.kandidaten()).length > 0, bildKi: await o.ki.verfuegbar(true) }))
 
   // --- Aus dem Video ---
-  ipcMain.handle(IPC.thumbVideo, async (_e, video: unknown, kontoId: unknown, titel: unknown): Promise<string> => {
+  const starteVideo = async (video: unknown, kontoId: unknown, titel?: unknown): Promise<string> => {
     const ffmpeg = await tools.exePath(FFMPEG)
     if (!ffmpeg) throw new Error(t('thumb.fehlt.ffmpeg'))
     const p = await profil.laden()
@@ -282,12 +282,13 @@ export function registerThumbnailIpc(o: {
       sprache: hauptSprache()
     }
     return queue.enqueue('video', `${t('thumb.art.video')}: ${basename(payload.video)}`, payload)
-  })
+  }
+  ipcMain.handle(IPC.thumbVideo, (_e, video: unknown, kontoId: unknown, titel: unknown) => starteVideo(video, kontoId, titel))
   ipcMain.handle(IPC.thumbVideoErgebnis, async (_e, jobId: unknown): Promise<(Omit<VideoErgebnis, 'momente'> & { momente: (VideoErgebnis['momente'][number] & { pfad: string | null })[] }) | null> => {
     const res = queue.result<VideoErgebnis>(String(jobId))
     if (!res) return null
     return { ...res, momente: await Promise.all(res.momente.map(async (m) => ({ ...m, pfad: m.bild, bild: m.bild ? await alsDataUrl(m.bild) : null }))) }
   })
 
-  return { starte, vorbilder }
+  return { starte, starteVideo, vorbilder }
 }

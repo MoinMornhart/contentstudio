@@ -22,9 +22,13 @@ import { brauchtDreiD } from '@shared/profil'
 import { kiZentrale } from './ki/zentrale'
 import { registerMcpIpc } from './mcp/ipc'
 import { registerThumbnailIpc } from './thumbnail/ipc'
+import { registerSchnittIpc } from './schnitt/ipc'
+import { medienBedienen, medienSchemaAnmelden } from './schnitt/medien'
 
 // Tests: eigener Einstellungsordner statt %APPDATA%\ContentStudio (vor allem anderen setzen)
 if (process.env['CS_USERDATA']) app.setPath('userData', process.env['CS_USERDATA'])
+// Video-Player im Schnitt-Reiter: eigenes Protokoll cs-media:// (muss vor „ready“ angemeldet sein)
+medienSchemaAnmelden()
 
 const arg = (name: string): string | undefined => process.argv.find((a) => a.startsWith(`--cs-${name}=`))?.split('=').slice(1).join('=')
 const screenshotDir = parseScreenshotArg(process.argv)
@@ -48,6 +52,8 @@ hardware.register()
 registerSetupIpc(settings, !!screenshotDir && !process.argv.includes(SETUP_FLAG))
 const { queue: jobs, enqueueProbe } = setupJobs(localRoot(), tools, hardware, mainWindow)
 const thumbnail = registerThumbnailIpc({ queue: jobs, settings, profil, hardware, tools, ki: ki.schicht, fenster: mainWindow })
+registerSchnittIpc({ queue: jobs, profil, tools, hardware, ki: ki.schicht, fenster: mainWindow, starteVideo: thumbnail.starteVideo })
+medienBedienen(settings)
 
 // Fester Name für den Autostart-Eintrag (HKCU\...\Run). Ohne ihn leitet Electron den Namen
 // aus der AppUserModelId ab, und Setzen und Abfragen könnten verschiedene Einträge meinen.
