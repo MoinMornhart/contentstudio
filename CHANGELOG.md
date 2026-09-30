@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-30
+
+> Creator-Profil und Einrichtungsassistent
+
 ### Added
 
 - Creator-Profil (`creator-profile.json` im Datenordner): versioniert, mit Migration, Standards für alles
