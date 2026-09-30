@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-30
+
+> Schnitt: Transkript, Rohschnitt nach Stil, Effekte in Worten, Hochformat, Spuren, Export je Plattform
+
 ### Added
 
 - Schnitt-Reiter: Rohvideo für ein Konto wählen, Vorschau mit Wellenform und Standbild-Leiste, Transkript lokal mit
