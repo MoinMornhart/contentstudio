@@ -8,6 +8,24 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-30
+
+> KI-Schicht für alle Anbieter und MCP
+
+### Added
+
+- KI-Schicht für alle Anbieter: ein Auftrag mit JSON-Schema, jeder Anbieter übersetzt ihn; Rückfall auf den nächsten Weg,
+  Reparaturschleife für ungültiges JSON, immer nur ein KI-Auftrag gleichzeitig, Warten bis zum Reset bei Limits.
+- Wege: Ollama, LM Studio, llama.cpp (lokal, kostenlos), ChatGPT über die offizielle Codex-CLI (Abo), eigene API-Schlüssel
+  für Anthropic (offizielles SDK, Standardmodell Claude Opus 5.5), OpenAI, Google Gemini und OpenRouter.
+- API-Schlüssel nur verschlüsselt über den Windows-Schlüsselspeicher; Kostenschätzung vor jedem Aufruf und Monatssumme.
+- Vor dem ersten Senden an einen Anbieter zeigt die App, was wohin geht; ohne Zustimmung wird nichts gesendet.
+- „KI-Wege“ im Assistenten und in den Einstellungen: Erkennung, Fähigkeiten, Reihenfolge, Modellwahl, Test.
+- MCP-Server: Claude Desktop und ChatGPT Desktop können ContentStudio als Werkzeug nutzen.
+- Nutzungsbedingungen aller Anbieter geprüft und belegt (`docs/ki-anbieter.md`). Claude mit Abo läuft über Claude
+  Desktop; der Weg über Claude Code ist ohne Freigabe von Anthropic nicht eingebaut. Gemini nur mit bezahltem Schlüssel.
+- YouTube-Kanaldaten werden nach 30 Tagen automatisch gelöscht, mit Löschknopf und Quellenangabe.
+
 ## [0.2.0] - 2026-09-30
 
 > Creator-Profil und Einrichtungsassistent

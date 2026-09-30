@@ -24,6 +24,7 @@ and English.
 ## Neueste Änderungen
 
 <!-- CHANGELOG:START -->
+- **0.3.0** (2026-09-30): KI-Schicht für alle Anbieter und MCP
 - **0.2.0** (2026-09-30): Creator-Profil und Einrichtungsassistent
 - **0.1.0** (2026-09-30): Fundament
 - **0.0.1** (2026-09-30): Projekt angelegt

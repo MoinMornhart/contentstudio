@@ -1,7 +1,7 @@
 {
   "name": "contentstudio",
   "productName": "ContentStudio",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Lokale Desktop-App für Creator: Thumbnails, Schnitt und Planung mit deiner eigenen KI",
   "author": "ContentStudio contributors",
   "license": "MIT",
@@ -23,12 +23,15 @@
     "icon": "node scripts/make-icon.mts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0",
+    "@modelcontextprotocol/server": "^2.2.0",
     "electron-updater": "^6.8.9",
     "koffi": "^3.3.2",
     "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@modelcontextprotocol/client": "^2.2.0",
     "@types/node": "^26.6.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
