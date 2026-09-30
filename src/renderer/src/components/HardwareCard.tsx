@@ -19,6 +19,38 @@ const ENGINE_NAME: Record<RenderSetting['engine'], string> = { CYCLES: 'Cycles',
 const ONNX_NAME: Record<OnnxProvider, string> = { cuda: 'CUDA', directml: 'DirectML', cpu: 'CPU' }
 
 /** Startet die Aufgabe „Probebild“ und zeigt das Ergebnis, sobald sie fertig ist. */
+/** Leistungsbericht (ROADMAP 8.4): misst Export und Spracherkennung und öffnet den Bericht */
+function Leistungsbericht({ disabled }: { disabled: boolean }): React.JSX.Element {
+  const { t } = useI18n()
+  const [stand, setStand] = useState<{ percent: number; step: string } | null>(null)
+  const [fehler, setFehler] = useState<string | null>(null)
+  useEffect(() => window.cs.onLeistungStand(setStand), [])
+  const laeuft = !!stand && stand.percent < 100
+  return (
+    <>
+      <button
+        className="btn"
+        disabled={disabled || laeuft}
+        title={t('leistung.hinweis')}
+        onClick={() => {
+          setFehler(null)
+          setStand({ percent: 0, step: t('leistung.schritt.start') })
+          window.cs.leistungsbericht().then(
+            () => setStand(null),
+            (e: unknown) => {
+              setStand(null)
+              setFehler(fehlerText(e))
+            }
+          )
+        }}
+      >
+        {laeuft ? `${stand.step} (${stand.percent} %)` : t('leistung.knopf')}
+      </button>
+      {fehler && <span className="warn small">{fehler}</span>}
+    </>
+  )
+}
+
 function ProbeRender({ disabled }: { disabled: boolean }): React.JSX.Element {
   const { t } = useI18n()
   const jobs = useJobs()
@@ -133,6 +165,7 @@ export function HardwareCard(): React.JSX.Element {
           {state?.state === 'none' ? t('hw.jetztTesten') : t('hw.neuTesten')}
         </button>
         {profile && c?.blenderVersion && <ProbeRender disabled={running} />}
+        {profile && <Leistungsbericht disabled={running} />}
       </div>
     </Card>
   )

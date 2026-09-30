@@ -1024,5 +1024,27 @@ export const en: Record<Schluessel, string> = {
   'schnitt.programm.resolve': 'Timeline as FCPXML and EDL, with markers – untested in Resolve',
   'schnitt.programm.capcut': 'Folder with all clips in order, subtitles and a list to take over',
   'schnitt.programm.fertig': 'Saved: {datei}',
-  'schnitt.programm.laeuft': 'Clips are being cut – see tasks. Folder: {datei}'
+  'schnitt.programm.laeuft': 'Clips are being cut – see tasks. Folder: {datei}',
+
+  'leistung.knopf': 'Performance report',
+  'leistung.hinweis': 'Measures export and speech recognition on this computer and opens a report to share (about 1–3 minutes).',
+  'leistung.schritt.start': 'Starting …',
+  'leistung.schritt.export': 'Export with {encoder} …',
+  'leistung.schritt.whisper': 'Speech recognition with {modell} …',
+  'leistung.schritt.bericht': 'Writing the report …',
+  'leistung.titel': 'Performance report',
+  'leistung.geraet': 'Device',
+  'leistung.entscheidungen': 'Decisions from the hardware test',
+  'leistung.messungen': 'Measurements',
+  'leistung.aufgabe': 'Task',
+  'leistung.sekunden': 'Seconds',
+  'leistung.ergebnis': 'Result',
+  'leistung.keinProfil': 'no hardware test yet',
+  'leistung.export': 'Export 20 s Full HD ({encoder})',
+  'leistung.echtzeit': '{faktor}× real time',
+  'leistung.whisper': 'Speech recognition 20 s (Whisper {modell}, {geraet})',
+  'leistung.whisperWert': '{faktor}× video length, {abschnitte} segments',
+  'leistung.render': 'test image rendered',
+  'leistung.fehlgeschlagen': 'failed',
+  'leistung.uebersprungen': 'skipped (tool missing)'
 }

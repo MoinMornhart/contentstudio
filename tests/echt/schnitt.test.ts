@@ -4,11 +4,10 @@
 // Export je Plattform mit Prüfung. Braucht FFmpeg, uv und die Python-Umgebung aus CONTENTSTUDIO_TOOLS_DIR.
 // Aufruf: npx vitest run -c vitest.echt.config.ts tests/echt/schnitt.test.ts
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
-import type { JobContext } from '../../src/main/jobs/queue'
 import { importJob } from '../../src/main/schnitt/import'
 import { aendereProjekt, ladeProjekt, projektOrdner, speichereProjekt, type Projekt } from '../../src/main/schnitt/projekt'
 import { transkriptJob, liesAbschnitte } from '../../src/main/schnitt/transkript'
@@ -17,70 +16,24 @@ import { vorschauJob } from '../../src/main/schnitt/vorschau'
 import { exportJob } from '../../src/main/schnitt/export'
 import { spurJob } from '../../src/main/schnitt/spuren'
 import type { EffektHilfe } from '../../src/main/schnitt/effekt-vorbereitung'
-import type { ThumbUmgebung } from '../../src/main/thumbnail/umgebung'
+import { ctx, dauerVon, FFMPEG, FFPROBE, PY_DIR, ROOT, SKRIPTE, sprachDatei, testVideo, umgebung, UV } from './hilfen'
 import type { Plattform } from '../../src/shared/profil'
 
-const ROOT = process.env['CONTENTSTUDIO_TOOLS_DIR'] ?? join(process.env['LOCALAPPDATA'] ?? '', 'ContentStudio')
 const AUS = join(process.env['LOCALAPPDATA'] ?? '', 'ContentStudio', 'test-echt', 'schnitt')
 const DATEN = join(AUS, 'daten')
-const FF_DIR = readdirSync(join(ROOT, 'ffmpeg')).map((v) => join(ROOT, 'ffmpeg', v, 'bin')).find((d) => existsSync(join(d, 'ffmpeg.exe')))!
-const FFMPEG = join(FF_DIR, 'ffmpeg.exe')
-const FFPROBE = join(FF_DIR, 'ffprobe.exe')
-const UV = readdirSync(join(ROOT, 'uv')).map((v) => join(ROOT, 'uv', v, 'uv.exe')).find(existsSync)!
-const PY_DIR = join(ROOT, 'py', 'vorlage')
-const SKRIPTE = join(__dirname, '..', '..', 'blender')
-
-const umgebung: ThumbUmgebung = { blender: null, uv: UV, pyDir: PY_DIR, modelle: join(ROOT, 'py', 'modelle'), skripte: SKRIPTE, prompts: join(__dirname, '..', '..', 'resources', 'prompts'), werkzeugRoot: ROOT, mojangErlaubt: false }
 const hilfe: EffektHilfe = { ffmpeg: FFMPEG, python: join(PY_DIR, 'Scripts', 'python.exe'), skripte: SKRIPTE, lokal: ROOT, schrift: null, schriftName: null, minecraftAssets: null }
-
-function ctx(): JobContext<unknown> {
-  let cp: unknown
-  return {
-    id: 'test',
-    get checkpoint() {
-      return cp
-    },
-    save: async (c: unknown) => void (cp = c),
-    progress: () => undefined,
-    yield: async () => undefined,
-    signal: new AbortController().signal,
-    track: () => undefined,
-    waitUntil: () => {
-      throw new Error('limit')
-    }
-  } as unknown as JobContext<unknown>
-}
 
 // Sprechtexte mit Pausen (Sekunden), Füllwort und abgebrochenem Satz vor seiner Wiederholung
 const TEXTE = {
   de: {
-    stimme: 'Microsoft Hedda Desktop',
     teile: ['Hallo zusammen, willkommen zu meinem Video über das Wandern in den Bergen.', 3.5, 'Heute zeige ich euch, wie man, ähm, den Rucksack richtig packt.', 4, 'Zuerst kommt die Jacke in die.', 0.4, 'Zuerst kommt die Regenjacke ganz nach oben in den Rucksack.', 3, 'Oh nein, ich habe die Trinkflasche vergessen!', 1, 'Zum Glück gibt es auf der Hütte Wasser.', 2.5, 'Wenn euch das Video gefallen hat, lasst ein Abo da. Tschüss.'],
     wort: /rucksack/i
   },
   en: {
-    stimme: 'Microsoft Zira Desktop',
     teile: ['Hi everyone, welcome back to my channel about cooking at home.', 3.5, 'Today I will show you, um, how to bake a simple loaf of bread.', 4, 'First we put the flour in the.', 0.4, 'First we put the flour and the salt into a large bowl.', 3, 'Oh no, I forgot to buy yeast!', 1, 'Luckily there is some left in the fridge.', 2.5, 'If you liked this video, please subscribe. Bye.'],
     wort: /bread|flour/i
   }
 } as const
-
-function sprachDatei(sprache: keyof typeof TEXTE, wav: string): void {
-  const { stimme, teile } = TEXTE[sprache]
-  const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${sprache === 'de' ? 'de-DE' : 'en-US'}">${teile.map((x) => (typeof x === 'number' ? `<break time="${Math.round(x * 1000)}ms"/>` : x.replace(/&/g, '&amp;'))).join(' ')}</speak>`
-  const ps1 = join(AUS, `tts-${sprache}.ps1`)
-  // Windows PowerShell 5.1 liest Skripte ohne BOM als ANSI – Umlaute brauchen das BOM
-  writeFileSync(ps1, `\ufeffAdd-Type -AssemblyName System.Speech\n$s = New-Object System.Speech.Synthesis.SpeechSynthesizer\n$s.SelectVoice('${stimme}')\n$s.SetOutputToWaveFile('${wav}')\n$s.SpeakSsml(@'\n${ssml}\n'@)\n$s.Dispose()\n`, 'utf8')
-  execFileSync('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ps1])
-}
-
-const dauerVon = (datei: string): number => Number(execFileSync(FFPROBE, ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', datei]).toString())
-
-/** Video 1920×1080 mit weißem Quadrat, das von links nach rechts wandert, und der Sprache als Ton */
-function testVideo(wav: string, mp4: string): void {
-  const d = dauerVon(wav)
-  execFileSync(FFMPEG, ['-y', '-v', 'error', '-f', 'lavfi', '-i', `color=c=0x1c2530:s=1920x1080:r=30:d=${d.toFixed(2)}`, '-f', 'lavfi', '-i', 'color=c=white:s=220x220:r=30', '-i', wav, '-filter_complex', `[0:v][1:v]overlay=x='80+(W-380)*t/${d.toFixed(2)}':y=430:shortest=1,format=yuv420p[v]`, '-map', '[v]', '-map', '2:a', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '28', '-c:a', 'aac', '-shortest', mp4])
-}
 
 async function neuesProjekt(id: string, sprache: string, video: string, richtung: string, plattform: Plattform = 'youtube'): Promise<void> {
   const p: Projekt = { id, name: `Test ${id}`, kontoId: 'k', kanal: 'Testkanal', plattform, sprache, richtung, erstellt: new Date().toISOString(), quelle: { pfad: video, groesse: 0, pruefsumme: '', dauer: 0, breite: 0, hoehe: 0, fps: 0, audio: false }, spuren: [], proxy: false, wellenform: false, leiste: false }
@@ -103,7 +56,7 @@ beforeAll(() => {
   for (const s of ['de', 'en'] as const) {
     const wav = join(AUS, `sprache-${s}.wav`)
     if (!existsSync(join(AUS, `sprache-${s}.mp4`))) {
-      sprachDatei(s, wav)
+      sprachDatei(s, TEXTE[s].teile, wav)
       testVideo(wav, join(AUS, `sprache-${s}.mp4`))
     }
   }

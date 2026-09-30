@@ -1,6 +1,6 @@
 // Herkunft: MoinStudio src/renderer/src/components/PlanungClaude.tsx (MIT), mit der KI-Schicht und übersetzbar.
 import { useEffect, useState } from 'react'
-import { teileTermin, wochentag, wochentagKurz } from '@shared/kalender'
+import { teileTermin } from '@shared/kalender'
 import type { PlanungKarte, PlanungKiArt, PlanungKiErgebnis, PlanungKiStand } from '@shared/planung'
 import { fehlerText, useI18n, useT } from '../i18n'
 
@@ -113,7 +113,7 @@ export function WochenPlaner({ karten, termin }: { karten: PlanungKarte[]; termi
   const titel = (id: string): string => karten.find((k) => k.id === id)?.titel ?? t('planung.woche.geloescht')
   const wann = (x: string): string => {
     const { tag, zeit } = teileTermin(x)
-    return `${wochentagKurz(wochentag(tag), locale)} ${tag.slice(8)}.${tag.slice(5, 7)}. ${zeit}`
+    return `${new Intl.DateTimeFormat(locale, { weekday: 'short', day: '2-digit', month: '2-digit' }).format(new Date(`${tag}T12:00`))} ${zeit}`
   }
   const nimm = (id: string, x: string): void => {
     termin(id, x)

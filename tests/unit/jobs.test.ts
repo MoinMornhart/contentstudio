@@ -186,16 +186,16 @@ describe('JobQueue', () => {
     })
     await q.start()
     const id = await q.enqueue('proc', 'Prozess', {})
-    await until(() => ticks > 5, 40_000) // unter Last startet node langsamer
+    await until(() => ticks > 5, 120_000) // unter Last (volle Testsuite neben einem Renderlauf) startet node sehr langsam
     await q.pause(id)
     await sleep(60)
     const frozen = ticks
     await sleep(400)
     expect(ticks - frozen).toBeLessThanOrEqual(2)
     await q.resume(id)
-    await until(() => ticks > frozen + 5, 40_000)
+    await until(() => ticks > frozen + 5, 120_000)
     expect((await q.waitFor(id)).state).toBe('done')
-  }, 120_000)
+  }, 300_000)
 })
 
 describe('Blender-Start: Rückfall auf Software-OpenGL', () => {

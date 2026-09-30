@@ -8,6 +8,18 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Added
+
+- Einstellungen → Hardware → Leistungsbericht: misst Export und Spracherkennung auf dem eigenen Rechner und öffnet einen
+  Bericht zum Weitergeben.
+- Qualitätsrunde vorbereitet: Freiform-Aufgaben für fünf Richtungen (je 20 Thumbnail-Beschreibungen und 20
+  Schnittwünsche, eine Richtung englisch), Lauf für jeden KI-Weg, Testmatrix „jede KI-Funktion mit jedem Weg und ohne
+  KI“, CPU-Bericht.
+
+### Changed
+
+- Datumsangaben in Kalender und Wochenplan im Format der Oberflächensprache.
+
 ## [0.7.0] - 2026-09-30
 
 > Export: Premiere, After Effects, DaVinci Resolve, CapCut, Photoshop, Selbsttests

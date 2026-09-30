@@ -129,7 +129,9 @@ const api = {
   onPlanungGeaendert: (handler: () => void) => ereignis(IPC.planungGeaendert, handler),
   programmeStatus: (...a: unknown[]) => ipcRenderer.invoke(IPC.programmeStatus, ...a),
   programmSelbsttest: (...a: unknown[]) => ipcRenderer.invoke(IPC.programmSelbsttest, ...a),
-  schnittProgramm: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittProgramm, ...a)
+  schnittProgramm: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittProgramm, ...a),
+  leistungsbericht: () => ipcRenderer.invoke(IPC.hwLeistung),
+  onLeistungStand: (handler: (s: { percent: number; step: string }) => void) => ereignis(IPC.hwLeistungStand, handler)
 } as CsApi
 
 contextBridge.exposeInMainWorld('cs', api)

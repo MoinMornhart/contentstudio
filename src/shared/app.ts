@@ -131,7 +131,9 @@ export const IPC = {
   uploadStart: 'upload:start',
   programmeStatus: 'programme:status',
   programmSelbsttest: 'programme:selbsttest',
-  schnittProgramm: 'schnitt:programm'
+  schnittProgramm: 'schnitt:programm',
+  hwLeistung: 'hw:leistung',
+  hwLeistungStand: 'hw:leistung-stand'
 } as const
 
 /** Wofür eine Datei hochgeladen wird: bestimmt Dateityp-Filter, Mehrfachauswahl und Zielordner im Datenordner. */
@@ -351,4 +353,7 @@ export interface CsApi {
   programmeStatus(neu?: boolean): Promise<ProgrammeStand>
   programmSelbsttest(id: ProgrammId): Promise<{ id: ProgrammId; status: 'ok' | 'fehler' | 'übersprungen' | 'checkliste'; details: string; datei: string | null }>
   schnittProgramm(id: string, ziel: SchnittZiel): Promise<{ datei: string | null; auftrag: string | null }>
+  /** Leistungsbericht (ROADMAP 8.4): misst Export und Spracherkennung, gibt die Berichtsdatei zurück */
+  leistungsbericht(): Promise<{ datei: string; schritte: { name: string; sekunden: number | null; wert: string }[] }>
+  onLeistungStand(handler: (s: { percent: number; step: string }) => void): () => void
 }

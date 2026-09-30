@@ -1,6 +1,6 @@
 // Herkunft: MoinStudio src/main/hardware/controller.ts (MIT). Blender wird nur getestet, wenn 3D gebraucht wird.
-import { app, ipcMain, type BrowserWindow } from 'electron'
-import { appendFileSync, mkdirSync } from 'node:fs'
+import { app, ipcMain, shell, type BrowserWindow } from 'electron'
+import { appendFileSync, existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { IPC } from '@shared/app'
 import type { DeviceProfile, HardwareState } from '@shared/hardware'
@@ -8,6 +8,9 @@ import { ProfileStore } from './profile'
 import { needsHardwareTest, runHardwareTest } from './run'
 import type { ToolManager } from '../tools/manager'
 import { t } from '../i18n'
+import { leistungsbericht } from './leistung'
+import { FFMPEG } from '../tools/specs'
+import { resourceDir } from '../resources'
 
 /** Pfad zum Blender-Messskript (Entwicklung: Projektordner, installiert: resources). */
 export function benchScriptPath(): string {
@@ -121,6 +124,22 @@ export class HardwareController {
     ipcMain.handle(IPC.hwRun, async () => {
       await this.run().catch(() => undefined)
       return this.current()
+    })
+    // Leistungsbericht (ROADMAP 8.4): misst Export und Spracherkennung, schreibt Markdown und öffnet es
+    ipcMain.handle(IPC.hwLeistung, async () => {
+      const python = join(this.root, 'py', 'vorlage', 'Scripts', 'python.exe')
+      const r = await leistungsbericht({
+        ordner: join(this.root, 'leistung'),
+        ffmpeg: await this.tools.exePath(FFMPEG),
+        profil: await this.profiles.load(),
+        python: existsSync(python) ? python : null,
+        whisperSkript: join(resourceDir('blender'), 'transkript.py'),
+        whisperModelle: join(this.root, 'py', 'modelle', 'whisper'),
+        version: app.getVersion(),
+        melde: (percent, step) => this.getWindow()?.webContents.send(IPC.hwLeistungStand, { percent, step })
+      })
+      void shell.openPath(r.datei)
+      return r
     })
   }
 }

@@ -98,22 +98,29 @@ def gesicht_box(rgba):
         return None
     rgb = np.asarray(rgba.convert("RGB"))
     kandidaten = []
+    yunet_ok = False
     if GESICHT_MODELL and os.path.exists(GESICHT_MODELL) and hasattr(cv2, "FaceDetectorYN"):
-        # YuNet arbeitet am besten auf ~640 px
-        f = min(1.0, 640 / max(rgb.shape[:2]))
-        klein = cv2.resize(rgb, (max(1, int(rgb.shape[1] * f)), max(1, int(rgb.shape[0] * f))))
-        bgr = cv2.cvtColor(klein, cv2.COLOR_RGB2BGR)
-        # Einmal laden, dann nur die Bildgröße anpassen (Verfolgung ruft das für tausende Bilder auf)
-        det = _DETEKTOR.get("yunet")
-        if det is None:
-            det = cv2.FaceDetectorYN.create(GESICHT_MODELL, "", (bgr.shape[1], bgr.shape[0]), 0.7, 0.3, 5000)
-            _DETEKTOR["yunet"] = det
-        det.setInputSize((bgr.shape[1], bgr.shape[0]))
-        _, faces = det.detect(bgr)
-        for fc in faces if faces is not None else []:
-            x, y, w, h = (float(v) / f for v in fc[:4])
-            kandidaten.append((w * h, (int(x), int(y), int(x + w), int(y + h))))
-    elif hasattr(cv2, "CascadeClassifier"):
+        try:
+            # YuNet arbeitet am besten auf ~640 px
+            f = min(1.0, 640 / max(rgb.shape[:2]))
+            klein = cv2.resize(rgb, (max(1, int(rgb.shape[1] * f)), max(1, int(rgb.shape[0] * f))))
+            bgr = cv2.cvtColor(klein, cv2.COLOR_RGB2BGR)
+            # Einmal laden, dann nur die Bildgröße anpassen (Verfolgung ruft das für tausende Bilder auf)
+            det = _DETEKTOR.get("yunet")
+            if det is None:
+                det = cv2.FaceDetectorYN.create(GESICHT_MODELL, "", (bgr.shape[1], bgr.shape[0]), 0.7, 0.3, 5000)
+                _DETEKTOR["yunet"] = det
+            det.setInputSize((bgr.shape[1], bgr.shape[0]))
+            _, faces = det.detect(bgr)
+            for fc in faces if faces is not None else []:
+                x, y, w, h = (float(v) / f for v in fc[:4])
+                kandidaten.append((w * h, (int(x), int(y), int(x + w), int(y + h))))
+            yunet_ok = True
+        except cv2.error as e:
+            # z. B. zu wenig Speicher: Detektor neu laden lassen und für dieses Bild die Haar-Kaskade nehmen
+            _DETEKTOR.pop("yunet", None)
+            print(f"CS_HINWEIS YuNet fehlgeschlagen, nehme Haar-Kaskade: {e}", file=sys.stderr)
+    if not yunet_ok and hasattr(cv2, "CascadeClassifier"):
         grau = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
         for name in ("haarcascade_frontalface_default.xml", "haarcascade_profileface.xml"):
             kaskade = cv2.CascadeClassifier(os.path.join(cv2.data.haarcascades, name))

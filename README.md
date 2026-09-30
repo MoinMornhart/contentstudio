@@ -119,6 +119,17 @@ Jedes Video von der Idee bis zur Veröffentlichung – ein Board je Konto, ein K
 - **Aus Claude Desktop & Co.:** über MCP lassen sich Thumbnails, Schnitt (`video_edit`) und Planung (`planning`) auch
   per Chat steuern.
 
+## Einstellungen
+
+- **Creator-Profil:** Konten mit Plattform, Sprache, Richtung, Upload-Rhythmus, wie du im Thumbnail aussiehst, Freunde
+  und Marke (Farben, Schrift, Logo). Ein Assistent fragt das beim ersten Start in Ruhe ab.
+- **KI-Wege:** lokal, Abo über Codex-CLI, Desktop-Apps über MCP oder eigene Schlüssel – in deiner Reihenfolge, mit
+  Kostenanzeige und Monatsbudget.
+- **Hardware:** der Test stellt Blender, Encoder und Spracherkennung passend ein; der Leistungsbericht misst, wie schnell
+  dein Rechner exportiert und transkribiert.
+- **Programme:** Premiere, After Effects, DaVinci Resolve, CapCut und Photoshop werden erkannt, je mit Selbsttest.
+- **Hochladen:** standardmäßig nie automatisch; optional YouTube über die offizielle Anmeldung.
+
 ## Grundsätze
 
 | | |

@@ -1025,7 +1025,29 @@ export const de = {
   'schnitt.programm.resolve': 'Zeitleiste als FCPXML und EDL, mit Markern – ungetestet in Resolve',
   'schnitt.programm.capcut': 'Ordner mit allen Clips in Reihenfolge, Untertiteln und Liste zum Übernehmen',
   'schnitt.programm.fertig': 'Gespeichert: {datei}',
-  'schnitt.programm.laeuft': 'Clips werden geschnitten – siehe Aufgaben. Ordner: {datei}'
+  'schnitt.programm.laeuft': 'Clips werden geschnitten – siehe Aufgaben. Ordner: {datei}',
+
+  'leistung.knopf': 'Leistungsbericht',
+  'leistung.hinweis': 'Misst Export und Spracherkennung auf diesem Rechner und öffnet einen Bericht zum Weitergeben (etwa 1–3 Minuten).',
+  'leistung.schritt.start': 'Starte …',
+  'leistung.schritt.export': 'Export mit {encoder} …',
+  'leistung.schritt.whisper': 'Spracherkennung mit {modell} …',
+  'leistung.schritt.bericht': 'Schreibe den Bericht …',
+  'leistung.titel': 'Leistungsbericht',
+  'leistung.geraet': 'Gerät',
+  'leistung.entscheidungen': 'Entscheidungen aus dem Hardware-Test',
+  'leistung.messungen': 'Messungen',
+  'leistung.aufgabe': 'Aufgabe',
+  'leistung.sekunden': 'Sekunden',
+  'leistung.ergebnis': 'Ergebnis',
+  'leistung.keinProfil': 'noch kein Hardware-Test',
+  'leistung.export': 'Export 20 s Full HD ({encoder})',
+  'leistung.echtzeit': '{faktor}× Echtzeit',
+  'leistung.whisper': 'Spracherkennung 20 s (Whisper {modell}, {geraet})',
+  'leistung.whisperWert': '{faktor}× Videolänge, {abschnitte} Abschnitte',
+  'leistung.render': 'Testbild gerendert',
+  'leistung.fehlgeschlagen': 'fehlgeschlagen',
+  'leistung.uebersprungen': 'übersprungen (Werkzeug fehlt)'
 } as const
 
 export type Schluessel = keyof typeof de

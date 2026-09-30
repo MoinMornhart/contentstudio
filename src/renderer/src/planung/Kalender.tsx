@@ -1,6 +1,6 @@
 // Herkunft: MoinStudio src/renderer/src/components/PlanungKalender.tsx (MIT), für beliebig viele Konten und übersetzbar.
 import { useState } from 'react'
-import { luecken, monatsRaster, plusTage, rhythmusAus, tagVon, teileTermin, terminAufTag, WOCHE, wochenTage, wochentag, wochentagKurz, type Luecke } from '@shared/kalender'
+import { luecken, monatsRaster, plusTage, rhythmusAus, tagVon, teileTermin, terminAufTag, WOCHE, wochenTage, wochentagKurz, type Luecke } from '@shared/kalender'
 import type { PlanungAenderung, PlanungKarte } from '@shared/planung'
 import type { Konto } from '@shared/profil'
 import { RhythmusEditor } from '../profil/Bausteine'
@@ -25,7 +25,7 @@ export function PlanungKalender({ karten, oeffne, aendern }: { karten: PlanungKa
   const [ziehe, setZiehe] = useState<string | null>(null)
 
   const name = (id: string): string => konten.find((k) => k.id === id)?.name.trim() || t('konten.unbenannt')
-  const tagText = (tag: string): string => `${wochentagKurz(wochentag(tag), locale)} ${tag.slice(8)}.${tag.slice(5, 7)}.`
+  const tagText = (tag: string): string => new Intl.DateTimeFormat(locale, { weekday: 'short', day: '2-digit', month: '2-digit' }).format(new Date(`${tag}T12:00`))
   const b = new Date(`${bezug}T12:00`)
   const tage = ansicht === 'monat' ? monatsRaster(b.getFullYear(), b.getMonth()) : wochenTage(bezug)
   const blaettern = (richtung: number): void => {
