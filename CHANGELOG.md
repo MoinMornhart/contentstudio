@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-30
+
+> Export: Premiere, After Effects, DaVinci Resolve, CapCut, Photoshop, Selbsttests
+
 ### Added
 
 - Schnitt weitergeben: Premiere Pro (FCP7-XML mit Zooms, Texten, Markern und Untertiteln), After Effects (Skript, das die

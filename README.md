@@ -142,11 +142,11 @@ zwölf Schritten durch Profil, Kanäle, Darstellung, Marke und KI. Updates komme
 ## Neueste Änderungen
 
 <!-- CHANGELOG:START -->
+- **0.7.0** (2026-09-30): Export: Premiere, After Effects, DaVinci Resolve, CapCut, Photoshop, Selbsttests
 - **0.6.0** (2026-09-30): Planung: Board je Konto, Kalender, KI-Ideen, Cross-Posting, Upload-Paket
 - **0.5.0** (2026-09-30): Schnitt: Transkript, Rohschnitt nach Stil, Effekte in Worten, Hochformat, Spuren, Export je Plattform
 - **0.4.0** (2026-09-30): Thumbnails: Vorbilder, Stilbuch, 3D, Foto, Vorlagen, Selbstprüfung, Export
 - **0.3.0** (2026-09-30): KI-Schicht für alle Anbieter und MCP
-- **0.2.0** (2026-09-30): Creator-Profil und Einrichtungsassistent
 <!-- CHANGELOG:END -->
 
 ## Entwicklung
