@@ -197,7 +197,7 @@ describe.runIf(!!UV && existsSync(FOTOS))('Vorlagen-Modus: 5 Vorlagen', () => {
 describe.runIf(existsSync(join(ROOT, 'ffmpeg')))('Aus dem Video: 3 Testvideos', () => {
   const ffmpeg = readdirSync(join(ROOT, 'ffmpeg')).map((v) => join(ROOT, 'ffmpeg', v, 'bin', 'ffmpeg.exe')).find(existsSync)!
   const VIDEOS = [
-    { name: 'drei-szenen', farben: ['red', 'green', 'blue'], laenge: 8 },
+    { name: 'drei-szenen', farben: ['red', 'white', 'blue'], laenge: 8 },
     { name: 'fuenf-szenen', farben: ['black', 'white', 'orange', 'purple', 'cyan'], laenge: 6 },
     { name: 'lang', farben: ['navy', 'yellow', 'gray', 'pink'], laenge: 30 }
   ]

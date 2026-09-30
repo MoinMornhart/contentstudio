@@ -98,12 +98,12 @@ export async function renderModell(
   basis: string,
   ctx: JobContext<unknown>
 ): Promise<{ roh: string | null; bericht: Bericht; fehler: string | null }> {
-  const spec = { ...modell, samples: u.blender?.samples ?? 32, geraet: u.blender?.geraet ?? 'CPU', breite: 1280, hoehe: 1280 }
+  const spec = { ...modell, samples: u.blender?.samples ?? 32, geraet: u.blender?.geraet ?? 'CPU', breite: 1024, hoehe: 1024 }
   await writeFile(`${basis}.modell.json`, JSON.stringify(spec, null, 1))
   const { code, output } = await blender(u, join('modell', 'render_modell.py'), [`${basis}.modell.json`, `${basis}.figur.png`, `${basis}.figur.bericht.json`], ctx)
   const mb = await liesJson<Bericht>(`${basis}.figur.bericht.json`, {})
   if (code !== 0 || mb.fehler) return { roh: null, bericht: mb, fehler: mb.fehler ?? `Blender ${code}: ${output.trim().split(ZEILE).slice(-1)[0]}` }
-  const personen = ((foto['personen'] as Record<string, unknown>[] | undefined) ?? []).map((x, i) => (i === 0 ? { ...x, bild: `${basis}.figur.png`, freistellen: false, art: 'modell', kopf_rel: mb.figuren?.['ich']?.kopf_box ?? null, ...(modell['kamera'] === 'ganz' ? { kopf_anteil: Math.min(Number(x['kopf_anteil'] ?? 0.12), 0.12), kopf_y: 0.22 } : {}) } : x))
+  const personen = ((foto['personen'] as Record<string, unknown>[] | undefined) ?? []).map((x, i) => (i === 0 ? { ...x, bild: `${basis}.figur.png`, freistellen: false, art: 'modell', kopf_rel: mb.figuren?.['ich']?.kopf_box ?? null, ...(modell['kamera'] === 'ganz' ? { kopf_anteil: null, hoehe: 0.86, anschnitt: 0, steht: true } : {}) } : x))
   const erg = await renderFoto(p, u, { ...foto, personen }, basis, ctx)
   erg.bericht.warnungen = [...(mb.warnungen ?? []), ...(erg.bericht.warnungen ?? [])]
   return erg
@@ -170,13 +170,19 @@ export async function setzeTextUndLogo(
   let logoBox: Box | null = null
   if (auftrag.logo) {
     try {
-      const l = setzeLogo(await liesBild(bild), await liesBild(auftrag.logo), [...sperrFlaechen(bericht), ...textBoxen])
-      if (!l.frei) warnungen.push(t('thumb.warn.logoVerdeckt'))
-      const ziel = `${basis}.fertig.png`
-      await schreibePng(ziel, l.bild)
-      await schreibePng(join(ebenen, 'logo.png'), l.ebene)
-      bild = ziel
-      logoBox = l.box
+      // Keine Ecke ganz frei: erst kleiner versuchen, sonst lieber ohne Logo als über Gesicht, Figur oder Text
+      const grund = await liesBild(bild)
+      const logo = await liesBild(auftrag.logo)
+      const sperren = [...sperrFlaechen(bericht), ...textBoxen]
+      const l = [0.16, 0.12, 0.09].map((b) => setzeLogo(grund, logo, sperren, b)).find((x) => x.frei)
+      if (!l) warnungen.push(t('thumb.warn.logoVerdeckt'))
+      else {
+        const ziel = `${basis}.fertig.png`
+        await schreibePng(ziel, l.bild)
+        await schreibePng(join(ebenen, 'logo.png'), l.ebene)
+        bild = ziel
+        logoBox = l.box
+      }
     } catch {
       warnungen.push(t('thumb.warn.logoFehlt'))
     }

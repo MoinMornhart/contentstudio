@@ -192,6 +192,8 @@ def baue(spec, ausgabe, bericht_pfad):
         # Welche Ränder des Originalfotos schneiden die Figur ab? (vor dem Zuschneiden prüfen)
         voll = np.asarray(fig.getchannel("A"))
         offen = {"links": voll[:, :3].max() > 128, "rechts": voll[:, -3:].max() > 128, "unten": voll[-3:].max() > 128}
+        if p.get("art") == "modell":  # 3D-Modell: Blender rendert es frei, nur ein Anschnitt unten ist gewollt
+            offen["links"] = offen["rechts"] = False
         qw = fig.width
         fig = fig.crop(bbox)
         # Kopf schon bekannt (3D-Modell: Blender kennt ihn genau), in Pixeln des Zuschnitts

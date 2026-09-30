@@ -1,6 +1,6 @@
 // Herkunft: MoinStudio src/main/thumbnail/video.ts (MIT), auf die KI-Schicht umgestellt und um lokale Momente ergänzt.
 import { spawn } from 'node:child_process'
-import { mkdir, readdir } from 'node:fs/promises'
+import { mkdir, readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
 import type { VideoErgebnis } from '@shared/thumbnail'
@@ -26,9 +26,9 @@ export interface VideoPayload {
   sprache: string
 }
 
-function ffmpeg(exe: string, args: string[], ctx: JobContext<unknown>): Promise<string> {
+function ffmpeg(exe: string, args: string[], ctx: JobContext<unknown>, cwd?: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn(exe, ['-hide_banner', '-y', ...args], { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn(exe, ['-hide_banner', '-y', ...args], { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], cwd })
     ctx.track(child)
     let out = ''
     child.stderr.on('data', (d: Buffer) => (out = (out + d.toString()).slice(-400_000)))
@@ -51,15 +51,24 @@ export function zeit(sek: number): string {
   return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`
 }
 
-/** Szenenwechsel aus der showinfo-Ausgabe (Zeit und Stärke) */
+/** Wechselstärke je Bild aus der Ausgabe von metadata=print (Zeile mit pts_time, danach lavfi.scene_score) */
 export function szenenAus(text: string): { zeit: number; staerke: number }[] {
   const out: { zeit: number; staerke: number }[] = []
-  const re = /pts_time:([\d.]+)[\s\S]*?lavfi\.scene_score=([\d.]+)/g
-  for (const m of text.matchAll(re)) out.push({ zeit: Number(m[1]), staerke: Number(m[2]) })
-  if (out.length) return out
-  for (const m of text.matchAll(/pts_time:([\d.]+)/g)) out.push({ zeit: Number(m[1]), staerke: 0.5 })
+  let zeit: number | null = null
+  for (const zeile of text.split(/\r?\n/)) {
+    const z = /pts_time:([\d.]+)/.exec(zeile)
+    if (z) zeit = Number(z[1])
+    const w = /lavfi\.scene_score=([\d.]+)/.exec(zeile)
+    if (w && zeit !== null) {
+      out.push({ zeit, staerke: Number(w[1]) })
+      zeit = null
+    }
+  }
   return out
 }
+
+/** Ab dieser Stärke gilt ein Wechsel als Schnitt (FFmpeg-Szenenwert 0–1; feste 0,3 übersieht ruhige Schnitte) */
+const SCHNITT = 0.1
 
 /** Bis zu `n` starke Momente, gleichmäßig über das Video verteilt (je Abschnitt der stärkste Wechsel) */
 export function waehleMomente(szenen: { zeit: number; staerke: number }[], dauer: number, n = 8): { zeit: number; grund: 'szene' | 'gleichmaessig' }[] {
@@ -67,7 +76,7 @@ export function waehleMomente(szenen: { zeit: number; staerke: number }[], dauer
   for (let i = 0; i < n; i++) {
     const von = (dauer * i) / n
     const bis = (dauer * (i + 1)) / n
-    const kandidaten = szenen.filter((s) => s.zeit >= von && s.zeit < bis)
+    const kandidaten = szenen.filter((s) => s.zeit >= von && s.zeit < bis && s.staerke >= SCHNITT)
     if (kandidaten.length) {
       const best = kandidaten.reduce((a, b) => (b.staerke > a.staerke ? b : a))
       // kurz nach dem Wechsel: das neue Bild steht dann schon ruhig
@@ -90,7 +99,11 @@ export async function videoJob(p: VideoPayload, ctx: JobContext<unknown>, d: { k
 
   // Szenenwechsel: auf kleinem Bild und mit wenigen Bildern je Sekunde (schnell auf jedem Rechner)
   ctx.progress(15, t('thumb.video.szenen'))
-  const szenenText = await ffmpeg(p.ffmpeg, ['-i', p.video, '-an', '-vf', "fps=2,scale=320:-2,select='gt(scene,0.3)',metadata=print,showinfo", '-f', 'null', '-'], ctx).catch(() => '')
+  // Werte aller Bilder in eine Datei (bei langen Videos zu viel für die Konsolenausgabe); FFmpeg läuft im
+  // Ausgabeordner, damit kein Windows-Pfad im Filter maskiert werden muss
+  const werte = join(p.ausgabe, 'szenen.txt')
+  await ffmpeg(p.ffmpeg, ['-i', p.video, '-an', '-vf', `fps=2,scale=160:-2,select='gte(scene,0)',metadata=print:file=szenen.txt`, '-f', 'null', '-'], ctx, p.ausgabe).catch(() => '')
+  const szenenText = await readFile(werte, 'utf8').catch(() => '')
   const momente = waehleMomente(szenenAus(szenenText), dauer)
   await ctx.yield()
 

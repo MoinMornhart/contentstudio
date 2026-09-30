@@ -206,9 +206,9 @@ describe('Reaction, Vorlage, Video', () => {
   })
 
   it('Video: Momente gleichmäßig verteilt, stärkster Wechsel je Abschnitt', () => {
-    const text = 'n: 0 pts_time:12.5 lavfi.scene_score=0.4\nn: 1 pts_time:14 lavfi.scene_score=0.9\nn: 2 pts_time:95 lavfi.scene_score=0.5'
+    const text = 'frame:0 pts:25 pts_time:12.5\nlavfi.scene_score=0.4\nframe:1 pts:28 pts_time:14\nlavfi.scene_score=0.9\nframe:2 pts:30 pts_time:15\nlavfi.scene_score=0.02\nframe:3 pts:190 pts_time:95\nlavfi.scene_score=0.5'
     const s = szenenAus(text)
-    expect(s).toEqual([{ zeit: 12.5, staerke: 0.4 }, { zeit: 14, staerke: 0.9 }, { zeit: 95, staerke: 0.5 }])
+    expect(s).toEqual([{ zeit: 12.5, staerke: 0.4 }, { zeit: 14, staerke: 0.9 }, { zeit: 15, staerke: 0.02 }, { zeit: 95, staerke: 0.5 }])
     const m = waehleMomente(s, 100, 4)
     expect(m).toHaveLength(4)
     expect(m[0]).toEqual({ zeit: 14.6, grund: 'szene' })

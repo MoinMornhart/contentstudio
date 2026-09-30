@@ -480,7 +480,7 @@ export const de = {
   'thumb.schritt.lama': 'Lade das Modell zum Auffüllen des Hintergrunds (einmalig, 208 MB) …',
   'thumb.schritt.text': 'Text und Logo setzen …',
   'thumb.warn.textFehlt': 'Text konnte nicht gesetzt werden',
-  'thumb.warn.logoVerdeckt': 'Logo findet keine ganz freie Ecke',
+  'thumb.warn.logoVerdeckt': 'Logo weggelassen: keine Ecke ist frei von Gesicht, Figur oder Text',
   'thumb.warn.logoFehlt': 'Logo konnte nicht gesetzt werden',
   'thumb.fehler.keinPlan': 'Die KI hat keine gültige Variante geplant.',
   'thumb.fehler.render': 'Das Bild konnte nicht erstellt werden.',

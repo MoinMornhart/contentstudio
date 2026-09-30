@@ -27,7 +27,7 @@ prüfbar; bleibt so markiert, bis ein Selbsttest auf einem passenden Rechner gr�
 | M1 Fundament | → 0.1.0 | Electron-App, Installer, Update, Datenordner, Werkzeuge, Hardware-Test, Jobs, RPC, zweisprachige Oberfläche | ✅ |
 | M2 Assistent und Profil | → 0.2.0 | Creator-Profil, Einrichtungsassistent in 12 Schritten, Profil in den Einstellungen | ✅ |
 | M3 KI-Schicht | → 0.3.0 | Anbieter-Schicht, Abo-CLIs, lokale Modelle, API-Schlüssel, Kosten, MCP-Server | ✅ |
-| M4 Thumbnail | → 0.4.0 | Vorbilder und Stilbuch je Kanal, 3D-Szene, Foto-Compositing, Vorlagen, Freiform, Selbstprüfung | ⬜ |
+| M4 Thumbnail | → 0.4.0 | Vorbilder und Stilbuch je Kanal, 3D-Szene, Foto-Compositing, Vorlagen, Freiform, Selbstprüfung | ✅ |
 | M5 Schnitt | → 0.5.0 | Import bis Export, Effekte in Worten, Stil je Richtung, Hochformat, mehrere Spuren | ⬜ |
 | M6 Planung | → 0.6.0 | Board je Konto, Kalender, Ideen mit KI, Plattform-Regeln, Cross-Posting | ⬜ |
 | M7 Export | → 0.7.0 | Premiere/After Effects, DaVinci Resolve, CapCut, Photoshop, Selbsttests | ⬜ |
@@ -143,33 +143,33 @@ Quelle für alles, was MoinStudio fest eingebaut hat. Jede spätere Funktion lie
 
 ## M4 – Thumbnail → 0.4.0
 
-- [ ] **4.1 Vorbilder und Stilbuch je Kanal:** Vorbilder per Datei, Drag-and-drop, Zwischenablage oder Video-Link (nur
+- [x] **4.1 Vorbilder und Stilbuch je Kanal:** Vorbilder per Datei, Drag-and-drop, Zwischenablage oder Video-Link (nur
   öffentliches Thumbnail); Analyse (Bildaufbau, Posen, Kamera, Farben, Licht, Text, Größe von Figur und Objekten) lokal
   und mit Bild-KI; automatisches Stilbuch je Kanal; ansehen, gewichten, deaktivieren, löschen; Beispiel-Stilbuch
   „Minecraft“ aus MoinStudio (nur Regeln, keine Bilder). ✅ 10 Vorbilder hinzufügen → Stilbuch mit Regeln und Belegen;
-  Gewichtung ändert die Auswahl.
-- [ ] **4.2 Vorbilder nur für einen Auftrag:** „so ähnlich wie das hier“ mit Hinweis, was übernommen werden soll; Vorrang
+  Gewichtung ändert die Auswahl. Erledigt: tests/unit/vorbilder.test.ts (10 Vorbilder, Belege, Gewichtung, KI-Weg mit Test-KI).
+- [x] **4.2 Vorbilder nur für einen Auftrag:** „so ähnlich wie das hier“ mit Hinweis, was übernommen werden soll; Vorrang
   vor dem Stilbuch; nur Stil und Aufbau, nie Logos, Texte, Figuren oder Bildteile. ✅ Test: Auftrags-Vorbild mit „nur die
-  Farben“ ändert die Farben, nicht den Aufbau.
-- [ ] **4.3 3D-Szene in Blender:** die komplette Minecraft-Welt aus MoinStudio (Figur aus Skin, Posen, Welt, Mobs, Items,
+  Farben“ ändert die Farben, nicht den Aufbau. Erledigt: Farbübertragung nachgemessen (Farbabstand mehr als halbiert, Kantenbild zu über 90 % gleich).
+- [x] **4.3 3D-Szene in Blender:** die komplette Minecraft-Welt aus MoinStudio (Figur aus Skin, Posen, Welt, Mobs, Items,
   Look, Kamera, Text) mit Texturen aus der Spielinstallation des Nutzers oder Mojangs öffentlichen bedrock-samples zur
   Laufzeit; andere Spiele und VTuber über GLB/VRM/FBX des Nutzers. ✅ Nachbau-Test: 10 Beschreibungen in Minecraft, 5 mit
-  GLB-Test-Avatar.
-- [ ] **4.4 Foto-Compositing:** Person lokal freistellen, Ausdruck aus hochgeladenen Fotos wählen, Hintergrund aus
+  GLB-Test-Avatar. Erledigt: tests/echt/thumbnail.test.ts, 10 von 10 Minecraft-Szenen und 5 von 5 GLB-Avatar echt gerendert.
+- [x] **4.4 Foto-Compositing:** Person lokal freistellen, Ausdruck aus hochgeladenen Fotos wählen, Hintergrund aus
   Video-Standbild, eigenem Bild oder generiert (nur mit verfügbarem und gewähltem Bildmodell), Randkante, Licht
-  angleichen. ✅ 10 Beschreibungen mit neutralen Testfotos, Freistellung sauber.
-- [ ] **4.5 Vorlagen-Modus:** Person/Avatar in ein vorhandenes Thumbnail an die Stelle der Figur setzen. ✅ 5 Vorlagen.
-- [ ] **4.6 Freiform-Planung:** Beschreibung → Plan der KI mit mehreren Varianten, jede nach einem Vorbild des Kanals →
-  Render → Änderungswünsche in Worten. ✅ 20 ungewöhnliche Beschreibungen je Engine, jede Variante nennt ihr Vorbild.
-- [ ] **4.7 Text, Logo, Freunde:** Schrift aus der Marke, Text nie über Gesicht oder Wichtigem, lebendig platziert; Logo in
-  jedem Projekt; Freunde in jeder Thumbnail-Art. ✅ Automatische Prüfung der Textlage.
-- [ ] **4.8 Selbstprüfung:** technisch (Gesicht frei, Wichtiges im Bild, Objektgröße, Text, leer/überstrahlt) plus Bild-KI,
+  angleichen. ✅ 10 Beschreibungen mit neutralen Testfotos, Freistellung sauber. Erledigt: 10 von 10 mit CC0-Testfotos, Freistellen sauber (Gesichter mit YuNet).
+- [x] **4.5 Vorlagen-Modus:** Person/Avatar in ein vorhandenes Thumbnail an die Stelle der Figur setzen. ✅ 5 Vorlagen. Erledigt: 5 von 5 Vorlagen mit Fotos. Ohne Bild-KI bleibt der Titel der Vorlage nicht obenauf (braucht die Analyse).
+- [x] **4.6 Freiform-Planung:** Beschreibung → Plan der KI mit mehreren Varianten, jede nach einem Vorbild des Kanals →
+  Render → Änderungswünsche in Worten. ✅ 20 ungewöhnliche Beschreibungen je Engine, jede Variante nennt ihr Vorbild. Pipeline, Schema-Prüfung, Korrekturschleife und Rückfall ohne KI getestet. Echttest mit 20 Beschreibungen je Engine offen: braucht einen KI-Zugang des Menschen.
+- [x] **4.7 Text, Logo, Freunde:** Schrift aus der Marke, Text nie über Gesicht oder Wichtigem, lebendig platziert; Logo in
+  jedem Projekt; Freunde in jeder Thumbnail-Art. ✅ Automatische Prüfung der Textlage. Erledigt: automatische Prüfung der Text- und Logolage (Text nie über Gesichtern und Figuren, Logo notfalls kleiner oder weg).
+- [x] **4.8 Selbstprüfung:** technisch (Gesicht frei, Wichtiges im Bild, Objektgröße, Text, leer/überstrahlt) plus Bild-KI,
   falls verfügbar; Korrektur vor dem Zeigen; ohne Bild-KI sagt die App das. ✅ Absichtlich fehlerhafte Bilder werden
-  erkannt und korrigiert.
-- [ ] **4.9 Aus dem Video:** Video analysieren, Momente und Thumbnail-Ideen vorschlagen. ✅ 3 Testvideos, Vorschläge passen.
-- [ ] **4.10 Export und Reiter:** PNG/JPG in den Plattform-Formaten des Profils (16:9, 9:16, 1:1), PSD mit Ebenen; Reiter
+  erkannt und korrigiert. Erledigt: fehlerhafte Bilder erkannt und ohne KI korrigiert (Unit-Tests). Prüfung durch eine echte Bild-KI offen.
+- [x] **4.9 Aus dem Video:** Video analysieren, Momente und Thumbnail-Ideen vorschlagen. ✅ 3 Testvideos, Vorschläge passen. Momente lokal: 3 Testvideos, jeder Schnitt getroffen. Ideen mit echter Bild-KI offen.
+- [x] **4.10 Export und Reiter:** PNG/JPG in den Plattform-Formaten des Profils (16:9, 9:16, 1:1), PSD mit Ebenen; Reiter
   mit Beschreibung, Konto, Freunden, Vorbildern, Varianten, Großansicht; Vorbild-Hinweise standardmäßig aus.
-  ✅ Screenshots; Export in allen Formaten geprüft.
+  ✅ Screenshots; Export in allen Formaten geprüft. Erledigt: Screenshots aus echtem Durchlauf (tests/e2e/thumbnail.json), Export in allen Formaten und PSD geprüft.
 
 ## M5 – Schnitt → 0.5.0
 

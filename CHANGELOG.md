@@ -34,7 +34,10 @@ Kurzbeschreibung für die README.
 
 - Minecraft-Mobs werden nur zur Laufzeit aus Mojangs `bedrock-samples` importiert; aufrechte Wesen wie der Creeper
   stehen jetzt richtig.
-- Bei Speichermangel rendert Blender automatisch kleiner und mit weniger Samples.
+- Bei Speichermangel rendert Blender automatisch kleiner und mit weniger Samples (Minecraft) bzw. ohne Entrauschen
+  (3D-Modell).
+- Aufgaben sehen nach dem Speichern eines Zwischenstands sofort den neuen Stand.
+- README neu mit Bildern der Thumbnail-Arten und der Oberfläche.
 
 ## [0.3.0] - 2026-09-30
 

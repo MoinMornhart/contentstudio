@@ -221,7 +221,7 @@ def baue(spec, ausgabe, bericht_pfad):
             kopf_z = (arm.matrix_world @ k["kopf"].head).z + hoehe * 0.05
     art = spec.get("kamera", "brust")
     # Sichtbarer Ausschnitt und Blickpunkt je Kameraart
-    ausschnitt = {"nah": 0.32, "brust": 0.58, "ganz": 1.08}.get(art, 0.58) * hoehe
+    ausschnitt = {"nah": 0.32, "brust": 0.58, "ganz": 1.3}.get(art, 0.58) * hoehe
     ziel = Vector((mitte.x, mitte.y, kopf_z - ausschnitt * (0.28 if art != "ganz" else 0.45)))
     cam_d = bpy.data.cameras.new("Kamera")
     cam_d.lens = {"nah": 50, "brust": 40, "ganz": 35}.get(art, 40)
@@ -236,9 +236,8 @@ def baue(spec, ausgabe, bericht_pfad):
     # Leicht von unten (Heldenperspektive) und leicht seitlich
     cam.location = ziel + Vector((0.12 * abstand * (1 if spec.get("seite", "links") == "links" else -1), abstand * vorne, 0.06 * abstand))
     cam.rotation_euler = (ziel - cam.location).to_track_quat("-Z", "Y").to_euler()
-    # Figur auf die gewünschte Bildseite: Kamera seitlich verschieben
-    verschiebung = {"links": 0.22, "rechts": -0.22, "mitte": 0.0}.get(spec.get("seite", "links"), 0.22)
-    cam_d.shift_x = verschiebung
+    # Figur mittig rendern: auf die Bildseite setzt sie erst das Compositing (sonst stößt sie an den Rand)
+    cam_d.shift_x = 0.0
     licht(szene, spec.get("licht", "studio"), spec.get("randlicht"), vorne)
 
     szene.render.engine = "CYCLES"
@@ -253,7 +252,16 @@ def baue(spec, ausgabe, bericht_pfad):
     szene.render.image_settings.color_mode = "RGBA"
     szene.view_settings.view_transform = "AgX" if "AgX" in [v.identifier for v in type(szene.view_settings).bl_rna.properties["view_transform"].enum_items] else "Filmic"
     szene.render.filepath = ausgabe
-    bpy.ops.render.render(write_still=True)
+    try:
+        bpy.ops.render.render(write_still=True)
+    except RuntimeError as err:
+        # Zu wenig Speicher (kleine Rechner): kleiner und ohne Entrauschen noch einmal
+        if "memory" not in str(err).lower():
+            raise
+        print("CS_WENIGER_SPEICHER", err)
+        szene.cycles.use_denoising = False
+        szene.render.resolution_percentage = 70
+        bpy.ops.render.render(write_still=True)
 
     # Bericht: Figur- und Kopfbox in Bildanteilen (oben links = 0,0)
     def auf_bild(p):

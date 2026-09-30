@@ -479,7 +479,7 @@ export const en: Record<Schluessel, string> = {
   'thumb.schritt.lama': 'Downloading the background fill model (once, 208 MB) …',
   'thumb.schritt.text': 'Placing text and logo …',
   'thumb.warn.textFehlt': 'Text could not be placed',
-  'thumb.warn.logoVerdeckt': 'Logo found no completely free corner',
+  'thumb.warn.logoVerdeckt': 'Logo left out: no corner is free of faces, figures or text',
   'thumb.warn.logoFehlt': 'Logo could not be placed',
   'thumb.fehler.keinPlan': 'The AI did not plan a valid variant.',
   'thumb.fehler.render': 'The image could not be created.',
