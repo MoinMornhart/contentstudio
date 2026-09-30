@@ -1,0 +1,63 @@
+# --- Secrets / lokale Konfiguration ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+
+# --- Private Nutzerdaten (gehören in den Datenordner, nie ins Repo) ---
+/data/
+/userdata/
+*.skin.png
+/skins/
+/friends/
+/raw/
+/references/
+/renders/
+/projects/
+
+# --- Node / Electron ---
+node_modules/
+dist/
+out/
+release/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# --- Heruntergeladene Werkzeuge / Modelle (werden zur Laufzeit geladen) ---
+/tools/blender/
+/tools/ffmpeg/
+/models/
+*.onnx
+*.safetensors
+*.ckpt
+
+# --- Medien / Render-Ausgaben ---
+*.mp4
+*.mov
+*.mkv
+*.wav
+*.blend1
+/tmp/
+/scratch/
+
+# --- Test-Ausgaben (Berichte in docs/tests/ bleiben versioniert) ---
+/test-output/
+
+# --- System / Editor ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+*.swp
+
+# --- MoinStudio-Klon für Neubau und Update (nur lesen, nie committen) ---
+/upstream/

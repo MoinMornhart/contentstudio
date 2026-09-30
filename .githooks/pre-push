@@ -1,0 +1,19 @@
+#!/bin/sh
+# Secret-Scan vor jedem Push. Bricht den Push ab, wenn gitleaks etwas findet.
+# winget legt Kommandozeilen-Aliase hier ab; ältere Shells kennen den Pfad evtl. noch nicht.
+if [ -n "$LOCALAPPDATA" ] && ! command -v gitleaks >/dev/null 2>&1; then
+  WINGET="$(cygpath -u "$LOCALAPPDATA" 2>/dev/null)/Microsoft/WinGet"
+  PATH="$PATH:$WINGET/Links"
+  for d in "$WINGET"/Packages/Gitleaks.Gitleaks_*; do
+    [ -d "$d" ] && PATH="$PATH:$d"
+  done
+fi
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-push: gitleaks nicht gefunden – Push abgebrochen. Installation: winget install Gitleaks.Gitleaks" >&2
+  exit 1
+fi
+echo "pre-push: gitleaks prüft Repository-Historie ..."
+gitleaks git --redact --no-banner . || {
+  echo "pre-push: gitleaks hat mögliche Secrets gefunden – Push abgebrochen." >&2
+  exit 1
+}
