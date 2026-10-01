@@ -16,7 +16,9 @@ export const AllgemeinVarianteZ = z.object({
   vorbild: z.string(),
   warum: z.string(),
   hintergrund: z.object({
-    art: z.enum(['verlauf', 'bild']),
+    art: z.enum(['verlauf', 'bild', 'ort']),
+    /** Nur bei „ort“: englische Stichworte für ein echtes Ortsfoto (z. B. „kitchen“, „gym“, „city street“) */
+    ort: z.string().optional(),
     farben: z.array(Hex).min(1).max(3),
     winkel: z.number().min(-180).max(180).optional(),
     unschaerfe: z.number().min(0).max(30).optional(),
@@ -40,6 +42,11 @@ export const AllgemeinVarianteZ = z.object({
       licht: z.enum(['studio', 'dramatisch', 'weich']),
       randlicht: Hex.optional()
     })
+    .optional(),
+  /** Gegenstände als 3D-Sticker: englischer Emoji-Name, Mitte (x, y als Bildanteil), Größe als Anteil der Bildhöhe */
+  objekte: z
+    .array(z.object({ emoji: z.string(), x: z.number().min(0).max(1), y: z.number().min(0).max(1), groesse: z.number().min(0.08).max(0.6), drehung: z.number().min(-30).max(30).optional() }))
+    .max(3)
     .optional(),
   text: z.array(z.object({ text: z.string(), farbe: Hex.optional() })).max(2).optional(),
   randfarbe: Hex.optional(),
@@ -70,7 +77,7 @@ const ENGINE_TEXT: Record<AllgemeinEingabe['engine'], string> = {
   grafik: 'Reine Grafik ohne Person: Hintergrund, Text und Logo (Personenliste leer lassen)'
 }
 
-const MODELL_REGELN = `7. **3D-Modell:** Fülle \`modell\` aus: \`pose\` (${MODELL_POSEN.join(', ')}), \`kopf\` (drehen −45…45 zur Bildmitte,
+const MODELL_REGELN = `8. **3D-Modell:** Fülle \`modell\` aus: \`pose\` (${MODELL_POSEN.join(', ')}), \`kopf\` (drehen −45…45 zur Bildmitte,
    neigen −25…25), \`kamera\` (nah = Kopf groß, brust = Oberkörper, ganz = ganze Figur), \`licht\` (studio, dramatisch,
    weich) und optional \`randlicht\` als Farbe. \`personen\` enthält dann genau die Hauptfigur mit Seite und Größe.`
 
@@ -103,6 +110,8 @@ export function pruefeAllgemein(plan: AllgemeinPlan, o: { engine: AllgemeinEinga
   plan.varianten.forEach((v, i) => {
     if (!bekannt.has(v.vorbild) && o.vorbilder[0]) v.vorbild = o.vorbilder[0].id
     if (v.hintergrund.art === 'bild' && !o.hintergrund) v.hintergrund.art = 'verlauf'
+    if (v.hintergrund.art === 'ort' && !v.hintergrund.ort?.trim()) v.hintergrund.art = 'verlauf'
+    v.objekte = (v.objekte ?? []).filter((x) => x.emoji.trim()).slice(0, 3)
     v.text = (v.text ?? []).slice(0, 1).map((t) => ({ ...t, text: t.text.split(/\s+/).slice(0, 4).join(' ') }))
     if (o.engine === 'grafik') v.personen = []
     else {

@@ -13,6 +13,7 @@ import { sichereMcAssets } from './minecraft/assets'
 import { ladeKatalog } from './minecraft/katalog'
 import { sichereMobs } from './minecraft/mobimport'
 import { wendeVorbilderAn } from './nachbearbeitung'
+import { loeseElemente } from './bildelemente'
 import { allgemeinOhneKi, allgemeinPrompt, AllgemeinPlanZ, AllgemeinVarianteZ, pruefeAllgemein, type AllgemeinPlan, type AllgemeinVariante } from './planung/allgemein'
 import { ernsteWarnungen, korrekturPrompt, mcOhneKi, McPlanZ, mcPrompt, pruefePlan, pruefeSzene, SzeneAntwortZ, type McPlan, type McPlanEingabe, type Szene } from './planung/minecraft'
 import { autoKorrektur, kiPruefung, technischePruefung, type Befund } from './pruefung'
@@ -247,7 +248,8 @@ async function allgemeinLauf(p: ThumbPayload, ctx: JobContext<Checkpoint>, d: Th
       await ctx.yield()
       ctx.progress(anteil(versuch * 0.3), t('thumb.schritt.variante', { nr: i + 1, von: plan.varianten.length, titel: v.titel }))
       const basis = join(p.ausgabe, `variante-${i + 1}.v${versuch}`)
-      const foto = fotoSpec(v, p, cp.fotoWahl[String(i)] ?? [])
+      const elemente = await loeseElemente(u.werkzeugRoot, v).catch(() => ({ ortFoto: null, objekte: [], hinweise: [] as string[] }))
+      const foto = fotoSpec(v, p, cp.fotoWahl[String(i)] ?? [], elemente)
       const r =
         engine === 'modell3d' && p.figuren[0]?.modell
           ? await renderModell(pyU, u, { modell: p.figuren[0].modell, ...v.modell, seite: v.personen[0]?.seite ?? 'links', randlicht: v.modell?.randlicht ?? v.randfarbe }, foto, basis, c)
@@ -259,7 +261,7 @@ async function allgemeinLauf(p: ThumbPayload, ctx: JobContext<Checkpoint>, d: Th
       let roh = r.roh
       if (await wendeVorbilderAn(roh, stil.auftrag, `${basis}.vorbild.png`)) roh = `${basis}.vorbild.png`
       const tl = await setzeTextUndLogo(u, pyU, roh, r.bericht, { texte: v.text ?? [], schrift: p.marke.schrift, farben: p.marke.farben, logo: p.marke.logo, zufall: i * 31 + versuch }, basis, c)
-      const befunde = await technischePruefung(tl.bild, r.bericht, { textBoxen: tl.textBoxen, logoBox: tl.logoBox, engineWarnungen: [...(r.bericht.warnungen ?? []), ...tl.warnungen] })
+      const befunde = await technischePruefung(tl.bild, r.bericht, { textBoxen: tl.textBoxen, logoBox: tl.logoBox, engineWarnungen: [...(r.bericht.warnungen ?? []), ...tl.warnungen, ...elemente.hinweise] })
       const ki = await kiPruefung(d.ki, tl.bild, { beschreibung: p.start.beschreibung, sprache: sprachName(p.sprache) }, c)
       const alle = [...befunde, ...(ki ?? [])]
       const ernst = alle.filter((b) => b.ernst)
@@ -350,8 +352,15 @@ async function waehleFotos(ki: KiSchicht | null, figuren: FigurDaten[], plan: Al
 }
 
 /** Spezifikation für blender/bild/komposit.py aus einer geplanten Variante */
-export function fotoSpec(v: AllgemeinVariante, p: Pick<ThumbPayload, 'figuren' | 'hintergrund' | 'engine'>, fotoWahl: number[]): Record<string, unknown> {
-  const hg = v.hintergrund.art === 'bild' && p.hintergrund ? { art: 'bild', pfad: p.hintergrund, unschaerfe: v.hintergrund.unschaerfe ?? 4, abdunkeln: v.hintergrund.abdunkeln ?? 0.15 } : { art: 'verlauf', farben: v.hintergrund.farben, winkel: v.hintergrund.winkel ?? 25 }
+export function fotoSpec(
+  v: AllgemeinVariante,
+  p: Pick<ThumbPayload, 'figuren' | 'hintergrund' | 'engine'>,
+  fotoWahl: number[],
+  elemente: { ortFoto: string | null; objekte: { pfad: string; x: number; y: number; groesse: number; drehung?: number }[] } = { ortFoto: null, objekte: [] }
+): Record<string, unknown> {
+  // Hintergrund: eigenes Bild, Ortsfoto (Poly Haven) oder Farbverlauf
+  const bildPfad = v.hintergrund.art === 'bild' ? p.hintergrund : v.hintergrund.art === 'ort' ? elemente.ortFoto : null
+  const hg = bildPfad ? { art: 'bild', pfad: bildPfad, unschaerfe: v.hintergrund.unschaerfe ?? 4, abdunkeln: v.hintergrund.abdunkeln ?? 0.15 } : { art: 'verlauf', farben: v.hintergrund.farben, winkel: v.hintergrund.winkel ?? 25 }
   const personen = v.personen
     .map((x) => {
       const fi = p.figuren.findIndex((f) => f.id === x.id)
@@ -376,7 +385,7 @@ export function fotoSpec(v: AllgemeinVariante, p: Pick<ThumbPayload, 'figuren' |
     })
     .filter(Boolean)
   // 1920 × 1080: genug Auflösung auch für den Zuschnitt ins Hochformat
-  return { breite: 1920, hoehe: 1080, hintergrund: hg, personen, licht_angleichen: 0.2, look: v.look ?? { kontrast: 1.08, saettigung: 1.12, vignette: 0.2 } }
+  return { breite: 1920, hoehe: 1080, hintergrund: hg, personen, objekte: elemente.objekte, licht_angleichen: 0.2, look: v.look ?? { kontrast: 1.08, saettigung: 1.12, vignette: 0.2 } }
 }
 
 function variante(v: { titel: string; warum: string; vorbild: string }, bild: string, roh: string, spec: string, ebenen: string, engine: Engine, technisch: Befund[], ki: Befund[] | null, korrekturen: number, texte: { text: string; farbe?: string }[], schriftAssets: string | null): VarianteErgebnis {

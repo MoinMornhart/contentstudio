@@ -104,8 +104,8 @@ export async function exportiereFormat(o: {
   await writeFile(o.ziel, o.typ === 'png' ? kodierePng(b) : kodiereJpg(b, 92))
 }
 
-const EBENEN_REIHE = (n: string): number => (n === 'hintergrund.png' ? 0 : n.startsWith('person-') ? 1 : n === 'text.png' ? 2 : n === 'logo.png' ? 3 : 4)
-const EBENEN_NAME: Record<string, string> = { 'hintergrund.png': 'Hintergrund', 'text.png': 'Text', 'logo.png': 'Logo' }
+const EBENEN_REIHE = (n: string): number => (n === 'hintergrund.png' ? 0 : n.startsWith('person-') ? 1 : n === 'objekte.png' ? 1.5 : n === 'text.png' ? 2 : n === 'logo.png' ? 3 : 4)
+const EBENEN_NAME: Record<string, string> = { 'hintergrund.png': 'Hintergrund', 'objekte.png': 'Gegenstände', 'text.png': 'Text', 'logo.png': 'Logo' }
 
 /** PSD mit Ebenen; ohne Ebenen-Ordner eine Ebene mit dem fertigen Bild */
 export async function exportierePsd(bild: string, ebenen: string | null, ziel: string): Promise<number> {

@@ -113,6 +113,12 @@ export function autoKorrektur(v: AllgemeinVariante, befunde: Befund[]): Allgemei
     neu.hintergrund.farben = [neu.hintergrund.farben[0]!, '#ff5a36']
     geaendert = true
   }
+  if (ernst.some((b) => /Gegenstand \d+ verdeckt|Object \d+ covers/.test(b.text)) && neu.objekte?.length) {
+    // Gegenstände in die freie Hälfte gegenüber der Hauptperson und etwas kleiner
+    const seite = neu.personen[0]?.seite ?? 'links'
+    neu.objekte = neu.objekte.map((o) => ({ ...o, x: seite === 'rechts' ? Math.min(o.x, 0.25) : Math.max(o.x, 0.75), groesse: Math.min(o.groesse, 0.3) }))
+    geaendert = true
+  }
   return geaendert ? neu : null
 }
 

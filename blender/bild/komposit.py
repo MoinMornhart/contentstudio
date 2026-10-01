@@ -12,12 +12,14 @@ spec:
                 "seite": "links" | "mitte" | "rechts", "mitte_x": 0.27 (optional, 0–1),
                 "hoehe": 0.95 (Höhe der Figur als Anteil der Bildhöhe), "anschnitt": 0.2 (Anteil unten abgeschnitten),
                 "spiegeln": false, "rand": 3, "randfarbe": "#ffffff", "schatten": true}],
+  "objekte": [{"pfad": "...png", "x": 0.75, "y": 0.6, "groesse": 0.35, "drehung": -8}] (Gegenstände als Sticker),
   "licht_angleichen": 0.25,
   "look": {"kontrast": 1.08, "saettigung": 1.12, "vignette": 0.2},
   "ebenen": "<ordner>" (optional: einzelne Ebenen für den PSD-Export)
 }
 
-bericht: {"figuren": {id: {"box": [u0, v0, u1, v1], "kopf_box": [...], "gesicht": true|false}}, "warnungen": [...]}
+bericht: {"figuren": {id: {"box": [u0, v0, u1, v1], "kopf_box": [...], "gesicht": true|false}},
+         "items": {"objekt-1": {"box": [...]}}, "warnungen": [...]}
 Alle Boxen in Bildanteilen (0–1, oben links = 0,0). Personen werden nie gezeichnet, nur freigestellt und gesetzt.
 """
 import json
@@ -175,6 +177,49 @@ def angleichen(rgba, grund, staerke):
     return Image.fromarray(arr.astype(np.uint8), "RGBA")
 
 
+def ueberlappung(a, b):
+    """Anteil von b, den a überdeckt (Boxen in Bildanteilen)"""
+    x = max(0.0, min(a[2], b[2]) - max(a[0], b[0]))
+    y = max(0.0, min(a[3], b[3]) - max(a[1], b[1]))
+    return x * y / max(1e-6, (b[2] - b[0]) * (b[3] - b[1]))
+
+
+def objekte_setzen(leinwand, objekte, bericht, ebenen):
+    """Gegenstände (3D-Sticker, freigestellte PNGs) mit weichem Schatten über die Personen setzen."""
+    W, H = leinwand.size
+    ebene = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for i, o in enumerate(objekte):
+        try:
+            bild = Image.open(o["pfad"]).convert("RGBA")
+        except Exception:
+            bericht["warnungen"].append(f"Gegenstand {i + 1} nicht lesbar – weggelassen")
+            continue
+        bbox = bild.getchannel("A").getbbox()
+        if not bbox:
+            continue
+        bild = bild.crop(bbox)
+        h = max(8, int(float(o.get("groesse", 0.3)) * H))
+        w = max(8, int(bild.width * h / bild.height))
+        bild = bild.resize((w, h), Image.LANCZOS)
+        if o.get("drehung"):
+            bild = bild.rotate(float(o["drehung"]), resample=Image.BICUBIC, expand=True)
+        x0 = int(float(o.get("x", 0.75)) * W - bild.width / 2)
+        y0 = int(float(o.get("y", 0.6)) * H - bild.height / 2)
+        s = schatten(bild, W)
+        ebene.paste(s, (x0 + int(W * 0.01), y0 + int(H * 0.015)), s)
+        oben = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        oben.paste(bild, (x0, y0), bild)
+        ebene = Image.alpha_composite(ebene, oben)
+        box = [max(0, x0) / W, max(0, y0) / H, min(W, x0 + bild.width) / W, min(H, y0 + bild.height) / H]
+        bericht.setdefault("items", {})[f"objekt-{i + 1}"] = {"box": [round(v, 4) for v in box]}
+        for fid, fig in bericht["figuren"].items():
+            if fig.get("kopf_box") and ueberlappung(box, fig["kopf_box"]) > 0.1:
+                bericht["warnungen"].append(f"Gegenstand {i + 1} verdeckt das Gesicht von {fid}")
+    if ebenen and objekte:
+        ebene.save(os.path.join(ebenen, "objekte.png"))
+    return Image.alpha_composite(leinwand, ebene)
+
+
 def look(bild, spec):
     l = spec.get("look") or {}
     if l.get("kontrast"):
@@ -307,6 +352,7 @@ def baue(spec, ausgabe, bericht_pfad):
             bericht["warnungen"].append(f"Gesicht von {p.get('id')} angeschnitten")
         bericht["figuren"][str(p.get("id", i))] = eintrag
 
+    leinwand = objekte_setzen(leinwand, spec.get("objekte") or [], bericht, ebenen)
     bild = look(leinwand.convert("RGB"), spec)
     bild.save(ausgabe)
     with open(bericht_pfad, "w", encoding="utf-8") as fh:

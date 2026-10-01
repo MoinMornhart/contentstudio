@@ -26,7 +26,12 @@ const EN: [RegExp, string][] = [
   [/^Mob (.+) kaum sichtbar$/, 'Mob $1 barely visible'],
   [/^Mob (.+) zu klein im Bild \((\d+) % der Bildhöhe\).*$/, 'Mob $1 too small ($2 % of the image height) – move it closer'],
   [/^Objekt (.+) \((objekt:\d+)\) nicht ganz im Bild \((\d+) %\).*$/, 'Object $1 ($2) not fully in the image ($3 %)'],
-  [/^Text „(.*)“ findet keinen freien Platz und überdeckt Wichtiges$/, 'Text “$1” finds no free space and covers something important']
+  [/^Text „(.*)“ findet keinen freien Platz und überdeckt Wichtiges$/, 'Text “$1” finds no free space and covers something important'],
+  [/^Gegenstand (\d+) verdeckt das Gesicht von (.+)$/, 'Object $1 covers the face of $2'],
+  [/^Gegenstand (\d+) nicht lesbar – weggelassen$/, 'Object $1 unreadable – left out'],
+  [/^Gegenstand „(.+)“ nicht gefunden – weggelassen$/, 'Object “$1” not found – left out'],
+  [/^Kein Ortsfoto zu „(.+)“ – Farbverlauf stattdessen$/, 'No location photo for “$1” – gradient instead'],
+  [/^Ortsfoto nicht geladen \((.+)\) – Farbverlauf stattdessen$/, 'Location photo not loaded ($1) – gradient instead']
 ]
 
 export function uebersetzeWarnung(w: string, sprache: Sprache): string {
