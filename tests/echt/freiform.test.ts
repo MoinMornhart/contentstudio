@@ -4,7 +4,7 @@
 // Hand in docs/tests/freiform-<richtung>.md. Fertige Aufgaben werden übersprungen (Lauf lässt sich fortsetzen).
 //
 // Aufruf (Beispiel):
-//   set CS_KI_WEG=api-anthropic   (oder api-openai, api-google, api-openrouter, ollama, lmstudio, llamacpp; ohne = ohne KI)
+//   set CS_KI_WEG=api-anthropic   (oder api-openai, api-google, api-openrouter, ollama, lmstudio, llamacpp, claude-cli = eigenes Claude-Abo nur in Tests; ohne = ohne KI)
 //   set CS_KI_MODELL=…            (optional, sonst wählt der Weg selbst)
 //   set CS_FREIFORM_NUR=kochen    (optional: kochen | kochen:thumb | kochen:wunsch:1-5)
 //   npx vitest run -c vitest.echt.config.ts tests/echt/freiform.test.ts
@@ -34,6 +34,7 @@ import { rohschnittJob } from '../../src/main/schnitt/rohschnitt'
 import { wunschJob } from '../../src/main/schnitt/bearbeiten'
 import { vorschauJob } from '../../src/main/schnitt/vorschau'
 import type { EffektHilfe } from '../../src/main/schnitt/effekt-vorbereitung'
+import { ClaudeCliTest, findeClaude } from './claude-cli'
 import { ctx, FFMPEG, PY_DIR, ROOT, SKRIPTE, sprachDatei, TEST_ECHT, testVideo, umgebung, UV } from './hilfen'
 
 interface Richtung {
@@ -99,7 +100,13 @@ function kiSchicht(): KiSchicht | null {
     'api-openrouter': () => new OpenAiKompatibel({ id: 'api-openrouter', art: 'api', name: 'OpenRouter', basis: 'https://openrouter.ai/api/v1', schluessel: async () => key, modell, standard: 'openrouter/auto', waehle: () => null }),
     ollama: () => new Ollama(modell),
     lmstudio: () => lokal('lmstudio', 'LM Studio', 'http://127.0.0.1:1234/v1'),
-    llamacpp: () => lokal('llamacpp', 'llama.cpp', 'http://127.0.0.1:8080/v1')
+    llamacpp: () => lokal('llamacpp', 'llama.cpp', 'http://127.0.0.1:8080/v1'),
+    // nur in Tests: eigenes Claude Code mit eigenem Abo (siehe claude-cli.ts)
+    'claude-cli': () => {
+      const exe = findeClaude()
+      if (!exe) throw new Error('Claude Code nicht gefunden (CS_CLAUDE_CLI setzen)')
+      return new ClaudeCliTest(exe, MODELL)
+    }
   }
   const bau = wege[WEG]
   if (!bau) throw new Error(`Unbekannter Weg ${WEG}; erlaubt: ${Object.keys(wege).join(', ')}`)

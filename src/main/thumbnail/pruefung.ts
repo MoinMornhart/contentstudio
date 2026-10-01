@@ -55,7 +55,7 @@ export async function kiPruefung(ki: KiSchicht | null, bild: string, o: { beschr
       {
         name: 'thumbnail-pruefung',
         system: 'You are a strict thumbnail reviewer. Judge whether the image works as a video thumbnail for the given description: faces visible and not covered, the subject recognisable, text readable and not covering faces, nothing important cut off, not empty, not over- or underexposed. Only report real problems.',
-        prompt: `Beschreibung: „${o.beschreibung}“. Gib eine Note von 1 (unbrauchbar) bis 10 (sehr gut) und liste echte Probleme (ernst = so darf es nicht gezeigt werden). Schreibe die Probleme auf ${o.sprache}.`,
+        prompt: `Beschreibung: „${o.beschreibung}“. Gib eine Note von 1 (unbrauchbar) bis 10 (sehr gut) und liste echte Probleme. ernst = so darf es nicht gezeigt werden: Gesicht verdeckt oder angeschnitten, Thema der Beschreibung ohne den Videotitel nicht erkennbar, Text unlesbar oder über einem Gesicht, Wichtiges abgeschnitten, Bild leer, über- oder unterbelichtet, sichtbare Fehler beim Freistellen. Schreibe die Probleme auf ${o.sprache}.`,
         bilder: [bild],
         schema: KiPruefungZ,
         brauchtBilder: true,
@@ -65,7 +65,8 @@ export async function kiPruefung(ki: KiSchicht | null, bild: string, o: { beschr
       ctx
     )
     const befunde: Befund[] = e.daten.probleme.map((p) => ({ art: p.art, text: p.text, ernst: p.ernst }))
-    if (e.daten.note < 5 && !befunde.some((b) => b.ernst)) befunde.push({ art: 'sonstiges', text: t('thumb.pruef.note', { note: e.daten.note }), ernst: true })
+    // Mittelmaß reicht nicht: unter 6 wird korrigiert, auch wenn kein Einzelproblem als ernst markiert ist
+    if (e.daten.note < 6 && !befunde.some((b) => b.ernst)) befunde.push({ art: 'sonstiges', text: t('thumb.pruef.note', { note: e.daten.note }), ernst: true })
     return befunde
   } catch {
     return null
