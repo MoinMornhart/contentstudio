@@ -106,3 +106,15 @@ Technisch prüft der Export jede Datei nach der Upload-Empfehlung: H.264 High, 4
 Empfohlene Titellänge und Hashtags stehen in `TEXT_REGELN` (`src/shared/planung.ts`), Stand 30.09.2026 aus den
 Hilfeseiten der Plattformen: YouTube Titel ≤ 60 (Grenze 100), bis 3 Hashtags im Text; Shorts 1–3 Hashtags im Titel;
 TikTok und Reels ohne eigenen Titel, 3–5 Hashtags im Text; X bis 2; Twitch, Kick, Podcast, Website ohne Hashtags.
+
+## Orte und Gegenstände im Thumbnail (Richtungen ohne eigene Engine, ROADMAP 8.1)
+
+- **Orte:** Fotos (Backplates) von [Poly Haven](https://polyhaven.com), Lizenz CC0. Die Liste kommt von
+  `api.polyhaven.com/assets?t=hdris` (nur Einträge mit dem Schlagwort `backplates`) und liegt 30 Tage im
+  Werkzeugordner (`bilder/orte/orte.json`). Ein Foto wird erst geladen, wenn ein Thumbnail diesen Ort nutzt, und mit
+  der MD5-Prüfsumme der API geprüft. Keine Anmeldung, es werden nur der Ortsname und die Datei-ID abgefragt.
+- **Gegenstände:** 3D-Emoji aus [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji), Lizenz MIT,
+  direkt von `raw.githubusercontent.com`. Nur Namen aus Kleinbuchstaben, Ziffern, Leerzeichen und Bindestrich werden
+  angefragt. Geladene Bilder bleiben im Werkzeugordner (`bilder/emoji`).
+- Beides liegt nie im Repo oder Installer. Fehlt das Netz oder ein Bild, nimmt ContentStudio den Farbverlauf bzw. lässt
+  den Gegenstand weg und sagt es in den Hinweisen des Auftrags.

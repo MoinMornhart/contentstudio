@@ -89,20 +89,22 @@ export async function ortFoto(ordner: string, ort: Ort, holen: Holen = fetch): P
 /** Englischer Emoji-Name (CLDR, z. B. „hot pepper“) → mögliche Pfade im Fluent-Emoji-Archiv */
 export function emojiPfade(name: string): string[] {
   const n = name.trim().toLowerCase().replace(/\s+/g, ' ')
-  if (!n || /[^a-z0-9 \-]/.test(n)) return []
+  if (!n || /[^a-z0-9 -]/.test(n)) return []
   const ordner = encodeURIComponent(n[0]!.toUpperCase() + n.slice(1))
-  const datei = n.replace(/[ \-]/g, '_')
+  const datei = n.replace(/[ -]/g, '_')
   return [`${FLUENT}/${ordner}/3D/${datei}_3d.png`, `${FLUENT}/${ordner}/Default/3D/${datei}_3d_default.png`]
 }
 
 /** 3D-Sticker eines Gegenstands, lokal zwischengespeichert; null, wenn es ihn nicht gibt */
 export async function emojiBild(ordner: string, name: string, holen: Holen = fetch): Promise<string | null> {
   await mkdir(ordner, { recursive: true })
+  const ziel = (url: string): string => join(ordner, decodeURIComponent(url.split('/').pop()!))
+  // erst alle Schreibweisen im Zwischenspeicher, dann im Netz
+  const vorhanden = emojiPfade(name).map(ziel).find((z) => existsSync(z))
+  if (vorhanden) return vorhanden
   for (const url of emojiPfade(name)) {
-    const ziel = join(ordner, decodeURIComponent(url.split('/').pop()!))
-    if (existsSync(ziel)) return ziel
     try {
-      return await lade(url, ziel, holen)
+      return await lade(url, ziel(url), holen)
     } catch {
       // nächste Schreibweise versuchen
     }
