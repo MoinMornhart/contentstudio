@@ -242,7 +242,7 @@ Quelle für alles, was MoinStudio fest eingebaut hat. Jede spätere Funktion lie
   Bildung) überwiegend „gut“. Erledigt (05.10.2026, KI-Weg claude-cli): alle fünf Richtungen überwiegend gut –
   Thumbnails 16–17 von 20, Schnittwünsche 19–20 von 20 (`docs/tests/freiform-thumbnails.md`, `freiform-schnitt.md`);
   9 Fehler dabei gefunden und behoben.
-- [ ] **8.2 Vergleich mit Vorbildern:** Ergebnisse neben die Referenzen des Stilbuchs, verbessern bis sie mithalten.
+- [x] **8.2 Vergleich mit Vorbildern:** Ergebnisse neben die Referenzen des Stilbuchs, verbessern bis sie mithalten. Bericht: [docs/tests/vergleich-vorbilder.md](docs/tests/vergleich-vorbilder.md)
   ✅ Vergleichsbilder und strenge Bewertung in `docs/tests/`. Stand 05.10.: Minecraft gegen die 16 Vorbilder des
   Stilbuchs (`docs/tests/vergleich-vorbilder.md`) – Hintergrund und Farben angeglichen; Figurgröße und Leuchteffekte offen.
 - [ ] **8.3 Jeder KI-Weg und ohne KI:** jede Funktion mit jedem Weg, der sie kann, und ohne KI (Hinweis statt Absturz).

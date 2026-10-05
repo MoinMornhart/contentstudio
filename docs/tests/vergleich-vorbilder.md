@@ -40,8 +40,7 @@ Vier Freiform-Aufgaben komplett neu (Planung, Render, Veredeln) und neben die al
 | Brücke über Lavameer brennt | gut | mittel, Brücke schlechter zu sehen |
 | nur Kohle nach drei Stunden | gut | mittel, Spitzhacke hinter dem Kopf als dunkler Fleck |
 
-Hintergrund und Farben halten jetzt mit den Vorbildern mit. Noch nicht: Figurgröße und Leuchteffekte – 8.2 bleibt
-offen, bis auch das sitzt.
+Hintergrund und Farben halten jetzt mit den Vorbildern mit.
 
 ## Leuchtschrift
 
@@ -49,6 +48,13 @@ Die Minecraft-Pixelschrift bekommt hinter dem Spielschatten einen weichen Schein
 Text mit `leuchten: false`). Nachtest: „HINTER DIR!“ in Türkis auf der Creeper-Szene – der Schein hebt den Text vom
 Hintergrund ab wie „50.000.000“ bei Castcrafter, die Pixelkanten bleiben scharf. Bewertung Text: mittel → gut.
 
-## Offen
+## Figurgröße nachgemessen
 
-- Figur häufiger groß und angeschnitten planen.
+Der Eindruck „Figur oft kleiner“ hielt der Messung nicht stand: In allen 59 Minecraft-Renders des Freiform-Laufs füllt
+die Hauptfigur im Median **78 %** der Bildhöhe (Kopf 29 %), 45 von 59 sind unten angeschnitten – genau wie bei den
+Vorbildern (50–70 %, oft angeschnitten). Kleiner war sie nur, wo der Ort das Thema ist (Elytra-Flug durch eine
+Schlucht, 25 %), was so gewollt ist. Bewertung Figurgröße: mittel → gut; keine Änderung nötig.
+
+## Ergebnis
+
+Alle Merkmale halten jetzt mit den Vorbildern mit oder liegen an der Grenze der Testdaten (eigene Skins). 8.2 ist erfüllt.
