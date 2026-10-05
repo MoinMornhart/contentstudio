@@ -8,6 +8,13 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Added
+
+- Schnitt: Skin-Intro „Sting“ für Minecraft-Konten – deine Figur springt ins Bild und reckt die Faust (oder winkt, oder
+  schlägt mit dem Schwert zur Kamera), darunter erscheint dein Kanalname mit Wusch, Knall und Ding. Sag einfach „mach
+  ein Intro mit mir“; erst kommt der stärkste Moment, der Sting dauert höchstens 3 Sekunden. Gerendert wird er einmal
+  und dann wiederverwendet (aus MoinStudio v0.44.0/v0.45.0).
+
 ## [0.7.5] - 2026-10-05
 
 > Neuer Reiter Logo: Logos erstellen und verwalten, Logo mit Ecke und Größe in jedem Thumbnail

@@ -58,3 +58,5 @@ Der Neubau beruht auf MoinStudio v0.36.2. Neuere MoinStudio-Versionen werden nac
 | v0.38.0 Sprechende Dateinamen | Fundament | übernommen; Shorts/Clips und Thumbnails mit Format-Zusatz | v0.7.3 |
 | v0.38.0 Namensvorschläge und Umbenennen im Schnitt | Schnitt | übernommen über die KI-Schicht und den Titel-Auftrag der Planung; Stichprobe des Transkripts reicht jetzt bis zum Ende | v0.7.3 |
 | v0.41.0 Videos im Schnitt landen automatisch in der Planung, Karten zeigen ihren Stand | Planung | übernommen mit Konten statt Kanälen und mehrsprachigen Füllwörtern | v0.7.3 |
+| v0.44.0 Animation: bewegte Szenen mit dem Skin (`blender/moin/animation.py`, `render_animation.py`) | Minecraft | übernommen nach `blender/minecraft/animation.py` | v0.7.6 |
+| v0.45.0 Skin-Intro „Sting“ im Schnitt (Sprung, Winken, Schwert, Kanalname mit Wusch, Knall und Ding) | Schnitt, Minecraft | übernommen für Konten mit Minecraft-Skin (Skin aus der Darstellung des Kontos); die KI bietet den Baustein nur diesen Konten an; ohne Blender bleibt Hintergrund mit Kanalname | v0.7.6 |

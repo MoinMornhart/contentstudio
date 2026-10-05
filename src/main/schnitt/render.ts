@@ -176,7 +176,7 @@ export interface RenderOptionen {
   encoder: string[]
   ausgabe: string
   /** Effekte mit fertigen Text-Bildern und Geräuschen; Zeiten im geschnittenen Video */
-  effekte?: { liste: Effekt[]; textBilder: Record<string, { datei: string; breite: number; hoehe: number }>; klaenge: Record<string, string> }
+  effekte?: { liste: Effekt[]; textBilder: Record<string, { datei: string; breite: number; hoehe: number }>; klaenge: Record<string, string>; stingVideos?: Record<string, string> }
   /** Mit Effekten: Schnittzeit → Endzeit und Länge des fertigen Videos */
   endzeit?: (t: number) => number
   laengeEnde?: number
@@ -194,7 +194,7 @@ function spurIndex(o: RenderOptionen): { facecam: number | null; ton: number | n
 function effektTeil(o: RenderOptionen): EffektGraph | null {
   if (!o.effekte?.liste.length) return null
   const laenge = o.liste.behalten.reduce((s, b) => s + b.ende - b.start, 0)
-  return effektGraph({ effekte: o.effekte.liste, laenge, breite: o.breite, hoehe: o.hoehe, fps: o.fps, audio: o.audio, autoZooms: o.hoch ? [] : o.zooms, textBilder: o.effekte.textBilder, klaenge: o.effekte.klaenge, untertitel: o.untertitel, basisEingaben: spurIndex(o).anzahl })
+  return effektGraph({ effekte: o.effekte.liste, laenge, breite: o.breite, hoehe: o.hoehe, fps: o.fps, audio: o.audio, autoZooms: o.hoch ? [] : o.zooms, textBilder: o.effekte.textBilder, klaenge: o.effekte.klaenge, untertitel: o.untertitel, stingVideos: o.effekte.stingVideos, basisEingaben: spurIndex(o).anzahl })
 }
 
 const zahl = (x: number): string => x.toFixed(3)

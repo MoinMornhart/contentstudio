@@ -69,6 +69,8 @@ export interface WunschPayload {
   ffmpeg?: string
   /** Markenschrift für Text-Einblendungen (Name, für die Beschreibung an die KI) */
   schrift?: string | null
+  /** Konto mit Minecraft-Skin: Skin-Sting im Intro möglich (aus MoinStudio v0.45.0) */
+  sting?: boolean
 }
 
 /** Sichtbogen: Standbilder aus dem Original im Raster, damit die Bild-KI Stellen im Bild findet (Explosion, Ort, Gesicht). */
@@ -96,7 +98,7 @@ const WunschZ = z.object({
 const t2 = (s: number): string => s.toFixed(2)
 
 /** Beschreibung der Bausteine für die KI – frei kombinierbar, keine feste Effektliste */
-export function bausteinText(schrift: string | null = null): string {
+export function bausteinText(schrift: string | null = null, sting = false): string {
   return `- tempo {von, bis, faktor}: 0.25–4 (0.5 = Zeitlupe, 2 = doppelt so schnell)
 - einfrieren {bei, dauer}: Standbild für dauer Sekunden (Ton pausiert)
 - zoom {von, bis, faktor 1–4, x, y}: sanft auf einen Bildpunkt (x, y 0–1, 0.5 = Mitte)
@@ -112,7 +114,11 @@ export function bausteinText(schrift: string | null = null): string {
 - video {bei, datei, lage oben|mitte|unten|links|rechts|oben-links|oben-rechts|unten-links|unten-rechts|voll, groesse 0.1–1, ton}: Video mit durchsichtigem Hintergrund einblenden, läuft ab „bei“ einmal durch (groesse 1 = ganzes Bild, ton true = sein Ton läuft mit). datei nur aus der Effekt-Bibliothek (unten)
 - zensur {von, bis}: Bild unscharf, Ton stumm, Piep darüber
 - lautstaerke {von, bis, faktor 0–4}: lauter oder leiser
-- intro {teile, klang}: Vorspann vor dem Video, höchstens eins. teile: {art: "clip", von, bis, tempo} = kurzer Moment aus dem Video, {art: "karte", text, dauer 0.5–6, hintergrund unscharf|schwarz, bei, farbe} = Titelkarte (bei = Zeitpunkt für das unscharfe Hintergrundbild). Zwischen Clips kommt automatisch ein Wusch, zur Karte ein Knall (klang: false schaltet das ab).`
+- intro {teile, klang}: Vorspann vor dem Video, höchstens eins. teile: {art: "clip", von, bis, tempo} = kurzer Moment aus dem Video, {art: "karte", text, dauer 0.5–6, hintergrund unscharf|schwarz, bei, farbe} = Titelkarte (bei = Zeitpunkt für das unscharfe Hintergrundbild). Zwischen Clips kommt automatisch ein Wusch, zur Karte ein Knall (klang: false schaltet das ab).${
+    sting
+      ? ' {art: "sting", vorlage sprung|winken|schwert, text, dauer 1–4, hintergrund unscharf|schwarz, bei} = die eigene Minecraft-Figur des Creators, animiert (sprung: springt ins Bild und reckt die Faust, winken: winkt in die Kamera, schwert: holt aus und schlägt zur Kamera), darunter der Text (z. B. der Kanalname) mit Wusch, Knall und Ding.'
+      : ''
+  }`
 }
 
 /**
@@ -129,7 +135,7 @@ ${zeilen.join('\n')}
 `
 }
 
-export function wunschPrompt(o: { wunsch: string; kanal: string; plattform: string; stil: string; sprache: string; schrift?: string | null; liste: Schnittliste; saetze: { start: number; ende: number; text: string }[]; effekte: Effekt[]; laut: number[]; sicht?: boolean; bibliothek?: BibEffekt[] }): string {
+export function wunschPrompt(o: { wunsch: string; kanal: string; plattform: string; stil: string; sprache: string; schrift?: string | null; liste: Schnittliste; saetze: { start: number; ende: number; text: string }[]; effekte: Effekt[]; laut: number[]; sicht?: boolean; bibliothek?: BibEffekt[]; sting?: boolean }): string {
   const { liste } = o
   const raus = (a: number, b: number): boolean => liste.entfernt.some((e) => !e.aus && (a + b) / 2 >= e.start && (a + b) / 2 <= e.ende)
   const nachher = liste.behalten.reduce((s, b) => s + b.ende - b.start, 0)
@@ -149,13 +155,18 @@ ${o.sicht ? (() => { const r = sichtRaster(liste.dauer); return `\nSo sieht das 
 Aktuelle Effekte (Originalzeit): ${JSON.stringify(o.effekte)}
 
 Effekt-Bausteine – frei kombinierbar, beliebig viele, jeder Wunsch lässt sich daraus bauen:
-${bausteinText(o.schrift ?? null)}
+${bausteinText(o.schrift ?? null, !!o.sting)}
 ${bibText(o.bibliothek ?? [])}
 Regeln:
 - Setze den Wunsch vollständig um und kombiniere Bausteine frei. Effekte passen zum Stil oben: genau an Höhepunkten
   (Ausrufe, laute Momente, Pointen, wichtige Schritte), nicht überall.
 - Ein „Intro“ besteht aus 2–4 der stärksten Momente (je 0.8–2 s, gern mit Tempo) und einer Titelkarte mit kurzem, starkem
-  Titel; zusammen 4–8 s.
+  Titel; zusammen 4–8 s. Wie bei großen Kanälen kommt der stärkste Moment zuerst (Cold Open).${
+    o.sting
+      ? ` Will der Creator sich selbst, seine Figur oder seinen Kanal im Intro („mit mir“, „mit meinem Skin“, „mit Kanalname“),
+  nimm statt der Titelkarte einen kurzen „sting“ (2 s, text = Kanalname ${o.kanal} oder ein kurzer Titel) – nie länger als 3 s.`
+      : ''
+  }
 - „Am Ende“ heißt am Ende des fertigen Videos (letzte behaltene Stelle), „am Anfang“ an seinem Beginn – nicht beim
   letzten oder ersten Satz.
 - Effekt-Zeiten liegen in Stellen, die im Video bleiben (nicht in [raus]-Stellen, außer du holst sie zurück).
@@ -179,7 +190,7 @@ export async function wunschJob(p: WunschPayload, ctx: JobContext<unknown>, d: {
   // Sichtbogen nur, wenn eine Bild-KI da ist
   const sicht = p.ffmpeg && pr.quelle && (await d.ki.verfuegbar(true)) ? await sichtbogen(p.ffmpeg, pr.proxy ? join(ordner, 'proxy.mp4') : pr.quelle.pfad, ordner, liste.dauer) : null
   const bibliothek = (await ladeBibliothek(p.daten)).filter((e) => passtZu(e, pr.kontoId, pr.richtung))
-  const basis = { bibliothek, wunsch: p.wunsch, kanal: pr.kanal, plattform: pr.plattform, stil: stilText(stilFuer([pr.richtung], pr.einstellungen?.format ?? '16:9'), [pr.richtung], pr.einstellungen?.format ?? '16:9'), sprache: sprachName(hauptSprache()), schrift: p.schrift ?? null, liste, saetze, effekte, laut: lauteMomente(wellen), sicht: !!sicht }
+  const basis = { bibliothek, wunsch: p.wunsch, kanal: pr.kanal, plattform: pr.plattform, stil: stilText(stilFuer([pr.richtung], pr.einstellungen?.format ?? '16:9'), [pr.richtung], pr.einstellungen?.format ?? '16:9'), sprache: sprachName(hauptSprache()), schrift: p.schrift ?? null, liste, saetze, effekte, laut: lauteMomente(wellen), sicht: !!sicht, sting: !!p.sting }
   let prompt = wunschPrompt(basis)
   let a: { schritte?: { art: 'entfernen' | 'zurueck'; von: number; bis: number; warum?: string }[]; effekte?: unknown; antwort?: string } = {}
   let geprueft: Effekt[] = effekte

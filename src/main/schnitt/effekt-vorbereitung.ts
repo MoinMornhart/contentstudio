@@ -2,7 +2,8 @@
 import { execFile } from 'node:child_process'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { effekteInSchnittzeit, introDauer, pruefeEffekte, zeitleiste, type Effekt } from './effekte'
+import { effekteInSchnittzeit, introDauer, pruefeEffekte, zeitleiste, type Effekt, type IntroTeil } from './effekte'
+import { renderSting, type StingFigur, type StingRender } from '../animation/sting'
 import type { Bereich } from './rohschnitt'
 import { sichereKlaenge } from './klaenge'
 import { liesMitKonfliktkopien } from '../data/jsonfile'
@@ -23,12 +24,15 @@ export interface EffektHilfe {
   schriftName: string | null
   /** Minecraft-Kanal: Ordner assets/minecraft der Spieldatei → Pixelschrift wie im Spiel */
   minecraftAssets: string | null
+  /** Skin-Sting (aus MoinStudio v0.45.0): Blender, Texturen und Skin des Kontos; fehlt bei Konten ohne Minecraft-Skin oder ohne Blender */
+  sting?: Omit<StingRender, 'cache' | 'ffmpeg'> & { figur: StingFigur; samples: number }
 }
 
 export interface VorbereiteteEffekte {
   liste: Effekt[]
   textBilder: Record<string, { datei: string; breite: number; hoehe: number }>
   klaenge: Record<string, string>
+  stingVideos: Record<string, string>
   endzeit: (t: number) => number
   laenge: number
 }
@@ -53,7 +57,7 @@ function textBild(hilfe: EffektHilfe, datei: string, text: string, farbe: string
 }
 
 /** Lädt die Effekte eines Projekts und legt Text-Bilder und Geräusche an; null, wenn es keine Effekte gibt. */
-export async function bereiteEffekteVor(daten: string, ordner: string, schnitt: { dauer: number; behalten: Bereich[] }, hilfe: EffektHilfe): Promise<VorbereiteteEffekte | null> {
+export async function bereiteEffekteVor(daten: string, ordner: string, schnitt: { dauer: number; behalten: Bereich[] }, hilfe: EffektHilfe, format: { breite: number; hoehe: number; fps: number } = { breite: 1920, hoehe: 1080, fps: 30 }): Promise<VorbereiteteEffekte | null> {
   // gespeichert in Originalzeit, gerendert in Schnittzeit; Bibliotheks-Dateien („bib:<id>/<datei>“) auf diesem Gerät
   // auflösen – fehlt eine Datei (Effekt gelöscht), fällt der Effekt weg statt das Rendern abzubrechen
   const roh = effekteInSchnittzeit(await ladeEffekte(ordner, schnitt.dauer), schnitt.behalten)
@@ -78,8 +82,24 @@ export async function bereiteEffekteVor(daten: string, ordner: string, schnitt: 
   const texte: { schluessel: string; text: string; farbe?: string }[] = []
   liste.forEach((e, i) => {
     if (e.art === 'text') texte.push({ schluessel: String(i), text: e.text, farbe: e.farbe })
-    if (e.art === 'intro') e.teile.forEach((t, j) => t.art === 'karte' && texte.push({ schluessel: `${i}.${j}`, text: t.text, farbe: t.farbe ?? '#ffdd33' }))
+    if (e.art === 'intro')
+      e.teile.forEach((t, j) => {
+        if ((t.art === 'karte' || t.art === 'sting') && t.text) texte.push({ schluessel: `${i}.${j}`, text: t.text, farbe: t.farbe ?? '#ffdd33' })
+      })
   })
+  // Skin-Stings rendern (oder aus dem Zwischenspeicher); ohne Blender oder Skin bleibt der Hintergrund mit Kanalname
+  const stingVideos: Record<string, string> = {}
+  const stings: { schluessel: string; t: Extract<IntroTeil, { art: 'sting' }> }[] = []
+  liste.forEach((e, i) => e.art === 'intro' && e.teile.forEach((t, j) => t.art === 'sting' && stings.push({ schluessel: `${i}.${j}`, t })))
+  if (stings.length && hilfe.sting) {
+    for (const { schluessel, t } of stings) {
+      try {
+        stingVideos[schluessel] = await renderSting(t.vorlage ?? 'sprung', hilfe.sting.figur, { dauer: introDauer(t), breite: format.breite, hoehe: format.hoehe, fps: format.fps, samples: hilfe.sting.samples }, { ...hilfe.sting, ffmpeg: hilfe.ffmpeg, cache: join(hilfe.lokal, 'stings') })
+      } catch (err) {
+        console.error('Sting', err)
+      }
+    }
+  }
   if (texte.length) {
     await mkdir(join(ordner, 'effekte'), { recursive: true })
     for (const { schluessel, text, farbe } of texte) {
@@ -92,5 +112,5 @@ export async function bereiteEffekteVor(daten: string, ordner: string, schnitt: 
   const zl = zeitleiste(liste, laenge)
   const intro = liste.find((e): e is Extract<Effekt, { art: 'intro' }> => e.art === 'intro')
   const vorspann = (intro?.teile ?? []).reduce((s, t) => s + introDauer(t), 0)
-  return { liste, textBilder, klaenge, endzeit: (t) => vorspann + zl.endzeit(t), laenge: vorspann + zl.laenge }
+  return { liste, textBilder, stingVideos, klaenge, endzeit: (t) => vorspann + zl.endzeit(t), laenge: vorspann + zl.laenge }
 }

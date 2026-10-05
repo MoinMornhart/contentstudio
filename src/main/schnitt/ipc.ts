@@ -17,7 +17,7 @@ import type { ProfilStore } from '../profil/store'
 import type { HardwareController } from '../hardware/controller'
 import { ProfileStore } from '../hardware/profile'
 import type { ToolManager } from '../tools/manager'
-import { FFMPEG, UV } from '../tools/specs'
+import { BLENDER_FALLBACK, BLENDER_PRIMARY, FFMPEG, UV } from '../tools/specs'
 import { werkzeugRoot } from '../tools/ipc'
 import { resourceDir } from '../resources'
 import { t } from '../i18n'
@@ -113,6 +113,25 @@ export function registerSchnittIpc(o: {
     return { blender: null, uv: await tools.exePath(UV), pyDir: join(root, 'py', 'vorlage'), modelle: join(root, 'py', 'modelle'), skripte: resourceDir('blender'), prompts: resourceDir('prompts'), werkzeugRoot: root, mojangErlaubt: false }
   }
 
+  /** Blender laut Hardware-Profil und der Minecraft-Skin des Kontos für den Skin-Sting; fehlt eins, gibt es keinen Sting */
+  const stingHilfe = async (konto: Konto, texturen: string): Promise<EffektHilfe['sting']> => {
+    const d = konto.darstellung.find((x) => x.art === 'spielavatar' && x.spiel.toLowerCase() === 'minecraft' && x.skin)
+    if (!d || d.art !== 'spielavatar' || !d.skin) return undefined
+    const hw = await o.hardware.profiles.load()
+    if (!hw) return undefined
+    const config = ProfileStore.effective(hw)
+    const spec = [BLENDER_PRIMARY, BLENDER_FALLBACK].find((s) => s.version === config.blenderVersion)
+    const exe = spec ? await o.tools.exePath(spec) : null
+    if (!exe) return undefined
+    return {
+      blender: { exe, mesa: config.blenderMesa, geraet: config.final.engine === 'CYCLES' ? config.final.device : 'CPU' },
+      blenderDir: resourceDir('blender'),
+      texturen,
+      figur: { skin: await profil.absolut(d.skin), slim: d.slim },
+      samples: Math.max(12, Math.min(32, Math.round(config.final.samples / 2)))
+    }
+  }
+
   /** Effekt-Hilfe: Markenschrift, bei Minecraft-Kanälen die Pixelschrift aus der Spieldatei (falls schon entpackt) */
   const effektHilfe = async (p: Projekt, ff: string): Promise<EffektHilfe> => {
     const pr = await profil.laden()
@@ -120,13 +139,16 @@ export function registerSchnittIpc(o: {
     const root = werkzeugRoot()
     const python = join(root, 'py', 'vorlage', 'Scripts', 'python.exe')
     let minecraftAssets: string | null = null
+    let sting: EffektHilfe['sting']
     if (konto && engineFuer(konto.darstellung) === 'minecraft') {
       const alt = JSON.parse(await readFile(join(root, 'mc', 'aktuell.json'), 'utf8').catch(() => '{}')) as { version?: string }
-      const pfad = alt.version ? mcPfade(join(root, 'mc'), alt.version, 'zwischenspeicher').assets : null
-      if (pfad && existsSync(join(pfad, 'font'))) minecraftAssets = pfad
+      const pfad = alt.version ? mcPfade(join(root, 'mc'), alt.version, 'zwischenspeicher') : null
+      if (pfad && existsSync(join(pfad.assets, 'font'))) minecraftAssets = pfad.assets
+      // Skin-Sting im Intro (aus MoinStudio v0.45.0): nur mit Skin des Kontos, Spieldatei und Blender
+      sting = pfad && existsSync(pfad.textures) ? await stingHilfe(konto, pfad.textures).catch(() => undefined) : undefined
     }
     const schriftDatei = pr.marke.schrift?.datei ? await profil.absolut(pr.marke.schrift.datei).catch(() => null) : null
-    return { ffmpeg: ff, python: existsSync(python) ? python : null, skripte: resourceDir('blender'), lokal: root, schrift: schriftPfad(pr.marke.schrift?.name ?? null, schriftDatei), schriftName: pr.marke.schrift?.name ?? null, minecraftAssets }
+    return { ffmpeg: ff, python: existsSync(python) ? python : null, skripte: resourceDir('blender'), lokal: root, schrift: schriftPfad(pr.marke.schrift?.name ?? null, schriftDatei), schriftName: pr.marke.schrift?.name ?? null, minecraftAssets, ...(sting ? { sting } : {}) }
   }
 
   const alsAnsicht = (ordnerDaten: string, p: Projekt): SchnittProjekt => {
@@ -233,7 +255,10 @@ export function registerSchnittIpc(o: {
     if (!text) throw new Error(t('thumb.aendern.leer'))
     const ordnerDaten = await daten()
     const pr = await profil.laden()
-    const payload: WunschPayload = { daten: ordnerDaten, projekt: String(id), wunsch: text, ffmpeg: (await tools.exePath(FFMPEG)) ?? undefined, schrift: pr.marke.schrift?.name ?? null }
+    const kontoId = (await ladeProjekt(ordnerDaten, String(id)))?.kontoId
+    const konto = pr.konten.find((k) => k.id === kontoId)
+    const sting = !!konto && engineFuer(konto.darstellung) === 'minecraft' && konto.darstellung.some((x) => x.art === 'spielavatar' && !!x.skin)
+    const payload: WunschPayload = { daten: ordnerDaten, projekt: String(id), wunsch: text, ffmpeg: (await tools.exePath(FFMPEG)) ?? undefined, schrift: pr.marke.schrift?.name ?? null, sting }
     const auftrag = await merkeAuftrag(String(id), 'schnitt-wunsch', t('schnitt.titel.wunsch', { wunsch: text.slice(0, 40) }), payload)
     // danach gleich die Vorschau, damit man das Ergebnis sieht
     void queue.waitFor(auftrag).then((j) => (j.state === 'done' ? starteVorschau(id) : null)).catch(() => undefined)
