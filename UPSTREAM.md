@@ -1,7 +1,7 @@
 # Upstream
 
 Quelle: https://github.com/MoinMornhart/moinstudio
-Zuletzt übernommen: v0.36.2 (Commit cece641) am 2026-09-30
+Zuletzt übernommen: v0.36.2 vollständig (Commit cece641) am 2026-09-30; aus v0.37.0–v0.50.1 (Commit 5c28eae) die Fehlerbehebungen am 2026-10-05, der Rest folgt Version für Version (siehe Tabelle)
 
 Der Neubau beruht auf MoinStudio v0.36.2. Neuere MoinStudio-Versionen werden nach dem Ablauf in
 [docs/auftrag.md](docs/auftrag.md), Abschnitt 8, nachgezogen. Nichts wird stillschweigend ausgelassen: Was nicht
@@ -29,3 +29,13 @@ Der Neubau beruht auf MoinStudio v0.36.2. Neuere MoinStudio-Versionen werden nac
 | v0.36.2 und älter: Kanal-Farben `.k-mornhart`/`.k-morni` | Philip-spezifisch | ersetzt durch Farben je Konto in Profil-Reihenfolge | ab v0.6.0 |
 | v0.36.2 und älter: MCP-Werkzeuge `video_edit`, `planning` | allgemein | übernommen, englische Beschreibungen, Konto-IDs statt fester Kanäle; `planning` läuft über die App (Rhythmus liegt im Profil) | ab v0.6.0 |
 | v0.36.2 und älter: `src/main/adobe/*` (Erkennung, Premiere-XML, PSD, Photoshop-COM, Selbsttest) | allgemein | übernommen nach `src/main/programme/`, Marker übersetzbar; PSD über ag-psd statt eigenem Schreiber, mit „Feinschliff“-Ebene; erweitert um After Effects (Skript), DaVinci Resolve (FCPXML/EDL) und CapCut (Ordner) | ab v0.7.0 |
+| v0.48.2 Auswahl-Ausdruck als flacher Baum, Einblendungen nur solange sichtbar | Schnitt | übernommen | v0.7.2 |
+| v0.48.2 Installer für jede Version (CI) | Fundament | übernommen | v0.7.2 |
+| v0.48.1 Whisper-Modell ohne Internet laden, Download mit Wiederholungen | Schnitt | übernommen | v0.7.2 |
+| v0.48.0 iCloud-Sperren abwarten, Datenordner immer lokal | Fundament | übernommen und erweitert auf OneDrive und Dropbox | v0.7.2 |
+| v0.41.4 Thumbnail-Runden nicht als Sync-Konflikte | Fundament | übernommen | v0.7.2 |
+| v0.41.5 Minecraft-Spieldateien lokal statt im Datenordner | Fundament | schon so: ContentStudio legt sie seit v0.4.0 in den lokalen Werkzeugordner | – |
+| v0.47.1, v0.47.2, v0.48.3 Rohvideo und Premiere-Sequenzen auf jedem Gerät | Export | übernommen und erweitert auf After Effects, Resolve und Cloud-Ordner wie Dropbox | v0.7.2 |
+| v0.46.1 Zeitlimit für Claude-Aufrufe, faire Auswahl über alle Versuche | KI, Thumbnail | übernommen über die KI-Schicht für alle Anbieter; die Bildprüfung lief in ContentStudio schon bei jedem Versuch | v0.7.2 |
+| v0.38.0 OpenCV 4 statt 5 | Bild | übernommen | v0.7.2 |
+| v0.50.1 Abhängigkeiten (Electron 44.5.1, eslint 10.12, MCP 2.3) | Fundament | übernommen | v0.7.2 |

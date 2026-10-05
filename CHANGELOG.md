@@ -8,6 +8,37 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Added
+
+- Thumbnails ohne eigene Engine (Kochen, Vlog, Fitness, Bildung …): echte Orte als Hintergrund (Fotos von Poly Haven,
+  CC0) und bis zu drei Gegenstände als 3D-Sticker (Microsoft Fluent Emoji, MIT), damit das Thema auf einen Blick
+  erkennbar ist. Verdeckt ein Gegenstand ein Gesicht, rückt die Korrektur ihn zur Seite. Ohne Netz bleibt es beim
+  Farbverlauf, mit Hinweis.
+
+### Changed
+
+- Jede Version bekommt jetzt ein Installationspaket, auch reine Fehlerbehebungen (aus MoinStudio v0.48.2).
+- Abhängigkeiten: Electron 44.5.1, eslint 10.12, MCP 2.3 (aus MoinStudio v0.50.1).
+
+### Fixed
+
+- Vorschau und Export langer Videos brachen mit „FFmpeg … Cannot allocate memory“ ab: Die Auswahl der behaltenen
+  Stücke ist jetzt ein flacher Baum, Texteinblendungen entstehen nur, solange sie zu sehen sind (aus MoinStudio v0.48.2).
+- Transkript: Ein vorhandenes Sprachmodell wird ohne Internet geladen, ein fehlendes mit bis zu fünf Versuchen (aus
+  MoinStudio v0.48.1).
+- Datenordner in iCloud, OneDrive oder Dropbox: Kurze Sperren während der Synchronisierung werden bis zu zehn Sekunden
+  abgewartet statt als Fehler gezeigt; der Datenordner bleibt immer auf dem Gerät (aus MoinStudio v0.48.0).
+- Zwischenstände der Thumbnails galten fälschlich als Sync-Konflikte (aus MoinStudio v0.41.4).
+- Premiere, After Effects, Resolve: kein „Media offline“ mehr auf dem zweiten Gerät. Das Rohvideo wird auf jedem Gerät
+  gefunden (auch unter einem anderen Windows-Benutzer), liegt es außerhalb des Datenordners, kommt eine Kopie ins
+  Projekt; Programmdateien mit Pfaden eines anderen Geräts werden beim Start neu geschrieben (aus MoinStudio v0.47.1,
+  v0.47.2, v0.48.3).
+- Ein hängender KI-Aufruf blockierte einen Auftrag: Jeder Aufruf hat jetzt ein Zeitlimit (Bildprüfung 5 Minuten, sonst
+  30), danach kommt der nächste KI-Weg dran. Bei mehreren Thumbnail-Versuchen wiegen gemessene Fehler dreifach (aus
+  MoinStudio v0.46.1).
+- Bildwerkzeuge: OpenCV bleibt auf Version 4, Version 5 stürzte zufällig ab (aus MoinStudio v0.38.0).
+- Thumbnail-Gegenstände: schon geladene Bilder werden nicht noch einmal im Netz gesucht.
+
 ## [0.7.1] - 2026-09-30
 
 > Fix: Foto-Thumbnails brachen zufällig ab; Leistungsbericht; Qualitätsrunde vorbereitet
