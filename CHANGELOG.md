@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-10-05
+
+> Thumbnail-Vorlage für jede Art von Bild: eigene Maske je Person, Hände, Ketten, Schlussprüfung mit Korrektur
+
 ### Added
 
 - Thumbnail-Vorlage für jede Art von Bild: echte Menschen, Spielfiguren, Comic; eine oder mehrere Personen; von vorn,
