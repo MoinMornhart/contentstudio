@@ -8,6 +8,16 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Added
+
+- Leuchtende Minecraft-Schrift: Texte im Thumbnail bekommen hinter dem Spielschatten einen weichen Schein in ihrer Farbe,
+  wie bei großen Kanälen (abschaltbar je Text).
+
+### Changed
+
+- Vergleich mit den Vorbildern abgeschlossen (docs/tests/vergleich-vorbilder.md); Figurgröße nachgemessen, sie hält mit.
+- Persönliche Namen aus der Projektdoku entfernt.
+
 ## [0.7.11] - 2026-10-05
 
 > Minecraft-Thumbnails näher an großen Kanälen, Leistungsbericht mit Intel-Grafik
