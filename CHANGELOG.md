@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.7.11] - 2026-10-05
+
+> Minecraft-Thumbnails näher an großen Kanälen, Leistungsbericht mit Intel-Grafik
+
 ### Changed
 
 - Minecraft-Thumbnails nach dem Vergleich mit großen Kanälen: Die Welt hinter der Figur bleibt detailreich und satt statt
