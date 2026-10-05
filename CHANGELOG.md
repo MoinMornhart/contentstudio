@@ -8,6 +8,12 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Added
+
+- Premiere-Brücke (ungetestet): UXP-Plugin „ContentStudio Bridge“ für Premiere Pro (`premiere-plugin/`) und die
+  Gegenstelle in ContentStudio (nur 127.0.0.1, eigener Port). Das Plugin kennt nur feste Befehle und führt sie nur mit
+  dem Zufallsschlüssel aus, den ContentStudio bei jedem Start lokal ablegt (aus MoinStudio v0.47.0).
+
 ## [0.7.6] - 2026-10-05
 
 > Skin-Intro Sting im Schnitt für Minecraft-Konten

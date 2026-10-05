@@ -1,0 +1,26 @@
+{
+  "manifestVersion": 5,
+  "id": "io.github.moinmornhart.contentstudio.bridge",
+  "name": "ContentStudio Bridge",
+  "version": "0.1.0",
+  "main": "index.html",
+  "host": {
+    "app": "premierepro",
+    "minVersion": "25.6"
+  },
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "contentstudio-bridge-panel",
+      "label": { "default": "ContentStudio" },
+      "minimumSize": { "width": 230, "height": 120 },
+      "maximumSize": { "width": 2000, "height": 2000 },
+      "preferredDockedSize": { "width": 300, "height": 160 },
+      "preferredFloatingSize": { "width": 300, "height": 160 }
+    }
+  ],
+  "requiredPermissions": {
+    "network": { "domains": ["ws://127.0.0.1:47812", "ws://localhost:47812"] },
+    "localFileSystem": "fullAccess"
+  }
+}
