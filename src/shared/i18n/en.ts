@@ -1046,5 +1046,7 @@ export const en: Record<Schluessel, string> = {
   'leistung.whisperWert': '{faktor}× video length, {abschnitte} segments',
   'leistung.render': 'test image rendered',
   'leistung.fehlgeschlagen': 'failed',
-  'leistung.uebersprungen': 'skipped (tool missing)'
+  'leistung.uebersprungen': 'skipped (tool missing)',
+
+  'programme.fehler.quelleFehlt': 'The source video “{name}” is not on this device ({pfad}). Export the program files once on the device that has the video – a copy then goes into the project folder in your data folder.'
 }

@@ -14,6 +14,7 @@ import { localRoot } from '../tools/ipc'
 import { capcutOrdner, type CapcutEingabe } from './capcut'
 import { findeProgramme, PROGRAMM_NAMEN, type ErkanntesProgramm } from './erkennung'
 import { capcutEingabe, programmDateien } from './projekt-export'
+import { programmeAuffrischen } from './geraet'
 import { erzeugeProben, selbsttest, type Proben } from './selbsttest'
 
 const Tests = z.record(z.string(), z.object({ status: z.enum(['ok', 'fehler', 'übersprungen', 'checkliste']), details: z.string(), zeit: z.string(), datei: z.string().nullable() }))
@@ -44,6 +45,14 @@ export function registerProgrammeIpc(o: { queue: JobQueue; profil: ProfilStore; 
     if (ergebnis.datei && ergebnis.status !== 'übersprungen') void shell.openPath(ergebnis.datei)
     return ergebnis
   })
+
+  // Beim Start: Programmdateien im Datenordner auf die Pfade dieses Geräts umstellen (PC ↔ Laptop über den Datenordner)
+  setTimeout(() => {
+    void o.profil
+      .datenordner()
+      .then((daten) => programmeAuffrischen(daten, programmDateien, (text) => console.log(text)))
+      .catch(() => undefined)
+  }, 8000)
 
   // Weitergabe eines Schnitt-Projekts (ROADMAP 7.1–7.3)
   o.queue.register('capcut', (p: CapcutEingabe, ctx) => capcutOrdner(p, ctx))

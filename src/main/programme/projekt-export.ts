@@ -15,6 +15,7 @@ import { afterEffectsSkript } from './aftereffects'
 import type { CapcutEingabe } from './capcut'
 import { premiereXml, srt, type PremiereOptionen } from './premiere'
 import { resolveEdl, resolveFcpxml } from './resolve'
+import { quelleFuerProgramme } from './geraet'
 
 /** Breite und Höhe aus dem PNG-Kopf (IHDR); null, wenn es kein PNG ist */
 export function pngGroesse(b: Buffer): { breite: number; hoehe: number } | null {
@@ -50,9 +51,11 @@ export async function projektFuerProgramme(daten: string, id: string): Promise<{
     const groesse = info && info.mtimeMs >= stand ? pngGroesse(await readFile(datei)) : null
     if (groesse) textBilder[String(i)] = { datei, ...groesse }
   }
+  // Pfad für dieses Gerät: Rohvideo notfalls als Kopie im Projektordner, damit es auf jedes Gerät kommt
+  const quelle = { ...p.quelle, pfad: await quelleFuerProgramme(daten, ordner, p.quelle.pfad, p.quelle.groesse) }
   const untertitel = untertitelGruppen(abschnitte, liste, 7).map((g) => ({ start: g.start, ende: g.ende, text: g.woerter.map((w) => sauber(w.wort)).join(' ') }))
   return {
-    optionen: { name, quelle: p.quelle, liste, zooms: einstellungen(p).zooms ? zoomsAus(abschnitte, liste, wellen) : [], kapitel: exp?.kapitel ?? [], effekte, textBilder },
+    optionen: { name, quelle, liste, zooms: einstellungen(p).zooms ? zoomsAus(abschnitte, liste, wellen) : [], kapitel: exp?.kapitel ?? [], effekte, textBilder },
     untertitel,
     ordner
   }
