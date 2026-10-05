@@ -158,7 +158,10 @@ export function registerThumbnailIpc(o: {
     queue
       .state()
       .jobs.filter((j) => (['thumbnail', 'reaktion', 'vorlage', 'aenderung', 'video'] as string[]).includes(j.kind))
-      .map((j) => ({ id: j.id, art: (j.kind === 'thumbnail' ? 'frei' : j.kind) as ThumbAuftragInfo['art'], titel: j.title, state: j.state, progress: j.progress, step: j.step, error: j.error ?? null, createdAt: j.createdAt }))
+      .map((j) => {
+        const a = j.kind === 'aenderung' ? queue.payload<AenderungPayload>(j.id) : undefined
+        return { id: j.id, art: (j.kind === 'thumbnail' ? 'frei' : j.kind) as ThumbAuftragInfo['art'], titel: j.title, state: j.state, progress: j.progress, step: j.step, error: j.error ?? null, createdAt: j.createdAt, ...(a ? { eltern: a.eltern, wunsch: a.wunsch, basis: a.basisJob } : {}) }
+      })
       .reverse()
   )
 
@@ -195,6 +198,8 @@ export function registerThumbnailIpc(o: {
     // Änderung einer Änderung: auf den ursprünglichen Auftrag zurückgehen
     let quelle = (basis as ThumbPayload).ausgabe
     let idx = Number(index)
+    // Verlauf: Änderungen hängen am ursprünglichen Auftrag
+    const eltern = 'basis' in basis ? (basis.eltern ?? id) : id
     if ('basis' in basis) {
       quelle = basis.basis.ausgabe
       idx = 0
@@ -203,15 +208,23 @@ export function registerThumbnailIpc(o: {
     const b = basis as ThumbPayload
     if (b.start.art !== 'frei') throw new Error(t('thumb.aendern.nurFrei'))
     const ausgabe = join(await profil.datenordner(), 'thumbnails', `aenderung-${randomUUID()}`)
-    const payload: AenderungPayload = { basis: { ...b, ausgabe }, quelle, index: idx, wunsch: text, bild: v.bild }
+    const payload: AenderungPayload = { basis: { ...b, ausgabe }, quelle, index: idx, wunsch: text, bild: v.bild, eltern, basisJob: { job: id, variante: Number(index) } }
     // Die geänderte Variante bekommt ihre eigene plan.json im neuen Ordner (für weitere Änderungen)
     return queue.enqueue('aenderung', `${t('thumb.aendern.titel')}: ${text.slice(0, 50)}`, payload)
   })
 
   ipcMain.handle(IPC.thumbLoeschen, async (_e, jobId: unknown): Promise<void> => {
     const dir = await profil.datenordner()
-    const p = (await queue.remove(String(jobId))) as { ausgabe?: string } | undefined
-    if (p?.ausgabe && imOrdner(dir, p.ausgabe)) await rm(p.ausgabe, { recursive: true, force: true })
+    // Ein Auftrag nimmt seinen ganzen Verlauf (alle Änderungen) mit (aus MoinStudio v0.37.0)
+    const verlauf = queue
+      .state()
+      .jobs.filter((j) => j.kind === 'aenderung' && queue.payload<AenderungPayload>(j.id)?.eltern === String(jobId))
+      .map((j) => j.id)
+    for (const id of [String(jobId), ...verlauf]) {
+      const p = (await queue.remove(id)) as { ausgabe?: string; basis?: { ausgabe?: string } } | undefined
+      const ordner = p?.ausgabe ?? p?.basis?.ausgabe
+      if (ordner && imOrdner(dir, ordner)) await rm(ordner, { recursive: true, force: true })
+    }
   })
 
   ipcMain.handle(IPC.thumbExport, async (_e, jobId: unknown, index: unknown, format: unknown, typ: unknown): Promise<string | null> => {

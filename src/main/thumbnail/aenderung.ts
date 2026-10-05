@@ -21,6 +21,9 @@ export interface AenderungPayload {
   index: number
   wunsch: string
   bild: string | null
+  /** Ursprünglicher Auftrag des Verlaufs und das Bild, an dem geändert wurde (aus MoinStudio v0.37.0) */
+  eltern?: string
+  basisJob?: { job: string; variante: number }
 }
 
 export function aenderungsPrompt(wunsch: string, engine: Engine, variante: unknown): string {

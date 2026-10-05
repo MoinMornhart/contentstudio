@@ -603,3 +603,10 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; }
 .kachel-chip.schnitt { color: #7cc4ff; border-color: color-mix(in srgb, #7cc4ff 45%, transparent); }
 .kachel-chip.bild { color: #ffcf5a; border-color: color-mix(in srgb, #ffcf5a 45%, transparent); }
 .kachel-chip.text { color: #8be28b; border-color: color-mix(in srgb, #8be28b 45%, transparent); }
+/* Thumbnail-Verlauf (aus MoinStudio v0.37.0) */
+.verlauf { display: grid; gap: 14px; }
+.verlauf-schritt { display: grid; gap: 8px; border-left: 3px solid var(--border); padding-left: 12px; }
+.verlauf-wunsch { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.verlauf-nr { font-weight: 700; color: var(--accent); }
+.verlauf-eingabe { display: grid; gap: 6px; }
+.variant.gewaehlt { outline: 2px solid var(--accent); border-radius: 10px; }

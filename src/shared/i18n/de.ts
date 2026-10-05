@@ -1164,7 +1164,20 @@ export const de = {
   'schnitt.namen.los': 'Namen vorschlagen',
   'schnitt.namen.neu': 'Neue Vorschläge',
   'schnitt.namen.umbenennen': 'Umbenennen',
-  'schnitt.namen.hinweis': 'Ein Klick übernimmt den Vorschlag als Namen und als Titel (im Export und auf der Planungskarte).'
+  'schnitt.namen.hinweis': 'Ein Klick übernimmt den Vorschlag als Namen und als Titel (im Export und auf der Planungskarte).',
+
+  'thumb.verlauf.anzahl': '{anzahl} Änderung(en)',
+  'thumb.verlauf.alleLoeschen': 'Auftrag mit allen Änderungen löschen',
+  'thumb.verlauf.geloescht': 'einer gelöschten Änderung',
+  'thumb.verlauf.variante': 'Variante {nr}',
+  'thumb.verlauf.aenderung': 'Änderung {nr}',
+  'thumb.verlauf.an': 'an {was}',
+  'thumb.verlauf.loeschen': 'Löschen',
+  'thumb.verlauf.wirklich': 'Wirklich löschen?',
+  'thumb.verlauf.aendert': 'Ändert: {was}',
+  'thumb.verlauf.neuestes': '(neuestes Bild)',
+  'thumb.verlauf.waehlen': 'Ändern',
+  'thumb.verlauf.gewaehlt': 'Gewählt'
 } as const
 
 export type Schluessel = keyof typeof de

@@ -1163,5 +1163,18 @@ export const en: Record<Schluessel, string> = {
   'schnitt.namen.los': 'Suggest names',
   'schnitt.namen.neu': 'New suggestions',
   'schnitt.namen.umbenennen': 'Rename',
-  'schnitt.namen.hinweis': 'One click takes the suggestion as name and title (in the export and on the planning card).'
+  'schnitt.namen.hinweis': 'One click takes the suggestion as name and title (in the export and on the planning card).',
+
+  'thumb.verlauf.anzahl': '{anzahl} change(s)',
+  'thumb.verlauf.alleLoeschen': 'Delete job with all changes',
+  'thumb.verlauf.geloescht': 'a deleted change',
+  'thumb.verlauf.variante': 'variant {nr}',
+  'thumb.verlauf.aenderung': 'Change {nr}',
+  'thumb.verlauf.an': 'on {was}',
+  'thumb.verlauf.loeschen': 'Delete',
+  'thumb.verlauf.wirklich': 'Really delete?',
+  'thumb.verlauf.aendert': 'Changes: {was}',
+  'thumb.verlauf.neuestes': '(newest image)',
+  'thumb.verlauf.waehlen': 'Change',
+  'thumb.verlauf.gewaehlt': 'Selected'
 }

@@ -21,32 +21,123 @@ export function AuftragsListe({ offen, setzeOffen, vorbildHinweise, vorschlagen 
     }
   }, [])
   if (!auftraege.length) return <p className="muted">{t('thumb.ergebnis.keine')}</p>
+  // Änderungen stehen im Verlauf ihres Ursprungsauftrags, nicht als eigene Aufträge in der Liste (aus MoinStudio v0.37.0)
+  const haupt = auftraege.filter((a) => !a.eltern || !auftraege.some((x) => x.id === a.eltern))
+  const zuAuftrag = (id: string): ThumbAuftragInfo[] => auftraege.filter((a) => a.eltern === id).sort((x, y) => x.createdAt.localeCompare(y.createdAt))
   return (
     <ul className="auftraege">
-      {auftraege.map((a) => (
-        <li key={a.id} className={`auftrag-zeile${offen === a.id ? ' offen' : ''}`}>
-          <button type="button" className="auftrag-kopf" onClick={() => setzeOffen(offen === a.id ? null : a.id)}>
-            <strong>{a.titel}</strong>
-            <span className="muted small">
-              {t(`thumb.status.${a.state}`)}
-              {a.state === 'running' && a.progress !== null ? ` · ${a.progress} %` : ''}
-              {a.step && a.state !== 'done' ? ` · ${a.step}` : ''}
-            </span>
-          </button>
-          {a.error && <p className="warn small">{a.error}</p>}
-          {offen === a.id && a.state === 'done' && (a.art === 'video' ? <VideoErgebnisAnsicht jobId={a.id} vorschlagen={vorschlagen} /> : <Varianten jobId={a.id} vorbildHinweise={vorbildHinweise} />)}
-          {offen === a.id && (
-            <button type="button" className="btn small" onClick={() => void window.cs.thumbLoeschen(a.id).then(() => setzeOffen(null))}>
-              {t('thumb.ergebnis.loeschen')}
+      {haupt.map((a) => {
+        const aenderungen = zuAuftrag(a.id)
+        const status = [...aenderungen].reverse().find((x) => x.state !== 'done') ?? a
+        return (
+          <li key={a.id} className={`auftrag-zeile${offen === a.id ? ' offen' : ''}`}>
+            <button type="button" className="auftrag-kopf" onClick={() => setzeOffen(offen === a.id ? null : a.id)}>
+              <strong>{a.titel}</strong>
+              <span className="muted small">
+                {aenderungen.length > 0 && `${t('thumb.verlauf.anzahl', { anzahl: aenderungen.length })} · `}
+                {t(`thumb.status.${status.state}`)}
+                {status.state === 'running' && status.progress !== null ? ` · ${status.progress} %` : ''}
+                {status.step && status.state !== 'done' ? ` · ${status.step}` : ''}
+              </span>
             </button>
-          )}
-        </li>
-      ))}
+            {a.error && <p className="warn small">{a.error}</p>}
+            {offen === a.id && a.state === 'done' && (a.art === 'video' ? <VideoErgebnisAnsicht jobId={a.id} vorschlagen={vorschlagen} /> : <Verlauf auftrag={a} aenderungen={aenderungen} vorbildHinweise={vorbildHinweise} />)}
+            {offen === a.id && (
+              <button type="button" className="btn small" onClick={() => void window.cs.thumbLoeschen(a.id).then(() => setzeOffen(null))}>
+                {t(aenderungen.length ? 'thumb.verlauf.alleLoeschen' : 'thumb.ergebnis.loeschen')}
+              </button>
+            )}
+          </li>
+        )
+      })}
     </ul>
   )
 }
 
-function Varianten({ jobId, vorbildHinweise }: { jobId: string; vorbildHinweise: boolean }): React.JSX.Element {
+/**
+ * Verlauf eines Thumbnails wie ein Chat (aus MoinStudio v0.37.0): oben der Auftrag, darunter jede Änderung mit ihrem
+ * Ergebnis, ganz unten das Eingabefeld. Geändert wird das gewählte Bild, sonst das neueste.
+ */
+function Verlauf({ auftrag, aenderungen, vorbildHinweise }: { auftrag: ThumbAuftragInfo; aenderungen: ThumbAuftragInfo[]; vorbildHinweise: boolean }): React.JSX.Element {
+  const t = useT()
+  const [wahl, setWahl] = useState<{ job: string; variante: number } | null>(null)
+  const [text, setText] = useState('')
+  const [meldung, setMeldung] = useState<string | null>(null)
+  const [loeschen, setLoeschen] = useState<string | null>(null)
+  const schritte = [auftrag, ...aenderungen]
+  const neuestes = [...schritte].reverse().find((s) => s.state === 'done')
+  const basis = wahl && schritte.some((s) => s.id === wahl.job) ? wahl : neuestes ? { job: neuestes.id, variante: 0 } : null
+  const name = (b: { job: string; variante: number }): string => {
+    const n = schritte.findIndex((s) => s.id === b.job)
+    if (n < 0) return t('thumb.verlauf.geloescht')
+    return n === 0 ? t('thumb.verlauf.variante', { nr: b.variante + 1 }) : t('thumb.verlauf.aenderung', { nr: n })
+  }
+  const senden = (): void => {
+    if (!basis || !text.trim()) return
+    setMeldung(null)
+    window.cs.thumbAendern(basis.job, basis.variante, text).then(
+      () => {
+        setText('')
+        setWahl(null)
+      },
+      (e: unknown) => setMeldung(fehlerText(e))
+    )
+  }
+  const waehle = (job: string) => (i: number) => setWahl({ job, variante: i })
+  return (
+    <div className="verlauf">
+      <Varianten jobId={auftrag.id} vorbildHinweise={vorbildHinweise} gewaehlt={basis?.job === auftrag.id ? basis.variante : null} onWaehle={waehle(auftrag.id)} />
+      {aenderungen.map((a, n) => {
+        // Nur sagen, woran geändert wurde, wenn es nicht einfach das Bild direkt darüber ist
+        const vorher = n === 0 ? auftrag.id : aenderungen[n - 1]!.id
+        const woran = a.basis && (a.basis.job !== vorher || (n === 0 && a.basis.variante > 0)) ? name(a.basis) : null
+        return (
+          <div key={a.id} className="verlauf-schritt">
+            <div className="verlauf-wunsch">
+              <span className="verlauf-nr">{t('thumb.verlauf.aenderung', { nr: n + 1 })}</span>
+              <span>„{a.wunsch}“</span>
+              {woran && <span className="muted small">{t('thumb.verlauf.an', { was: woran })}</span>}
+              <button
+                type="button"
+                className="btn small"
+                onClick={() => {
+                  if (loeschen === a.id) void window.cs.thumbLoeschen(a.id).then(() => setLoeschen(null))
+                  else setLoeschen(a.id)
+                }}
+              >
+                {loeschen === a.id ? t('thumb.verlauf.wirklich') : t('thumb.verlauf.loeschen')}
+              </button>
+            </div>
+            {a.state === 'done' ? (
+              <Varianten jobId={a.id} vorbildHinweise={vorbildHinweise} gewaehlt={basis?.job === a.id ? basis.variante : null} onWaehle={waehle(a.id)} />
+            ) : (
+              <p className={a.state === 'failed' ? 'warn small' : 'muted small'}>
+                {a.state === 'failed' ? a.error : `${t(`thumb.status.${a.state}`)}${a.step ? ` · ${a.step}` : ''}`}
+              </p>
+            )}
+          </div>
+        )
+      })}
+      {basis && (
+        <div className="verlauf-eingabe">
+          <span className="muted small">
+            {t('thumb.verlauf.aendert', { was: name(basis) })}
+            {!wahl && schritte.length > 1 ? ` ${t('thumb.verlauf.neuestes')}` : ''}
+          </span>
+          <div className="row">
+            <input className="input" placeholder={t('thumb.aendern.platzhalter')} value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && text.trim() && senden()} />
+            <button type="button" className="btn primary" disabled={!text.trim()} onClick={senden}>
+              {t('thumb.aendern.knopf')}
+            </button>
+          </div>
+          {meldung && <p className="warn small">{meldung}</p>}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Varianten({ jobId, vorbildHinweise, gewaehlt, onWaehle }: { jobId: string; vorbildHinweise: boolean; gewaehlt: number | null; onWaehle: (i: number) => void }): React.JSX.Element {
   const t = useT()
   const [varianten, setVarianten] = useState<VarianteInfo[] | null>(null)
   const [gross, setGross] = useState<string | null>(null)
@@ -62,7 +153,7 @@ function Varianten({ jobId, vorbildHinweise }: { jobId: string; vorbildHinweise:
     <>
       <div className="variant-grid">
         {varianten.map((v, i) => (
-          <VarianteKarte key={i} jobId={jobId} index={i} v={v} vorbildHinweise={vorbildHinweise} gross={setGross} />
+          <VarianteKarte key={i} jobId={jobId} index={i} v={v} vorbildHinweise={vorbildHinweise} gross={setGross} gewaehlt={gewaehlt === i} waehle={() => onWaehle(i)} />
         ))}
       </div>
       {gross && (
@@ -74,10 +165,9 @@ function Varianten({ jobId, vorbildHinweise }: { jobId: string; vorbildHinweise:
   )
 }
 
-function VarianteKarte({ jobId, index, v, vorbildHinweise, gross }: { jobId: string; index: number; v: VarianteInfo; vorbildHinweise: boolean; gross: (b: string) => void }): React.JSX.Element {
+function VarianteKarte({ jobId, index, v, vorbildHinweise, gross, gewaehlt, waehle }: { jobId: string; index: number; v: VarianteInfo; vorbildHinweise: boolean; gross: (b: string) => void; gewaehlt: boolean; waehle: () => void }): React.JSX.Element {
   const t = useT()
   const [format, setFormat] = useState<ExportFormat>('16:9')
-  const [wunsch, setWunsch] = useState('')
   const [meldung, setMeldung] = useState<string | null>(null)
   const exportiere = (typ: 'png' | 'jpg' | 'psd'): void => {
     setMeldung(null)
@@ -87,7 +177,7 @@ function VarianteKarte({ jobId, index, v, vorbildHinweise, gross }: { jobId: str
       .catch((e: unknown) => setMeldung(fehlerText(e)))
   }
   return (
-    <figure className="variant">
+    <figure className={gewaehlt ? 'variant gewaehlt' : 'variant'}>
       {v.bild ? (
         <button type="button" className="bild-knopf" onClick={() => gross(v.bild!)} title={t('thumb.ergebnis.gross')}>
           <img src={v.bild} alt={v.titel} />
@@ -143,22 +233,8 @@ function VarianteKarte({ jobId, index, v, vorbildHinweise, gross }: { jobId: str
               ))}
             </div>
             <div className="row">
-              <input className="input" value={wunsch} placeholder={t('thumb.aendern.platzhalter')} onChange={(e) => setWunsch(e.target.value)} />
-              <button
-                type="button"
-                className="btn small"
-                disabled={!wunsch.trim()}
-                onClick={() =>
-                  void window.cs
-                    .thumbAendern(jobId, index, wunsch)
-                    .then(() => {
-                      setWunsch('')
-                      setMeldung(t('thumb.aendern.gestartet'))
-                    })
-                    .catch((e: unknown) => setMeldung(fehlerText(e)))
-                }
-              >
-                {t('thumb.aendern.knopf')}
+              <button type="button" className={gewaehlt ? 'btn small primary' : 'btn small'} aria-pressed={gewaehlt} onClick={waehle}>
+                ✏️ {t(gewaehlt ? 'thumb.verlauf.gewaehlt' : 'thumb.verlauf.waehlen')}
               </button>
             </div>
           </>

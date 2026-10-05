@@ -184,6 +184,10 @@ export interface ThumbAuftragInfo {
   step: string | null
   error: string | null
   createdAt: string
+  /** Änderung: ursprünglicher Auftrag (der Verlauf hängt an ihm), Wunsch und das Bild, an dem geändert wurde */
+  eltern?: string
+  wunsch?: string
+  basis?: { job: string; variante: number }
 }
 
 export interface VideoIdee {
