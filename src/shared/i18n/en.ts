@@ -1147,5 +1147,7 @@ export const en: Record<Schluessel, string> = {
 
   'schnitt.eff.video': 'Video overlay',
   'schnitt.eff.bib': '“{name}”',
-  'schnitt.eff.bibAuto': '“{name}” (automatic)'
+  'schnitt.eff.bibAuto': '“{name}” (automatic)',
+
+  'planung.autoKarte': 'Created automatically because the video went into editing.'
 }

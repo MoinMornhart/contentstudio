@@ -3,7 +3,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { kartenOrdner, ladeKarten, neueKarte } from '../../src/main/planung/karten'
-import { naechsteSpalte } from '../../src/main/planung/verbindung'
+import { naechsteSpalte, passendeKarte, titelAusName, videoInPlanung } from '../../src/main/planung/verbindung'
+import { speichereProjekt, type Projekt } from '../../src/main/schnitt/projekt'
 
 const t = (gewaehlt: boolean) => ({ auftrag: 'a', bild: 'thumbnails/x/1.png', gewaehlt })
 
@@ -21,6 +22,34 @@ describe('Planung: Verbindung zu Schnitt und Thumbnail (ROADMAP M6, MoinStudio 7
     expect(naechsteSpalte({ spalte: 'upload', thumbnail: null }, 'import')).toBe('upload')
     expect(naechsteSpalte({ spalte: 'veroeffentlicht', thumbnail: t(true) }, 'export')).toBe('veroeffentlicht')
     expect(naechsteSpalte({ spalte: 'thumbnail', thumbnail: null }, 'import')).toBe('thumbnail')
+  })
+
+  it('macht aus Dateinamen lesbare Titel (aus MoinStudio v0.41.0)', () => {
+    expect(titelAusName('2026-10-01_brot_backen_wie_beim_baecker.mp4')).toBe('Brot backen wie beim baecker')
+    expect(titelAusName('Aufnahme 19-42-10 Bergtour.mkv')).toBe('Aufnahme Bergtour')
+  })
+
+  it('findet die passende Karte im selben Konto, die noch nicht verknüpft und nicht hochgeladen ist', async () => {
+    const d = await mkdtemp(join(tmpdir(), 'cs-passend-'))
+    const a = await neueKarte(d, { kontoId: 'k1', titel: 'Brot backen wie beim Bäcker' }, 'PC')
+    await neueKarte(d, { kontoId: 'k2', titel: 'Brot backen wie beim Bäcker' }, 'PC')
+    await neueKarte(d, { kontoId: 'k1', titel: 'Pizza in zehn Minuten' }, 'PC')
+    const karten = await ladeKarten(d)
+    expect(passendeKarte(karten, { name: '2026-10-01_brot_backen_wie_beim_bäcker.mp4', kontoId: 'k1' })?.id).toBe(a.id)
+    expect(passendeKarte(karten, { name: 'Wanderung im Harz.mp4', kontoId: 'k1' })).toBeNull()
+  })
+
+  it('Video im Schnitt ohne Karte: verknüpft eine passende oder legt eine neue in „Schnitt“ an', async () => {
+    const d = await mkdtemp(join(tmpdir(), 'cs-auto-'))
+    const idee = await neueKarte(d, { kontoId: 'k1', titel: 'Pizza in zehn Minuten' }, 'PC')
+    const projekt = (id: string, name: string): Projekt => ({ id, name, kontoId: 'k1', kanal: 'Test', plattform: 'youtube', sprache: 'de', richtung: 'kochen', erstellt: '2026-10-01', quelle: null, spuren: [], proxy: false, wellenform: false, leiste: false }) as unknown as Projekt
+    await speichereProjekt(d, projekt('p1', 'pizza in zehn minuten.mp4'))
+    await speichereProjekt(d, projekt('p2', '2026-10-01_wanderung_im_harz.mp4'))
+    expect(await videoInPlanung(d, 'p1')).toMatchObject({ id: idee.id, schnitt: 'p1', spalte: 'schnitt' })
+    const neu = await videoInPlanung(d, 'p2')
+    expect(neu).toMatchObject({ titel: 'Wanderung im harz', schnitt: 'p2', spalte: 'schnitt', kontoId: 'k1' })
+    expect((await videoInPlanung(d, 'p2'))?.id).toBe(neu?.id)
+    expect(await ladeKarten(d)).toHaveLength(2)
   })
 
   it('liest Karten mit altem Thumbnail-Feld ohne Fehler', async () => {

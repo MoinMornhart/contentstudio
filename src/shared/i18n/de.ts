@@ -1148,7 +1148,9 @@ export const de = {
 
   'schnitt.eff.video': 'Video eingeblendet',
   'schnitt.eff.bib': '„{name}“',
-  'schnitt.eff.bibAuto': '„{name}“ (automatisch)'
+  'schnitt.eff.bibAuto': '„{name}“ (automatisch)',
+
+  'planung.autoKarte': 'Automatisch angelegt, weil das Video in den Schnitt kam.'
 } as const
 
 export type Schluessel = keyof typeof de
