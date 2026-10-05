@@ -311,14 +311,16 @@ export function effektGraph(o: EffektOptionen): EffektGraph {
     if (!datei) return
     const von = E(e.von)
     const bis = Math.max(von + 0.2, E(e.bis))
-    const idx = neueEingabe({ vor: ['-loop', '1', '-framerate', String(o.fps), '-t', z(bis + 0.1)], datei })
+    // Nur so lange erzeugen, wie die Einblendung zu sehen ist, und dann an ihre Stelle schieben – sonst lief jedes Bild ab
+    // Sekunde 0 mit und FFmpeg ging bei vielen Texten der Speicher aus (aus MoinStudio v0.48.2)
+    const idx = neueEingabe({ vor: ['-loop', '1', '-framerate', String(o.fps), '-t', z(bis - von + 0.1)], datei })
     // Größe: Text als Anteil der Bildhöhe je Zeile, Bild als Anteil der Breite
     const breite = e.art === 'text' ? Math.round(o.hoehe * klemme(e.groesse ?? 0.12, 0.07, 0.4) * ((tb?.breite ?? 1) / Math.max(1, (tb?.hoehe ?? 1) / Math.max(1, e.text.split('\n').length)))) : Math.round(o.breite * klemme(e.groesse ?? 0.3, 0.05, 1))
     const pop = e.art === 'text' && (e.animation ?? 'pop') === 'pop' ? `*(0.55+0.45*min(1\\,max(0\\,(t-${z(von)})/0.12)))` : ''
     const lage = e.lage ?? (e.art === 'text' ? 'oben' : 'rechts')
     const x = lage === 'links' ? 'W*0.05' : lage === 'rechts' ? 'W*0.95-w' : '(W-w)/2'
     const y = lage === 'oben' ? 'H*0.08' : lage === 'unten' ? 'H*0.78-h' : '(H-h)/2'
-    teile.push(`[${idx}:v]format=rgba,scale=w='${Math.min(o.breite, breite)}${pop}':h=-1:eval=frame,fade=t=in:st=${z(von)}:d=0.1:alpha=1,fade=t=out:st=${z(bis - 0.15)}:d=0.15:alpha=1[ov${i}]`)
+    teile.push(`[${idx}:v]setpts=PTS-STARTPTS+${z(von)}/TB,format=rgba,scale=w='${Math.min(o.breite, breite)}${pop}':h=-1:eval=frame,fade=t=in:st=${z(von)}:d=0.1:alpha=1,fade=t=out:st=${z(bis - 0.15)}:d=0.15:alpha=1[ov${i}]`)
     teile.push(`[${v}][ov${i}]overlay=x='${x}':y='${y}':enable='${zwischen(von, bis)}':eof_action=pass[vo${i}]`)
     v = `vo${i}`
   })

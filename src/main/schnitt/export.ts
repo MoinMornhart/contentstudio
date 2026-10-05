@@ -10,7 +10,7 @@ import { t } from '../i18n'
 import { sprachName } from '../thumbnail/job'
 import { ffmpegMitFortschritt } from './import'
 import { aendereProjekt, ladeProjekt, projektOrdner } from './projekt'
-import { filterGraph, renderArgs, zeitAbbildung } from './render'
+import { auswahlAusdruck, filterGraph, renderArgs, zeitAbbildung } from './render'
 import { liesAbschnitte } from './transkript'
 import { einstellungen, renderPlan, verfolgungFallsNoetig } from './vorschau'
 import type { ThumbUmgebung } from '../thumbnail/umgebung'
@@ -267,7 +267,7 @@ export async function exportJob(p: ExportPayload, ctx: JobContext<unknown>, d: {
   const datei = join(ordner, `export.${endung}`)
   if (audio) {
     // Podcast: nur der geschnittene Ton, AAC, mit Kapiteln als Metadaten
-    const auswahl = plan.liste.behalten.map((b) => `between(t\\,${b.start.toFixed(3)}\\,${b.ende.toFixed(3)})`).join('+') || '0'
+    const auswahl = auswahlAusdruck(plan.liste.behalten)
     await writeFile(join(ordner, 'export-kapitel.txt'), kapitelMetadaten(text.kapitel, laenge))
     await ffmpegMitFortschritt(p.ffmpeg, ['-i', pr.quelle.pfad, '-i', 'export-kapitel.txt', '-map_metadata', '1', '-map_chapters', '1', '-vn', '-af', `aselect='${auswahl}',asetpts=N/SR/TB`, '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-movflags', '+faststart', `export.${endung}`], ctx, laenge, (a) => ctx.progress(8 + a * 88, t('schnitt.schritt.export', { prozent: Math.round(a * 100) })), ordner)
   } else {

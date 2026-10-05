@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { filterGraph, renderArgs, untertitelAss, zeitAbbildung, zoomsAus } from '../../src/main/schnitt/render'
+import { auswahlAusdruck, filterGraph, renderArgs, untertitelAss, zeitAbbildung, zoomsAus } from '../../src/main/schnitt/render'
 import { regelSchnitt, schnittliste } from '../../src/main/schnitt/rohschnitt'
 import { liesAbschnitte } from '../../src/main/schnitt/transkript'
 
@@ -50,10 +50,34 @@ describe('Schnitt: Untertitel, Zooms, Render (ROADMAP M5, MoinStudio 6.6)', () =
   it('baut einen Filtergraph mit Auswahl, Zoom und Untertiteln und legt ihn in eine Datei', () => {
     const o = { quelle: 'proxy.mp4', liste, zooms: [{ start: 10, ende: 12 }], untertitel: 'vorschau.ass', breite: 960, hoehe: 540, fps: 30, audio: true, encoder: ['-c:v', 'libx264'], ausgabe: 'v.mp4' }
     const g = filterGraph(o)
-    expect(g).toContain("select='between(t\\,0.000\\,")
+    expect(g).toContain("[0:v]select='")
     expect(g).toContain('eval=frame,crop=960:540')
     expect(g).toContain('subtitles=vorschau.ass')
     expect(g).toContain("[0:a]aselect='")
     expect(renderArgs(o, 'f.txt')).toEqual(expect.arrayContaining(['-/filter_complex', 'f.txt', '-map', '[a]']))
+  })
+
+  it('Auswahl auch bei Hunderten Stücken: flacher Baum, wählt genau die behaltenen Zeiten', () => {
+    const stuecke = Array.from({ length: 700 }, (_, i) => ({ start: i * 10, ende: i * 10 + 4 }))
+    const a = auswahlAusdruck(stuecke)
+    let tiefe = 0
+    let max = 0
+    for (const c of a) {
+      if (c === '(') max = Math.max(max, ++tiefe)
+      if (c === ')') tiefe--
+    }
+    expect(max).toBeLessThan(16) // als Summe wären es 700 Glieder – FFmpeg bricht ab („Cannot allocate memory“)
+    const auswerten = (t: number): number =>
+      new Function('t', 'between', 'iff', 'lt', `return ${a.replace(/\\,/g, ',').replace(/if\(/g, 'iff(')}`)(
+        t,
+        (x: number, u: number, o: number) => (x >= u && x <= o ? 1 : 0),
+        (b: number, j: number, n: number) => (b ? j : n),
+        (x: number, y: number) => (x < y ? 1 : 0)
+      ) as number
+    for (const t of [0, 2, 4.5, 9.99, 10, 13.9, 5000, 5003, 5006, 6994, 6999]) {
+      const soll = stuecke.some((s) => t >= s.start && t <= s.ende) ? 1 : 0
+      expect(auswerten(t), `t=${t}`).toBe(soll)
+    }
+    expect(auswahlAusdruck([])).toBe('0')
   })
 })

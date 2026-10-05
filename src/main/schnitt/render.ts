@@ -223,6 +223,21 @@ export function verfolgungsAusdruck(punkte: { t: number; x: number }[], behalten
   return teile.join('+')
 }
 
+/**
+ * Auswahl der behaltenen Stücke als FFmpeg-Ausdruck. Als ausgeglichener Baum (if(lt(t,Mitte),links,rechts)) statt einer
+ * langen Summe: Mit 180 Stücken (30-Minuten-Aufnahme) brach FFmpegs Ausdrucks-Leser ab und meldete irreführend
+ * „Cannot allocate memory“ (aus MoinStudio v0.48.2). Der Baum ist auch bei tausend Stücken nur ~10 Ebenen tief.
+ */
+export function auswahlAusdruck(stuecke: readonly { start: number; ende: number }[]): string {
+  const s = [...stuecke].sort((a, b) => a.start - b.start)
+  const baum = (von: number, bis: number): string => {
+    if (bis - von === 1) return `between(t\\,${zahl(s[von]!.start)}\\,${zahl(s[von]!.ende)})`
+    const mitte = Math.floor((von + bis) / 2)
+    return `if(lt(t\\,${zahl(s[mitte]!.start)})\\,${baum(von, mitte)}\\,${baum(mitte, bis)})`
+  }
+  return s.length ? baum(0, s.length) : '0'
+}
+
 /** Filtergraph (kommt in eine Datei – bei Stunden-Streams wäre er für die Windows-Befehlszeile zu lang). */
 export function filterGraph(o: RenderOptionen): string {
   const auswahl = o.liste.behalten.map((b) => `between(t\\,${zahl(b.start)}\\,${zahl(b.ende)})`).join('+') || '0'

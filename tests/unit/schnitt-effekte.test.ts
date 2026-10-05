@@ -77,7 +77,7 @@ describe('Schnitt: Effekt-Bausteine (ROADMAP E.2)', () => {
       )
     )
     expect(g.eingaben).toEqual([
-      { vor: ['-loop', '1', '-framerate', '30', '-t', '7.100'], datei: 'C:/t/text1.png' },
+      { vor: ['-loop', '1', '-framerate', '30', '-t', '2.100'], datei: 'C:/t/text1.png' },
       { vor: [], datei: 'C:/k/whoosh.wav' }
     ])
     // 3 s Schnittzeit = 5 s Endzeit (2 s Schnitt als Zeitlupe dauern 4 s, dann 1 s normal)
