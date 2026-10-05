@@ -50,7 +50,12 @@ export function registerProgrammeIpc(o: { queue: JobQueue; profil: ProfilStore; 
   setTimeout(() => {
     void o.profil
       .datenordner()
-      .then((daten) => programmeAuffrischen(daten, programmDateien, (text) => console.log(text)))
+      .then(async (daten) => {
+        // mit FFmpeg behalten Premiere-Dateien ihre Effekt-Clips (fertige Wandlungen im Projekt werden wiederverwendet)
+        const ff = await ffmpeg().catch(() => null)
+        const werkzeuge = ff ? { ffmpeg: ff, klaenge: join(localRoot(), 'klaenge') } : null
+        return programmeAuffrischen(daten, (d, id, ziel) => programmDateien(d, id, ziel, werkzeuge), (text) => console.log(text))
+      })
       .catch(() => undefined)
   }, 8000)
 
@@ -68,7 +73,8 @@ export function registerProgrammeIpc(o: { queue: JobQueue; profil: ProfilStore; 
       return { datei: eingabe.ziel, auftrag: await o.queue.enqueue('capcut', t('programme.capcut.titel', { name: eingabe.titel }), eingabe) }
     }
     if (z !== 'premiere' && z !== 'aftereffects' && z !== 'resolve') throw new Error(t('planung.fehler.aktion', { aktion: String(ziel) }))
-    const r = await programmDateien(daten, String(id), z)
+    const ff = z === 'premiere' ? await ffmpeg().catch(() => null) : null
+    const r = await programmDateien(daten, String(id), z, ff ? { ffmpeg: ff, klaenge: join(localRoot(), 'klaenge') } : null)
     shell.showItemInFolder(r.datei)
     return { datei: r.datei, auftrag: null }
   })

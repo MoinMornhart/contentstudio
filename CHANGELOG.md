@@ -19,6 +19,9 @@ Kurzbeschreibung für die README.
 - Schnitt: Schalter „Zuschauen“. An: Schritte mit Fortschritt und beim Rendern jede Sekunde das aktuelle Bild; nach dem
   Rohschnitt startet die Vorschau von selbst. Aus: alles läuft im Hintergrund bis zum fertigen Export, dann kommt eine
   Windows-Benachrichtigung (aus MoinStudio v0.54.0).
+- Premiere: Effekte aus der Bibliothek (z. B. die Abo-Animation, Bilder) liegen als echte Clips in der Sequenz, mit
+  Größe und Lage wie im Render; Geräusche und der Ton der Animationen auf Spur A2. Greenscreen-Videos und WebM wandelt
+  ContentStudio einmal in ein freigestelltes ProRes-4444-Video im Projektordner (aus MoinStudio v0.55.0).
 
 ### Changed
 

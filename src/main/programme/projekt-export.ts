@@ -14,6 +14,7 @@ import { einstellungen } from '../schnitt/vorschau'
 import { afterEffectsSkript } from './aftereffects'
 import type { CapcutEingabe } from './capcut'
 import { premiereXml, srt, type PremiereOptionen } from './premiere'
+import { premiereMedien, type MedienWerkzeuge } from './premiere-medien'
 import { resolveEdl, resolveFcpxml } from './resolve'
 import { quelleFuerProgramme } from './geraet'
 
@@ -61,9 +62,13 @@ export async function projektFuerProgramme(daten: string, id: string): Promise<{
   }
 }
 
-/** Schreibt die Dateien für Premiere, After Effects oder Resolve nach <Projekt>/programme/; gibt die Hauptdatei zurück. */
-export async function programmDateien(daten: string, id: string, ziel: Exclude<ZielProgramm, 'capcut'>): Promise<{ datei: string; weitere: string[] }> {
+/**
+ * Schreibt die Dateien für Premiere, After Effects oder Resolve nach <Projekt>/programme/; gibt die Hauptdatei zurück.
+ * Mit `werkzeuge` (FFmpeg) bekommt Premiere die Bibliotheks-Effekte und Geräusche als echte Clips (aus MoinStudio v0.55.0).
+ */
+export async function programmDateien(daten: string, id: string, ziel: Exclude<ZielProgramm, 'capcut'>, werkzeuge: MedienWerkzeuge | null = null): Promise<{ datei: string; weitere: string[] }> {
   const { optionen, untertitel, ordner } = await projektFuerProgramme(daten, id)
+  if (ziel === 'premiere' && optionen.effekte?.length) Object.assign(optionen, await premiereMedien(daten, join(ordner, 'programme', 'medien'), optionen.effekte, werkzeuge).catch(() => ({})))
   const aus = join(ordner, 'programme')
   await mkdir(aus, { recursive: true })
   const weitere: string[] = []
