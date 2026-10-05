@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.7.13] - 2026-10-05
+
+> MoinStudio v0.51–v0.56: Kalender-Abgleich, Timeline, Zuschauen, Effekt-Ordner, KI-Platzwahl, Premiere-Clips
+
 ### Added
 
 - Schnitt: Effekte aus der eigenen Bibliothek mit „KI entscheidet“ setzt jetzt die KI an passende Stellen – nie im Hook

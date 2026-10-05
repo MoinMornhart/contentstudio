@@ -153,11 +153,11 @@ zwölf Schritten durch Profil, Kanäle, Darstellung, Marke und KI. Updates komme
 ## Neueste Änderungen
 
 <!-- CHANGELOG:START -->
+- **0.7.13** (2026-10-05): MoinStudio v0.51–v0.56: Kalender-Abgleich, Timeline, Zuschauen, Effekt-Ordner, KI-Platzwahl, Premiere-Clips
 - **0.7.12** (2026-10-05): Vergleich mit den Vorbildern abgeschlossen, leuchtende Minecraft-Schrift
 - **0.7.11** (2026-10-05): Minecraft-Thumbnails näher an großen Kanälen, Leistungsbericht mit Intel-Grafik
 - **0.7.10** (2026-10-05): Freiform-Tests bestanden: Thumbnails und Schnittwünsche in allen 5 Richtungen überwiegend gut
 - **0.7.9** (2026-10-05): Thumbnails in allen 5 Testrichtungen überwiegend gut: geteilte Bilder, genauere Prüfung, Posen nach Stimmung
-- **0.7.8** (2026-10-05): Bessere Thumbnails: keine harten Kanten bei Porträts, passende Orte, ruhigere Gefahr-Kamera
 <!-- CHANGELOG:END -->
 
 ## Entwicklung
