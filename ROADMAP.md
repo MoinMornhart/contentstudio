@@ -243,13 +243,15 @@ Quelle für alles, was MoinStudio fest eingebaut hat. Jede spätere Funktion lie
   Thumbnails 16–17 von 20, Schnittwünsche 19–20 von 20 (`docs/tests/freiform-thumbnails.md`, `freiform-schnitt.md`);
   9 Fehler dabei gefunden und behoben.
 - [ ] **8.2 Vergleich mit Vorbildern:** Ergebnisse neben die Referenzen des Stilbuchs, verbessern bis sie mithalten.
-  ✅ Vergleichsbilder und strenge Bewertung in `docs/tests/`.
+  ✅ Vergleichsbilder und strenge Bewertung in `docs/tests/`. Stand 05.10.: Minecraft gegen die 16 Vorbilder des
+  Stilbuchs (`docs/tests/vergleich-vorbilder.md`) – Hintergrund und Farben angeglichen; Figurgröße und Leuchteffekte offen.
 - [ ] **8.3 Jeder KI-Weg und ohne KI:** jede Funktion mit jedem Weg, der sie kann, und ohne KI (Hinweis statt Absturz).
   ✅ Testmatrix in `docs/tests/ki-wege.md`. Stand: „ohne KI“ und Test-KI für alle 18 Funktionen erledigt; echte Wege
   warten auf einen Zugang (API-Schlüssel oder lokales Modell ab ~8B).
 - [ ] **8.4 Hardware:** ein Lauf nur mit CPU (Software-OpenGL), einer mit GPU. ✅ Beide Berichte in `docs/tests/`.
-  Stand: CPU-Bericht fertig (`docs/tests/hardware-cpu.md`); der GPU-Lauf braucht einen Rechner mit Grafikkarte
-  (Einstellungen → Hardware → Leistungsbericht).
+  Stand: CPU-Bericht (`docs/tests/hardware-cpu.md`) und integrierte Intel-Grafik (`docs/tests/hardware-intel.md`: Quick
+  Sync, DirectML, oneAPI erkannt) fertig; ein Lauf mit eigener Grafikkarte (NVIDIA/AMD) steht aus (Einstellungen →
+  Hardware → Leistungsbericht).
 
 ## M9 – Stabil → 1.0.0
 

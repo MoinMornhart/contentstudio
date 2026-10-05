@@ -62,15 +62,19 @@ def veredle(rgb, m, staerke=1.0):
 
     # Hintergrund: nur aus Hintergrund-Pixeln weichzeichnen (sonst ziehen Figuren Schlieren in den Hintergrund)
     hg = 1.0 - m3
-    sigma = 3.0 * s
+    # nur ein Hauch weicher (1,2 statt 3 px): bei den Vorbildern bleibt die Welt detailreich, 3 px nahmen dem Hintergrund
+    # vier Fünftel seiner Details (Vergleich 8.2, 05.10.)
+    sigma = 1.2 * s
     hg_weich = weich(rgb * hg, sigma) / np.maximum(weich(hg, sigma), 1e-4)
     hg_weich = np.where(hg > 0.02, hg_weich, rgb)
-    hg_bild = saettigung(hg_weich, 1.0 - 0.12 * staerke) * (1.0 - 0.16 * staerke)
+    # Vergleich mit den Vorbildern (8.2, 05.10.): deren Welt ist satt und nur leicht dunkler – blasser machen ließ unsere
+    # Bilder neben ihnen grau wirken
+    hg_bild = saettigung(hg_weich, 1.0 + 0.08 * staerke) * (1.0 - 0.10 * staerke)
 
     # Vordergrund: Unschärfemaske und etwas mehr Farbe
     vg = rgb + (rgb - weich(rgb, 2.0 * s)) * 0.55 * staerke
-    vg = saettigung(vg, 1.0 + 0.12 * staerke)
-    vg = 0.5 + (vg - 0.5) * (1.0 + 0.05 * staerke)
+    vg = saettigung(vg, 1.0 + 0.2 * staerke)
+    vg = 0.5 + (vg - 0.5) * (1.0 + 0.1 * staerke)
 
     # Light Wrap: weichgezeichneter Hintergrund fällt auf die Innenkante der Silhouette
     kante_innen = np.clip((m - weich(m, 7.0 * s)) * 2.4, 0, 1)

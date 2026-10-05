@@ -814,7 +814,8 @@ def baue(szene, texturen, ausgabe=None, bericht=None):
         bpy.data.objects.remove(probe_item["ob"], do_unlink=True)
     _gegner_zur_kamera(thema_figur, haupt, cam)
     oben, unten = haupt.kopf_punkte()
-    cam_data.dof.aperture_fstop = r.get("blende", 2.0)
+    # Blende 5,6 statt 2,0: bei den Vorbildern bleibt die Welt hinter der Figur erkennbar (Vergleich 8.2, 05.10.)
+    cam_data.dof.aperture_fstop = r.get("blende", 5.6)
     _pflanzen_vor_kamera_weg(cam, (oben + unten) / 2)
     _randlicht(scene, haupt, cam, k.get("seite", "links"), r.get("randlicht", 650),
                (0.3, 0.85, 1.0) if k.get("modus") == "kampf" and szene.get("himmel") in ("blutrot", "gewitter", "nacht")

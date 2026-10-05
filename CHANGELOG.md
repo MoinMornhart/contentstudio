@@ -8,6 +8,16 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Changed
+
+- Minecraft-Thumbnails nach dem Vergleich mit großen Kanälen: Die Welt hinter der Figur bleibt detailreich und satt statt
+  verwaschen (weniger Weichzeichner, Blende 5,6), die Figur bekommt mehr Farbe und Kontrast.
+
+### Added
+
+- Leistungsbericht auf einem Laptop mit integrierter Intel-Grafik: Export über Quick Sync, Freistellen über DirectML
+  (docs/tests/hardware-intel.md).
+
 ## [0.7.10] - 2026-10-05
 
 > Freiform-Tests bestanden: Thumbnails und Schnittwünsche in allen 5 Richtungen überwiegend gut
