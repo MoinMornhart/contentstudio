@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.7.6] - 2026-10-05
+
+> Skin-Intro Sting im Schnitt für Minecraft-Konten
+
 ### Added
 
 - Schnitt: Skin-Intro „Sting“ für Minecraft-Konten – deine Figur springt ins Bild und reckt die Faust (oder winkt, oder
