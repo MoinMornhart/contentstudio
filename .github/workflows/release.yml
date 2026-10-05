@@ -1,11 +1,11 @@
 # Baut den Windows-Installer und veröffentlicht ihn als GitHub-Release (inkl. latest.yml für die
-# Update-Funktion). Automatisch bei Tags vX.Y.0 (fertige Features / Meilensteine), manuell für
-# jede andere Version über „Run workflow“.
+# Update-Funktion). Automatisch bei jedem Versions-Tag – auch Fehlerbehebungen (vX.Y.Z), damit sie sofort über
+# „Nach Updates suchen“ ankommen (aus MoinStudio v0.48.2). Manuell über „Run workflow“ z. B. als Vorab-Version.
 name: Release
 
 on:
   push:
-    tags: ['v[0-9]+.[0-9]+.0']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
   workflow_dispatch:
     inputs:
       prerelease:
