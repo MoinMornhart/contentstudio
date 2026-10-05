@@ -26,11 +26,14 @@ import { registerSchnittIpc } from './schnitt/ipc'
 import { medienBedienen, medienSchemaAnmelden } from './schnitt/medien'
 import { registerPlanungIpc } from './planung/ipc'
 import { registerProgrammeIpc } from './programme/ipc'
+import { installiereCloudGeduld } from './data/cloud-geduld'
 
 // Tests: eigener Einstellungsordner statt %APPDATA%\ContentStudio (vor allem anderen setzen)
 if (process.env['CS_USERDATA']) app.setPath('userData', process.env['CS_USERDATA'])
 // Video-Player im Schnitt-Reiter: eigenes Protokoll cs-media:// (muss vor „ready“ angemeldet sein)
 medienSchemaAnmelden()
+// vor dem ersten Dateizugriff: Sperren von iCloud, OneDrive und Dropbox im Datenordner abwarten statt Fehler zu zeigen
+installiereCloudGeduld()
 
 const arg = (name: string): string | undefined => process.argv.find((a) => a.startsWith(`--cs-${name}=`))?.split('=').slice(1).join('=')
 const screenshotDir = parseScreenshotArg(process.argv)

@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { SPRACHEN } from '@shared/i18n'
 import { readJson, writeJsonAtomic } from './jsonfile'
+import { setzeDatenordner } from './cloud-geduld'
 
 /**
  * Geräte-Einstellungen in %APPDATA%\ContentStudio\settings.json. Sie gelten nur für dieses Gerät
@@ -33,6 +34,7 @@ export class SettingsStore {
     const res = await readJson(this.path, SettingsSchema)
     // Kaputte oder fehlende Datei: mit Standardwerten weiterarbeiten statt abzustürzen.
     this.cache = res.ok ? res.value : { ...DEFAULT_SETTINGS }
+    setzeDatenordner(this.cache.dataDir)
     return this.cache
   }
 
@@ -40,6 +42,7 @@ export class SettingsStore {
     const next = SettingsSchema.parse({ ...(await this.load()), ...patch })
     await writeJsonAtomic(this.path, next)
     this.cache = next
+    setzeDatenordner(next.dataDir)
     return next
   }
 }
