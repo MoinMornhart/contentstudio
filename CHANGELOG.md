@@ -8,6 +8,15 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Fixed
+
+- Foto-Thumbnails: Eng zugeschnittene Porträts zeigen keine harten Schnittkanten mehr mitten im Bild – sie sitzen am
+  Bildrand ihrer Seite und schließen oben und unten bündig ab, was dann noch im Bild läge, läuft weich aus.
+- Orte im Hintergrund: Die KI wählt aus den Orten, für die es Fotos gibt; ein Ort wird nur genommen, wenn er wirklich
+  passt (kein Tanzsaal mehr für „Bahnhof“). Sonst gibt es einen Farbverlauf mit passenden Gegenständen.
+- Minecraft: Kamera „Gefahr“ mit längerer Brennweite – zur Kamera gestreckte Arme blähen nicht mehr auf, die Gefahr
+  (Lava, Abgrund) hat mehr Platz im Bild.
+
 ## [0.7.7] - 2026-10-05
 
 > Premiere-Brücke (UXP-Plugin, ungetestet); damit ist MoinStudio bis v0.50.1 übernommen

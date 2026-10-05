@@ -14,7 +14,7 @@ import { sichereMcAssets } from './minecraft/assets'
 import { ladeKatalog } from './minecraft/katalog'
 import { sichereMobs } from './minecraft/mobimport'
 import { wendeVorbilderAn } from './nachbearbeitung'
-import { loeseElemente } from './bildelemente'
+import { loeseElemente, orteKatalog } from './bildelemente'
 import { allgemeinOhneKi, allgemeinPrompt, AllgemeinPlanZ, AllgemeinVarianteZ, pruefeAllgemein, type AllgemeinPlan, type AllgemeinVariante } from './planung/allgemein'
 import { ernsteWarnungen, korrekturPrompt, mcOhneKi, McPlanZ, mcPrompt, pruefePlan, pruefeSzene, SzeneAntwortZ, type McPlan, type McPlanEingabe, type Szene } from './planung/minecraft'
 import { autoKorrektur, kiPruefung, technischePruefung, type Befund } from './pruefung'
@@ -300,7 +300,12 @@ async function allgemeinLauf(p: ThumbPayload, ctx: JobContext<Checkpoint>, d: Th
     stil,
     hintergrund: !!p.hintergrund,
     sprache: sprachName(p.sprache),
-    kanalsprache: sprachName(p.kanal.sprache)
+    kanalsprache: sprachName(p.kanal.sprache),
+    // Orte, die es wirklich gibt – ohne Netz bleibt die Liste leer und die KI nennt Stichworte wie bisher
+    orte: await orteKatalog(join(u.werkzeugRoot, 'bilder', 'orte')).then(
+      (o) => o.map((x) => x.name),
+      () => [] as string[]
+    )
   }
   if (!cp.plan) {
     ctx.progress(8, t('thumb.schritt.plan'))

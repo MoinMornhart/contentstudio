@@ -52,13 +52,19 @@ export async function orteKatalog(ordner: string, holen: Holen = fetch): Promise
 
 /** Passendster Ort zu einer Suche („kitchen“, „gym“, „city street at night“); null, wenn nichts passt */
 export function waehleOrt(orte: Ort[], suche: string): Ort | null {
+  // Genau ein Name aus der Liste (so wählt die KI, seit sie die Liste kennt)
+  const genau = orte.find((o) => o.name.toLowerCase() === suche.trim().toLowerCase() || o.id === suche.trim())
+  if (genau) return genau
   const such = woerter(suche)
   if (!such.length) return null
   let bester: { ort: Ort; wert: number } | null = null
   for (const ort of orte) {
     // Treffer im Namen zählen doppelt; bei Gleichstand gewinnt der Ort mit weniger Stichworten (spezifischer)
     const wert = such.reduce((s, w) => s + (ort.stichworte.includes(w) ? (woerter(ort.name).includes(w) ? 2 : 1) : 0), 0) - ort.stichworte.length / 1000
-    if (wert >= 1 && (!bester || wert > bester.wert)) bester = { ort, wert }
+    // Mindestens die Hälfte der Suchwörter muss passen: „empty train station hall“ ist kein Tanzsaal, nur weil „hall“
+    // passt (Freiform-Pilot 05.10.) – dann lieber Farbverlauf und Gegenstände
+    const treffer = such.filter((w) => ort.stichworte.includes(w)).length
+    if (wert >= 1 && treffer * 2 >= such.length && (!bester || wert > bester.wert)) bester = { ort, wert }
   }
   return bester?.ort ?? null
 }

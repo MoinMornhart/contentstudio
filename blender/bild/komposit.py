@@ -153,6 +153,29 @@ def kontur(rgba, px, farbe):
     return rand
 
 
+def kanten_weich(rgba, kanten, anteil=0.2):
+    """Gerade Schnittkanten des Originalfotos, die im Bild zu sehen wären, weich auslaufen lassen (linear über
+    `anteil` der Figurgröße). Rand und Schatten entstehen danach aus dieser Deckkraft und laufen mit aus."""
+    if not kanten:
+        return rgba
+    w, h = rgba.size
+    m = np.ones((h, w), np.float32)
+    for k in kanten:
+        n = max(2, int((w if k in ("links", "rechts") else h) * anteil))
+        rampe = np.linspace(0.0, 1.0, n, dtype=np.float32)
+        if k == "links":
+            m[:, :n] = np.minimum(m[:, :n], rampe[None, :])
+        elif k == "rechts":
+            m[:, w - n:] = np.minimum(m[:, w - n:], rampe[::-1][None, :])
+        elif k == "oben":
+            m[:n, :] = np.minimum(m[:n, :], rampe[:, None])
+        elif k == "unten":
+            m[h - n:, :] = np.minimum(m[h - n:, :], rampe[::-1][:, None])
+    arr = np.asarray(rgba).copy()
+    arr[..., 3] = (arr[..., 3].astype(np.float32) * m).astype(np.uint8)
+    return Image.fromarray(arr, "RGBA")
+
+
 def schatten(rgba, w_ges):
     a = rgba.getchannel("A").filter(ImageFilter.GaussianBlur(max(4, w_ges * 0.012)))
     s = Image.new("RGBA", rgba.size, (0, 0, 0, 0))
@@ -257,7 +280,7 @@ def baue(spec, ausgabe, bericht_pfad):
             continue
         # Welche Ränder des Originalfotos schneiden die Figur ab? (vor dem Zuschneiden prüfen)
         voll = np.asarray(fig.getchannel("A"))
-        offen = {"links": voll[:, :3].max() > 128, "rechts": voll[:, -3:].max() > 128, "unten": voll[-3:].max() > 128}
+        offen = {"links": voll[:, :3].max() > 128, "rechts": voll[:, -3:].max() > 128, "unten": voll[-3:].max() > 128, "oben": voll[:3].max() > 128}
         if p.get("art") == "modell":  # 3D-Modell: Blender rendert es frei, nur ein Anschnitt unten ist gewollt
             offen["links"] = offen["rechts"] = False
         qw = fig.width
@@ -272,7 +295,7 @@ def baue(spec, ausgabe, bericht_pfad):
         def falsch(o):
             return (seite_vorab == "rechts" and o["links"] and not o["rechts"]) or (seite_vorab == "links" and o["rechts"] and not o["links"])
 
-        gespiegelt = {"links": offen["rechts"], "rechts": offen["links"], "unten": offen["unten"]}
+        gespiegelt = {"links": offen["rechts"], "rechts": offen["links"], "unten": offen["unten"], "oben": offen["oben"]}
         if (bool(p.get("spiegeln")) or falsch(offen)) and not falsch(gespiegelt):
             fig = ImageOps.mirror(fig)
             offen["links"], offen["rechts"] = offen["rechts"], offen["links"]
@@ -319,8 +342,33 @@ def baue(spec, ausgabe, bericht_pfad):
             x0 = W - fig.width
         elif links_offen and not rechts_offen and x0 > 0:
             x0 = 0
-        elif links_offen and rechts_offen and (x0 > 0 or x0 + fig.width < W):
-            bericht["warnungen"].append(f"Foto von {p.get('id')} ist an beiden Seiten abgeschnitten – Kante sichtbar")
+        elif links_offen and rechts_offen:
+            # Eng zugeschnittenes Porträt (beide Seiten offen): an den Bildrand seiner Seite, die andere Kante läuft aus
+            if seite == "rechts" and x0 + fig.width < W:
+                x0 = W - fig.width
+            elif seite != "rechts" and x0 > 0:
+                x0 = 0
+        if offen["oben"] and y0 > 0:
+            # Oben gekappte Haare: der Kopf schließt am oberen Bildrand ab, unten reicht das Foto bis zum Rand
+            y0 = 0
+            if unten_offen and fig.height < H:
+                f2 = H / fig.height
+                mitte = x0 + ((gesicht[0] + gesicht[2]) / 2 if gesicht else fig.width / 2)
+                fig = fig.resize((max(1, int(fig.width * f2)), H), Image.LANCZOS)
+                if gesicht:
+                    gesicht = tuple(int(v * f2) for v in gesicht)
+                x0 = int(mitte - ((gesicht[0] + gesicht[2]) / 2 if gesicht else fig.width / 2))
+                if links_offen and seite != "rechts":
+                    x0 = min(x0, 0)
+                if rechts_offen and seite == "rechts":
+                    x0 = max(x0, W - fig.width)
+        # Kanten, die trotzdem im Bild lägen (beide Seiten offen, oben gekappte Haare, kurzes Brustbild): weich
+        # auslaufen lassen statt einer geraden Linie mitten im Bild
+        sichtbar = [k for k, ja in (("links", links_offen and x0 > 0), ("rechts", rechts_offen and x0 + fig.width < W),
+                                    ("oben", offen["oben"] and y0 > 0), ("unten", unten_offen and y0 + fig.height < H)) if ja]
+        if sichtbar:
+            fig = kanten_weich(fig, sichtbar, 0.12)
+            bericht.setdefault("weiche_kanten", {})[p.get("id", str(i))] = sichtbar
         fig = angleichen(fig, grund, float(spec.get("licht_angleichen", 0.25)))
 
         # Schatten, Rand und Figur auf eine eigene Ebene – Teile außerhalb des Bildes fallen weg

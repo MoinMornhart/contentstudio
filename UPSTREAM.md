@@ -1,7 +1,7 @@
 # Upstream
 
 Quelle: https://github.com/MoinMornhart/moinstudio
-Zuletzt übernommen: v0.36.2 vollständig (Commit cece641) am 2026-09-30; aus v0.37.0–v0.50.1 (Commit 5c28eae) die Fehlerbehebungen am 2026-10-05, der Rest folgt Version für Version (siehe Tabelle)
+Zuletzt übernommen: v0.50.1 vollständig (Commit 5c28eae) am 2026-10-05 – v0.37.0–v0.50.1 in ContentStudio v0.7.2–v0.7.7 (siehe Tabelle); v0.51.0–v0.53.0 stehen noch aus
 
 Der Neubau beruht auf MoinStudio v0.36.2. Neuere MoinStudio-Versionen werden nach dem Ablauf in
 [docs/auftrag.md](docs/auftrag.md), Abschnitt 8, nachgezogen. Nichts wird stillschweigend ausgelassen: Was nicht

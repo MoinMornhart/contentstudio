@@ -23,7 +23,8 @@ Texte, Logos, Figuren oder Bildteile der Vorbilder.
    skeptisch … ContentStudio wählt dafür das passende Foto der Person.
 4. **Hintergrund:** `ort` zeigt einen echten Ort als Foto – gib in `ort` 1–3 englische Stichworte an (z. B. „kitchen“,
    „gym“, „office“, „city street“, „forest“, „beach“, „living room“, „studio“). Das macht das Thema sofort erkennbar
-   und ist meist die beste Wahl. `verlauf` mit 2 kräftigen Farben wirkt bei abstrakten Themen und als Kontrast. `bild`
+   und ist meist die beste Wahl, wenn der Ort wirklich zum Thema passt. {{orte}} `verlauf` mit 2 kräftigen Farben wirkt bei
+   abstrakten Themen und als Kontrast. `bild`
    nur, wenn ein Hintergrundbild mitgegeben ist ({{hintergrund}}). Bei `ort` und `bild` den Hintergrund leicht
    abdunkeln (0.1–0.3) oder unscharf machen (4–10), damit die Person heraussticht. `farben` immer angeben (für
    Text und Rückfall).

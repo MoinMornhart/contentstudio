@@ -18,7 +18,9 @@ from mathutils import Matrix, Vector
 MODI = {
     # Kopf höchstens gut ein Drittel der Bildhöhe (Vergleich mit BastiGHG 30.09.: 42 % wirkte erdrückend, Gesicht oft angeschnitten)
     "nah": {"linse": 50, "kopf_anteil": 0.34, "kopf_uv": (0.27, 0.58), "thema_uv": (0.72, 0.45), "hoehe": 10},
-    "gefahr": {"linse": 30, "kopf_anteil": 0.32, "kopf_uv": (0.24, 0.62), "thema_uv": (0.70, 0.30), "hoehe": 18},
+    # 40 statt 30 mm und etwas kleiner: der Weitwinkel blähte zur Kamera gestreckte Arme riesig auf, und die Gefahr selbst
+    # (Lava, Abgrund) braucht Platz im Bild (Freiform-Pilot 05.10.)
+    "gefahr": {"linse": 40, "kopf_anteil": 0.27, "kopf_uv": (0.24, 0.62), "thema_uv": (0.70, 0.30), "hoehe": 18},
     "tiefe": {"linse": 22, "kopf_anteil": 0.13, "kopf_uv": (0.32, 0.72), "thema_uv": (0.60, 0.20), "hoehe": 42},
     "klippe": {"linse": 32, "kopf_anteil": 0.30, "kopf_uv": (0.26, 0.66), "thema_uv": (0.72, 0.30), "hoehe": 4},
     "klippe_wand": {"linse": 22, "kopf_anteil": 0.18, "kopf_uv": (0.30, 0.74), "thema_uv": (0.58, 0.28), "hoehe": 12},

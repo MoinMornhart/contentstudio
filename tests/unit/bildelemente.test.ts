@@ -41,6 +41,17 @@ describe('Bildelemente: Orte und Gegenstände (ROADMAP 8.1)', () => {
     expect(waehleOrt(orte, 'busy city streets at night')?.id).toBe('city_street')
     expect(waehleOrt(orte, 'gym')?.id).toBe('home_gym')
     expect(waehleOrt(orte, 'underwater cave')).toBeNull()
+    // Genau ein Name aus der Liste (so wählt die KI); ein einzelnes passendes Wort reicht bei langen Suchen nicht
+    expect(waehleOrt(orte, 'Home Gym')?.id).toBe('home_gym')
+    expect(waehleOrt(orte, 'empty train station gym')).toBeNull()
+  })
+
+  it('die KI bekommt die vorhandenen Orte genannt, ohne Liste bleibt es bei Stichworten', async () => {
+    const { allgemeinPrompt } = await import('../../src/main/thumbnail/planung/allgemein')
+    const { stilKontext } = await import('../../src/main/thumbnail/kontext')
+    const e = { engine: 'foto' as const, beschreibung: 'x', kanal: 'k', plattform: 'YouTube', richtungen: [], figuren: [], anzahl: 1, stil: stilKontext({ vorbilder: [], stilbuch: null, beispiel: null, auftrag: [], farben: [] }), hintergrund: false, sprache: 'Deutsch', kanalsprache: 'Deutsch' }
+    expect(allgemeinPrompt('A {{orte}} B', { ...e, orte: ['Home Gym', 'Modern Kitchen'] })).toContain('Home Gym; Modern Kitchen')
+    expect(allgemeinPrompt('A {{orte}} B', e)).toBe('A  B')
   })
 
   it('setzt Emoji-Namen in Pfade des Fluent-Archivs um', () => {

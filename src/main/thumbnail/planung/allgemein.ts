@@ -69,6 +69,8 @@ export interface AllgemeinEingabe {
   hintergrund: boolean
   sprache: string
   kanalsprache: string
+  /** Namen der Orte, für die es echte Fotos gibt (Poly Haven); leer = unbekannt */
+  orte?: string[]
 }
 
 const ENGINE_TEXT: Record<AllgemeinEingabe['engine'], string> = {
@@ -101,6 +103,7 @@ export function allgemeinPrompt(vorlage: string, o: AllgemeinEingabe): string {
     .replaceAll('{{auftragsvorbilder}}', t.auftragsvorbilder)
     .replaceAll('{{sprache}}', o.sprache)
     .replaceAll('{{kanalsprache}}', o.kanalsprache)
+    .replaceAll('{{orte}}', o.orte?.length ? `Es gibt nur diese Orte – nimm in \`ort\` genau einen Namen aus der Liste oder \`verlauf\`, wenn keiner wirklich passt (lieber ein Farbverlauf mit passenden Gegenständen als ein falscher Ort): ${o.orte.join('; ')}` : '')
 }
 
 /** Repariert still, was sich sicher reparieren lässt; gibt echte Fehler zurück (dann plant die KI neu). */
