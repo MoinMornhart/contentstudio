@@ -1049,7 +1049,9 @@ export const de = {
   'leistung.fehlgeschlagen': 'fehlgeschlagen',
   'leistung.uebersprungen': 'übersprungen (Werkzeug fehlt)',
 
-  'programme.fehler.quelleFehlt': 'Das Rohvideo „{name}“ ist auf diesem Gerät nicht da ({pfad}). Exportiere die Programmdateien einmal auf dem Gerät, auf dem das Video liegt – dann landet eine Kopie im Projektordner des Datenordners.'
+  'programme.fehler.quelleFehlt': 'Das Rohvideo „{name}“ ist auf diesem Gerät nicht da ({pfad}). Exportiere die Programmdateien einmal auf dem Gerät, auf dem das Video liegt – dann landet eine Kopie im Projektordner des Datenordners.',
+
+  'ki.zeitlimit': 'Keine Antwort nach {minuten} min – abgebrochen'
 } as const
 
 export type Schluessel = keyof typeof de

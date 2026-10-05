@@ -269,3 +269,14 @@ describe('Mob-Import: Körperlage', () => {
     expect(baer[0]!.rotation).toEqual([90, 0, 0])
   })
 })
+
+describe('Auswahl über alle Versuche (aus MoinStudio v0.46.1)', () => {
+  it('gemessene Fehler wiegen dreifach, Anmerkungen der KI-Bildprüfung einfach', async () => {
+    const { punkte } = await import('../../src/main/thumbnail/job')
+    const gemessen = [{ ernst: true }, { ernst: false }]
+    const ki = [{ ernst: true }, { ernst: true }]
+    expect(punkte(gemessen, null)).toBe(3)
+    expect(punkte([], ki)).toBe(2)
+    expect(punkte(gemessen, ki)).toBe(5)
+  })
+})

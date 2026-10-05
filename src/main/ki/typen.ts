@@ -94,6 +94,8 @@ export interface KiAuftrag<T> {
   maxAusgabe?: number
   /** Nur Anbieter, die Bilder sehen können, kommen infrage */
   brauchtBilder?: boolean
+  /** Höchstdauer je Anbieter-Aufruf in ms (Standard 30 min); danach gilt der Weg als gescheitert, der nächste kommt dran */
+  zeitlimitMs?: number
 }
 
 export interface KiErgebnis<T> {

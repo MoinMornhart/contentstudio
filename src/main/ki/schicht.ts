@@ -16,6 +16,26 @@ export class KostenAbgelehnt extends Error {}
 
 const MAX_REPARATUREN = 2
 
+/** Ein hängender Aufruf blockierte sonst den ganzen Auftrag (aus MoinStudio v0.46.1: Bildprüfung hing über sechs Stunden) */
+export const STANDARD_ZEITLIMIT_MS = 30 * 60 * 1000
+
+/**
+ * Anbieter-Aufruf mit Zeitlimit: Nach Ablauf wird der Aufruf über das Abbruch-Signal beendet (Anbieter hören auf
+ * ctx.signal) und als Fehler gemeldet. Der Auftrag selbst läuft weiter – mit dem nächsten Weg oder ohne KI.
+ */
+async function mitZeitlimit(a: KiAnbieter, anfrage: RohAnfrage, ctx: JobContext<unknown> | undefined, ms: number): Promise<Awaited<ReturnType<KiAnbieter['frage']>>> {
+  const uhr = new AbortController()
+  const wache = setTimeout(() => uhr.abort(), ms)
+  const signal = ctx ? AbortSignal.any([ctx.signal, uhr.signal]) : uhr.signal
+  const unter = ctx ? new Proxy(ctx, { get: (ziel, k) => (k === 'signal' ? signal : Reflect.get(ziel, k, ziel)) }) : undefined
+  const ablauf = new Promise<never>((_, nein) => uhr.signal.addEventListener('abort', () => nein(new Error(t('ki.zeitlimit', { minuten: Math.max(1, Math.round(ms / 60000)) }))), { once: true }))
+  try {
+    return await Promise.race([a.frage(anfrage, unter), ablauf])
+  } finally {
+    clearTimeout(wache)
+  }
+}
+
 /**
  * Führt Aufträge über die Anbieter aus, die der Nutzer gewählt hat:
  * - immer nur ein KI-Prozess gleichzeitig (Abo-Limits, Rechenlast lokaler Modelle),
@@ -86,7 +106,7 @@ export class KiSchicht {
       const geschaetzt = a.art === 'api' ? kostenSchaetzung(basis, preis) : null
       if (a.art === 'api' && !(await this.freigabe({ anbieter: a.id, auftrag: auftrag.name, usd: geschaetzt }))) throw new KostenAbgelehnt(t('ki.kostenAbgelehnt'))
       try {
-        const erg = await this.mitReparatur(a, basis, auftrag.schema, ctx)
+        const erg = await this.mitReparatur(a, basis, auftrag.schema, ctx, auftrag.zeitlimitMs ?? STANDARD_ZEITLIMIT_MS)
         const kosten = a.art === 'api' ? ((erg.nutzung ? kostenAusNutzung(erg.nutzung, preis) : null) ?? geschaetzt) : null
         if (kosten !== null && kosten > 0) await this.buchen(kosten)
         return { ...erg, anbieter: a.id, kostenUsd: kosten }
@@ -106,12 +126,12 @@ export class KiSchicht {
     throw new Error(t('ki.alleGescheitert', { liste: hinweise.join(' · ') }))
   }
 
-  private async mitReparatur<T>(a: KiAnbieter, basis: RohAnfrage, schema: z.ZodType<T>, ctx?: JobContext<unknown>): Promise<Omit<KiErgebnis<T>, 'anbieter' | 'kostenUsd'>> {
+  private async mitReparatur<T>(a: KiAnbieter, basis: RohAnfrage, schema: z.ZodType<T>, ctx: JobContext<unknown> | undefined, zeitlimitMs: number): Promise<Omit<KiErgebnis<T>, 'anbieter' | 'kostenUsd'>> {
     let anfrage = a.faehigkeiten.jsonSchema ? basis : { ...basis, system: `${basis.system}\n\n${NUR_JSON}\n${JSON.stringify(basis.schema)}` }
     let letzterFehler = ''
     for (let runde = 0; runde <= MAX_REPARATUREN; runde++) {
       await ctx?.yield()
-      const antwort = await a.frage(anfrage, ctx)
+      const antwort = await mitZeitlimit(a, anfrage, ctx, zeitlimitMs)
       let roh: unknown
       try {
         roh = antwort.strukturiert !== undefined ? antwort.strukturiert : jsonAusText(antwort.text)

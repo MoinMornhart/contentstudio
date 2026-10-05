@@ -66,6 +66,28 @@ describe('KI-Schicht', () => {
     expect(a.anfragen).toHaveLength(3)
   })
 
+  it('Zeitlimit: ein hängender Weg wird abgebrochen, der nächste antwortet (aus MoinStudio v0.46.1)', async () => {
+    let abgebrochen = false
+    const haengt: KiAnbieter = {
+      ...anbieter('haengt', []),
+      frage: (_r, ctx) =>
+        new Promise((_, nein) =>
+          ctx?.signal.addEventListener('abort', () => {
+            abgebrochen = true
+            nein(new Error('abgebrochen'))
+          })
+        )
+    }
+    const b = anbieter('b', ['{"ideen":[{"titel":"Rückfall"}]}'])
+    const ctl = new AbortController()
+    const ctx = { signal: ctl.signal, yield: async () => undefined } as unknown as JobContext<unknown>
+    const e = await schicht([haengt, b]).frage({ ...auftrag, zeitlimitMs: 30 }, ctx)
+    expect(e.anbieter).toBe('b')
+    expect(abgebrochen).toBe(true)
+    expect(ctl.signal.aborted).toBe(false) // nur der Aufruf, nicht der Auftrag
+    await expect(schicht([{ ...haengt }]).frage({ ...auftrag, zeitlimitMs: 20 })).rejects.toThrow(/min/)
+  })
+
   it('überspringt Wege, die nicht bereit sind oder keine Bilder sehen, wenn Bilder nötig sind', async () => {
     const aus = anbieter('aus', [], { bereit: false })
     const blind = anbieter('blind', ['{"ideen":[{"titel":"blind"}]}'])

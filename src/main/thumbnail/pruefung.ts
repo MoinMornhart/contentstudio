@@ -60,7 +60,9 @@ export async function kiPruefung(ki: KiSchicht | null, bild: string, o: { beschr
         schema: KiPruefungZ,
         brauchtBilder: true,
         stufe: 'schnell',
-        maxAusgabe: 800
+        maxAusgabe: 800,
+        // Bildprüfung ist eine Zugabe: lieber ohne sie weiter als den Auftrag lange blockieren (aus MoinStudio v0.46.1)
+        zeitlimitMs: 5 * 60 * 1000
       },
       ctx
     )

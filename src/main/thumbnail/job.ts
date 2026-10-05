@@ -162,7 +162,7 @@ async function minecraftLauf(p: ThumbPayload, ctx: JobContext<Checkpoint>, d: Th
       const alle = [...befunde, ...(ki ?? [])]
       const ernst = alle.filter((b) => b.ernst)
       const ergebnis = variante(v, tl.bild, roh, `${basis}.szene.json`, `${basis}.ebenen`, 'minecraft', befunde, ki, versuch, v.text ?? [], mc.assets)
-      if (!bestes || ernst.length < bestes.ernst) bestes = { ergebnis, ernst: ernst.length }
+      if (!bestes || punkte(befunde, ki) < bestes.ernst) bestes = { ergebnis, ernst: punkte(befunde, ki) }
       if (!ernst.length || versuch === KORREKTUREN || !kiDa || !d.ki) break
       // Die KI korrigiert die Szene anhand des Prüfberichts
       try {
@@ -180,6 +180,13 @@ async function minecraftLauf(p: ThumbPayload, ctx: JobContext<Checkpoint>, d: Th
   ctx.progress(100, t('jobs.schritt.fertig'))
   return { varianten: fertig }
 }
+
+/**
+ * Wie schlecht ist ein Versuch? Gemessene Fehler (Gesicht verdeckt, Thema nicht im Bild …) wiegen dreifach, Anmerkungen
+ * der KI-Bildprüfung einfach – sonst gewinnt ein Versuch, dessen Prüfung zufällig weniger Anmerkungen hatte, obwohl
+ * die Messung schlechter ist (aus MoinStudio v0.46.1).
+ */
+export const punkte = (befunde: readonly { ernst: boolean }[], ki: readonly { ernst: boolean }[] | null): number => befunde.filter((b) => b.ernst).length * 3 + (ki ?? []).filter((b) => b.ernst).length
 
 const SYSTEM_PLAN = 'You plan video thumbnails as structured JSON for an automatic renderer. Follow the catalogue and rules exactly; never invent ids that are not listed.'
 
@@ -266,7 +273,7 @@ async function allgemeinLauf(p: ThumbPayload, ctx: JobContext<Checkpoint>, d: Th
       const alle = [...befunde, ...(ki ?? [])]
       const ernst = alle.filter((b) => b.ernst)
       const ergebnis = variante(v, tl.bild, roh, `${basis}.spec.json`, `${basis}.ebenen`, engine, befunde, ki, versuch, v.text ?? [], null)
-      if (!bestes || ernst.length < bestes.ernst) bestes = { ergebnis, ernst: ernst.length }
+      if (!bestes || punkte(befunde, ki) < bestes.ernst) bestes = { ergebnis, ernst: punkte(befunde, ki) }
       if (!ernst.length || versuch === KORREKTUREN) break
       const neu = (kiDa && d.ki ? await korrigiereAllgemein(d.ki, vorlage, eingabe, v, alle, r.bericht, c) : null) ?? autoKorrektur(v, alle)
       if (!neu) break
