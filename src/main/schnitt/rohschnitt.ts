@@ -9,7 +9,7 @@ import { t } from '../i18n'
 import { stilFuer, stilText, type SchnittStil } from './stil'
 import type { JobContext } from '../jobs/queue'
 import { aendereProjekt, ladeProjekt, projektOrdner } from './projekt'
-import { liesAbschnitte, type Abschnitt } from './transkript'
+import { kiSaetze, liesAbschnitte, type Abschnitt } from './transkript'
 
 /**
  * Automatischer Rohschnitt (ROADMAP 5.2). Ergebnis ist eine Schnittliste (EDL-JSON) in schnitt.json: welche Bereiche
@@ -191,11 +191,52 @@ export async function rohschnittJob(p: RohschnittPayload, ctx: JobContext<unknow
   }
   const liste = schnittliste(pr.quelle.dauer, entfernt)
   await writeFile(join(ordner, 'schnitt.json'), JSON.stringify(liste, null, 1))
+  await aendereProjekt(p.daten, p.projekt, () => ({ rohschnitt: true }))
   // Eigene Effekte aus der Bibliothek, die in jedes (oder jedes n-te) Video gehören
-  const effekteRoh = JSON.parse(await readFile(join(ordner, 'effekte.json'), 'utf8').catch(() => '[]')) as Record<string, unknown>[]
-  const bib = await bibAutomatisch(p.daten, { kontoId: pr.kontoId, richtung: pr.richtung, behalten: liste.behalten, laut: lauteMomente(wellen), effekte: Array.isArray(effekteRoh) ? effekteRoh : [], entscheid: pr.bibEntscheid ?? {} }).catch(() => null)
-  if (bib && (bib.gesetzt.length || effekteRoh.length !== bib.effekte.length)) await writeFile(join(ordner, 'effekte.json'), JSON.stringify(bib.effekte, null, 1))
-  await aendereProjekt(p.daten, p.projekt, () => ({ rohschnitt: true, ...(bib ? { bibEntscheid: bib.entscheid } : {}) }))
+  ctx.progress(92, t('schnitt.schritt.bibVerteilen'))
+  await bibVerteilen(p.daten, p.projekt, liste, abschnitte, wellen, d.ki, ctx).catch(() => null)
   ctx.progress(100, t('jobs.schritt.fertig'))
   return { projekt: p.projekt, vorher: pr.quelle.dauer, nachher: Math.round(laenge(liste.behalten) * 10) / 10 }
+}
+
+/** Bibliotheks-Effekte ins Projekt setzen (nach dem Rohschnitt und per „neu verteilen“); gibt die gesetzten Namen zurück */
+async function bibVerteilen(daten: string, id: string, liste: Schnittliste, abschnitte: Abschnitt[], wellen: { aufloesung: number; werte: number[] } | null, ki: KiSchicht | null, ctx: JobContext<unknown>): Promise<string[]> {
+  const pr = await ladeProjekt(daten, id)
+  if (!pr) return []
+  const ordner = projektOrdner(daten, id)
+  const effekteRoh = JSON.parse(await readFile(join(ordner, 'effekte.json'), 'utf8').catch(() => '[]')) as Record<string, unknown>[]
+  const vorher = Array.isArray(effekteRoh) ? effekteRoh : []
+  const bib = await bibAutomatisch(daten, {
+    kontoId: pr.kontoId,
+    richtung: pr.richtung,
+    behalten: liste.behalten,
+    laut: lauteMomente(wellen),
+    effekte: vorher,
+    entscheid: pr.bibEntscheid ?? {},
+    saetze: kiSaetze(abschnitte),
+    beschreibung: `Ein Video für das Konto „${pr.kanal}“ (${pr.plattform}), Richtung „${pr.richtung}“.`,
+    ki: ki ? { schicht: ki, ctx } : null
+  })
+  if (bib.gesetzt.length || vorher.length !== bib.effekte.length) await writeFile(join(ordner, 'effekte.json'), JSON.stringify(bib.effekte, null, 1))
+  await aendereProjekt(daten, id, () => ({ bibEntscheid: bib.entscheid }))
+  return bib.gesetzt
+}
+
+export interface VerteilPayload {
+  daten: string
+  projekt: string
+}
+
+/** „Bibliotheks-Effekte neu verteilen“ (aus MoinStudio v0.51.0): automatisch gesetzte werden ersetzt, eigene bleiben */
+export async function verteilJob(p: VerteilPayload, ctx: JobContext<unknown>, d: { ki: KiSchicht | null }): Promise<{ projekt: string; gesetzt: string[] }> {
+  const ordner = projektOrdner(p.daten, p.projekt)
+  const pr = await ladeProjekt(p.daten, p.projekt)
+  if (!pr?.rohschnitt) throw new Error(t('schnitt.fehler.erstRohschnitt'))
+  const liste = JSON.parse(await readFile(join(ordner, 'schnitt.json'), 'utf8')) as Schnittliste
+  const abschnitte = liesAbschnitte(await readFile(join(ordner, 'transkript.jsonl'), 'utf8').catch(() => ''))
+  const wellen = pr.wellenform ? (JSON.parse(await readFile(join(ordner, 'wellenform.json'), 'utf8').catch(() => 'null')) as { aufloesung: number; werte: number[] } | null) : null
+  ctx.progress(20, t('schnitt.schritt.bibVerteilen'))
+  const gesetzt = await bibVerteilen(p.daten, p.projekt, liste, abschnitte, wellen, d.ki, ctx)
+  ctx.progress(100, gesetzt.length ? t('schnitt.schritt.bibGesetzt', { namen: gesetzt.join(', ') }) : t('schnitt.schritt.bibKeine'))
+  return { projekt: p.projekt, gesetzt }
 }

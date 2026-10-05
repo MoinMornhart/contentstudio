@@ -101,6 +101,7 @@ const api = {
   schnittTranskript: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittTranskript, ...a),
   schnittTranskriptStart: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittTranskriptStart, ...a),
   schnittRohschnittStart: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittRohschnittStart, ...a),
+  schnittBibVerteilen: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittBibVerteilen, ...a),
   schnittListe: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittListe, ...a),
   schnittUmschalten: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittUmschalten, ...a),
   schnittBereich: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittBereich, ...a),

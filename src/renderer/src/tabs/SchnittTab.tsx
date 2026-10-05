@@ -476,6 +476,9 @@ function ProjektAnsicht({ p, ki, zurueck, loeschen, neuLaden }: { p: SchnittProj
             <button className="btn primary" disabled={!!p.auftrag} onClick={() => void window.cs.schnittVorschau(p.id).then(neuLaden)}>
               {t('schnitt.fertig.vorschau')}
             </button>
+            <button className="btn" disabled={!!p.auftrag} title={t('schnitt.bibVerteilenHinweis')} onClick={() => void window.cs.schnittBibVerteilen(p.id).then(neuLaden)}>
+              {t('schnitt.bibVerteilen')}
+            </button>
           </div>
           {p.einstellungen.format === '9:16' && <p className="muted small">{t('schnitt.fertig.hochHinweis')}</p>}
           <EffektListe p={p} springe={springe} neuLaden={neuLaden} />

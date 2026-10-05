@@ -149,10 +149,10 @@ function Bearbeiten({ start, fertig }: { start: Entwurf; fertig: () => void }): 
       setE((a) => {
         const b = { ...a, id: r.id }
         if (rolle === 'video') {
-          b.video = { datei: r.datei, greenscreen, ton: a.video?.ton ?? false }
+          b.video = { datei: r.datei, greenscreen, ton: a.video?.ton ?? false, ...(r.dauer ? { dauer: r.dauer } : {}) }
           b.chroma = greenscreen ? (r.chroma ?? STANDARD_CHROMA) : undefined
         } else if (rolle === 'bild') b.bild = { datei: r.datei, dauer: a.bild?.dauer ?? 2 }
-        else b.sound = { datei: r.datei, lautstaerke: a.sound?.lautstaerke ?? 1 }
+        else b.sound = { datei: r.datei, lautstaerke: a.sound?.lautstaerke ?? 1, ...(r.dauer ? { dauer: r.dauer } : {}) }
         return b
       })
       if (rolle === 'video' && greenscreen) setHinweis(r.erkannt ? t('bib.farbeErkannt', { farbe: r.chroma?.farbe ?? '' }) : t('bib.farbeStandard'))

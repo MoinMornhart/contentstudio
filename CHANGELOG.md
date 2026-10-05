@@ -8,6 +8,12 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Added
+
+- Schnitt: Effekte aus der eigenen Bibliothek mit „KI entscheidet“ setzt jetzt die KI an passende Stellen – nie im Hook
+  (erste 15 s), nie auf Höhepunkten, nie zwei gleichzeitig, mindestens 20 s Abstand. Passt ihr Vorschlag nicht, verteilt
+  eine Regel auf ein Satzende. Neuer Knopf „Bibliotheks-Effekte neu verteilen“ (aus MoinStudio v0.51.0).
+
 ## [0.7.12] - 2026-10-05
 
 > Vergleich mit den Vorbildern abgeschlossen, leuchtende Minecraft-Schrift

@@ -26,7 +26,7 @@ import { engineFuer, schriftPfad } from '../thumbnail/auftrag'
 import { mcPfade } from '../thumbnail/minecraft/assets'
 import type { ThumbUmgebung } from '../thumbnail/umgebung'
 import { liesAbschnitte, transkriptJob, type Abschnitt, type TranskriptPayload } from './transkript'
-import { rohschnittJob, type RohschnittPayload, type Schnittliste } from './rohschnitt'
+import { rohschnittJob, verteilJob, type RohschnittPayload, type Schnittliste, type VerteilPayload } from './rohschnitt'
 import { bereichSetzen, umschalten, wunschJob, type WunschPayload } from './bearbeiten'
 import { einstellungen, vorschauJob, type VorschauPayload } from './vorschau'
 import { exportJob, kapitelText, type ExportErgebnis, type ExportPayload } from './export'
@@ -67,6 +67,7 @@ export function registerSchnittIpc(o: {
   queue.register('schnitt-import', importJob)
   queue.register('schnitt-transkript', transkriptJob)
   queue.register('schnitt-rohschnitt', (p: RohschnittPayload, ctx) => rohschnittJob(p, ctx, d))
+  queue.register('schnitt-bib-verteilen', (p: VerteilPayload, ctx) => verteilJob(p, ctx, d))
   queue.register('schnitt-wunsch', (p: WunschPayload, ctx) => wunschJob(p, ctx, d))
   queue.register('schnitt-vorschau', vorschauJob)
   queue.register('schnitt-export', (p: ExportPayload, ctx) => exportJob(p, ctx as JobContext<unknown>, d))
@@ -241,6 +242,14 @@ export function registerSchnittIpc(o: {
     return merkeAuftrag(id, 'schnitt-rohschnitt', t('schnitt.titel.rohschnitt', { name: projekt.name }), payload)
   }
 
+  const starteVerteilen = async (id: string): Promise<string> => {
+    const ordnerDaten = await daten()
+    const projekt = await ladeProjekt(ordnerDaten, id)
+    if (!projekt) throw new Error(t('schnitt.fehler.projekt'))
+    const payload: VerteilPayload = { daten: ordnerDaten, projekt: id }
+    return merkeAuftrag(id, 'schnitt-bib-verteilen', t('schnitt.titel.bibVerteilen', { name: projekt.name }), payload)
+  }
+
   const starteVorschau = async (id: unknown): Promise<string> => {
     const ordnerDaten = await daten()
     const ff = await ffmpeg()
@@ -284,6 +293,7 @@ export function registerSchnittIpc(o: {
   })
   biete(IPC.schnittTranskriptStart, async (id: unknown) => starteTranskript(String(id)))
   biete(IPC.schnittRohschnittStart, async (id: unknown) => starteRohschnitt(String(id)))
+  biete(IPC.schnittBibVerteilen, async (id: unknown) => starteVerteilen(String(id)))
   const aendereListe = async (id: string, f: (l: Schnittliste) => Schnittliste): Promise<Schnittliste> => {
     const datei = join(projektOrdner(await daten(), id), 'schnitt.json')
     const neu = f(JSON.parse(await liesMitKonfliktkopien(datei)) as Schnittliste)

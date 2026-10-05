@@ -6,6 +6,9 @@ import { existsSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import { writeJsonAtomic } from '../data/jsonfile'
 import { t } from '../i18n'
+import type { JobContext } from '../jobs/queue'
+import type { KiSchicht } from '../ki/schicht'
+import { waehlePlaetze, type Bereich, type PlatzEffekt } from './platzierung'
 
 /**
  * Effekt-Bibliothek: eigene Effekte anlegen und benennen – „Abo-Animation“, „Boom“, „Meme-Einblendung“ … aus Video mit
@@ -32,9 +35,9 @@ export interface BibEffekt {
   id: string
   name: string
   /** Video mit Transparenz (Alpha) oder mit grünem/blauem Hintergrund (dann `chroma`) */
-  video?: { datei: string; greenscreen: boolean; ton: boolean }
+  video?: { datei: string; greenscreen: boolean; ton: boolean; /** Sekunden */ dauer?: number }
   bild?: { datei: string; dauer: number }
-  sound?: { datei: string; lautstaerke: number }
+  sound?: { datei: string; lautstaerke: number; /** Sekunden */ dauer?: number }
   chroma?: Chroma
   haeufigkeit: { modus: 'immer' | 'manchmal' | 'manuell'; /** jedes n-te Video */ jedes?: number; /** oder Prozent der Videos */ prozent?: number }
   /** Konto-IDs aus dem Creator-Profil; leer = alle Konten */
@@ -74,9 +77,9 @@ export function pruefeBibEffekt(roh: Partial<BibEffekt>, alt?: BibEffekt): BibEf
   return {
     id: alt?.id ?? (b.id && gueltigeId(b.id) ? b.id : randomUUID().slice(0, 8)),
     name,
-    ...(b.video ? { video: { datei: datei(b.video.datei), greenscreen: !!b.video.greenscreen, ton: !!b.video.ton } } : {}),
+    ...(b.video ? { video: { datei: datei(b.video.datei), greenscreen: !!b.video.greenscreen, ton: !!b.video.ton, ...(b.video.dauer ? { dauer: klemme(b.video.dauer, 0.1, 600, 3) } : {}) } } : {}),
     ...(b.bild ? { bild: { datei: datei(b.bild.datei), dauer: klemme(b.bild.dauer, 0.3, 30, 2) } } : {}),
-    ...(b.sound ? { sound: { datei: datei(b.sound.datei), lautstaerke: klemme(b.sound.lautstaerke, 0, 2, 1) } } : {}),
+    ...(b.sound ? { sound: { datei: datei(b.sound.datei), lautstaerke: klemme(b.sound.lautstaerke, 0, 2, 1), ...(b.sound.dauer ? { dauer: klemme(b.sound.dauer, 0.1, 600, 1) } : {}) } } : {}),
     ...(b.video?.greenscreen
       ? { chroma: { farbe: /^#[0-9a-f]{6}$/i.test(b.chroma?.farbe ?? '') ? b.chroma!.farbe : STANDARD_CHROMA.farbe, toleranz: klemme(b.chroma?.toleranz, 0, 1, STANDARD_CHROMA.toleranz), weichheit: klemme(b.chroma?.weichheit, 0, 1, STANDARD_CHROMA.weichheit), spill: klemme(b.chroma?.spill, 0, 1, STANDARD_CHROMA.spill) } }
       : {}),
@@ -169,18 +172,40 @@ export function alsBausteine(e: BibEffekt, bei: number, auto: boolean): Record<s
   return teile
 }
 
-/**
- * Zeitpunkt (Schnittzeit) für einen automatischen Effekt: fest ab Start oder vor dem Ende; „KI entscheidet“ ohne KI-Aufruf
- * nach der Regel aus der Recherche (nach dem ersten Höhepunkt zwischen 30 und 90 s, sonst bei 45 s bzw. in der Mitte
- * kurzer Videos). `laut`: laute Momente in Schnittzeit.
- */
-export function bibZeitpunkt(e: BibEffekt, laenge: number, laut: number[]): number {
-  const dauer = e.bild?.dauer ?? 3
-  const sicher = (t: number): number => Math.max(0, Math.min(t, laenge - Math.min(dauer, laenge * 0.2)))
-  if (e.platzierung.modus === 'fest') return sicher(e.platzierung.bezug === 'ende' ? laenge - (e.platzierung.sekunden ?? 10) : (e.platzierung.sekunden ?? 30))
-  if (laenge < 60) return sicher(laenge * 0.5)
-  const hoehepunkt = laut.find((t) => t >= 30 && t <= 90)
-  return sicher(hoehepunkt !== undefined ? hoehepunkt + 2 : 45)
+/** Wie lange ein Bibliotheks-Effekt sichtbar oder hörbar ist (Sekunden) */
+export function bibDauer(e: BibEffekt): number {
+  return Math.max(e.video?.dauer ?? 0, e.bild?.dauer ?? 0, e.sound?.dauer ?? 0) || 3
+}
+
+/** Ein Bibliotheks-Effekt für die Platzwahl */
+export function alsPlatzEffekt(e: BibEffekt): PlatzEffekt {
+  const art = e.video ? (e.video.greenscreen ? 'Greenscreen-Video' : 'Video') : e.bild ? 'Bild' : 'Sound'
+  return { id: e.id, name: e.name, dauer: bibDauer(e), art, ...(e.platzierung.modus === 'fest' ? { fest: { bezug: e.platzierung.bezug ?? 'start', sekunden: e.platzierung.sekunden ?? 30 } } : {}) }
+}
+
+/** Originalzeit → Schnittzeit; null, wenn die Stelle herausgeschnitten ist */
+export function imSchnitt(behalten: readonly { start: number; ende: number }[], t: number): number | null {
+  let summe = 0
+  for (const b of behalten) {
+    if (t >= b.start && t <= b.ende) return summe + (t - b.start)
+    summe += b.ende - b.start
+  }
+  return null
+}
+
+/** Belegte Bereiche (Schnittzeit) aus Effekten mit Bild oder Ton */
+function belegt(effekte: Record<string, unknown>[], behalten: readonly { start: number; ende: number }[]): Bereich[] {
+  const aus: Bereich[] = []
+  for (const e of effekte) {
+    if (e['art'] !== 'video' && e['art'] !== 'geraeusch' && e['art'] !== 'bild') continue
+    const start = typeof e['von'] === 'number' ? e['von'] : e['bei']
+    if (typeof start !== 'number') continue
+    const von = imSchnitt(behalten, start)
+    if (von === null) continue
+    const bis = typeof e['bis'] === 'number' ? (imSchnitt(behalten, e['bis']) ?? von + 1) : von + (e['art'] === 'video' ? 3 : 1)
+    aus.push({ von, bis })
+  }
+  return aus
 }
 
 /** Schnittzeit → Originalzeit (Effekte werden in Originalzeit gespeichert) */
@@ -195,41 +220,56 @@ export function imOriginal(behalten: readonly { start: number; ende: number }[],
 }
 
 /**
- * Nach dem Rohschnitt: Effekte der Bibliothek mit „in jedem Video“ oder „nur in manchen“ einsetzen, passend zu Konto und
- * Richtung. Ob ein Projekt „dran“ ist, wird einmal entschieden und im Projekt gemerkt (`entscheid`), damit ein neuer
- * Rohschnitt den Zähler nicht weiterdreht. Schon automatisch gesetzte Bibliotheks-Effekte werden ersetzt, von Hand oder
- * per Wunsch gesetzte bleiben. Gibt die neue Effektliste (Originalzeit) und die Entscheidungen zurück.
+ * Nach dem Rohschnitt (oder per „neu verteilen“): Effekte der Bibliothek mit „in jedem Video“ oder „nur in manchen“
+ * einsetzen, passend zu Konto und Richtung. Ob ein Projekt „dran“ ist, wird einmal entschieden und im Projekt gemerkt
+ * (`entscheid`), damit ein neuer Rohschnitt den Zähler nicht weiterdreht. Schon automatisch gesetzte
+ * Bibliotheks-Effekte werden ersetzt, von Hand oder per Wunsch gesetzte bleiben. Die Plätze wählt die KI innerhalb fester
+ * Grenzen (aus MoinStudio v0.51.0), sonst eine Regel. `laut` und `saetze` in Originalzeit.
  */
 export async function bibAutomatisch(
   daten: string,
-  o: { kontoId: string; richtung: string; behalten: { start: number; ende: number }[]; laut: number[]; effekte: Record<string, unknown>[]; entscheid: Record<string, boolean> }
+  o: {
+    kontoId: string
+    richtung: string
+    behalten: { start: number; ende: number }[]
+    laut: number[]
+    effekte: Record<string, unknown>[]
+    entscheid: Record<string, boolean>
+    saetze?: { ende: number; text: string }[]
+    beschreibung?: string
+    ki?: { schicht: KiSchicht; ctx: JobContext<unknown> } | null
+  }
 ): Promise<{ effekte: Record<string, unknown>[]; entscheid: Record<string, boolean>; gesetzt: string[] }> {
   const laenge = o.behalten.reduce((s, b) => s + b.ende - b.start, 0)
-  const lautSchnitt = o.laut.map((t) => {
-    let summe = 0
-    for (const b of o.behalten) {
-      if (t >= b.start && t <= b.ende) return summe + (t - b.start)
-      summe += b.ende - b.start
-    }
-    return -1
-  }).filter((t) => t >= 0)
-  const behalten = o.effekte.filter((e) => !(e['bib'] as { auto?: boolean } | undefined)?.auto)
+  const lautSchnitt = o.laut.map((t) => imSchnitt(o.behalten, t)).filter((t): t is number => t !== null)
+  const bleiben = o.effekte.filter((e) => !(e['bib'] as { auto?: boolean } | undefined)?.auto)
   const entscheid = { ...o.entscheid }
-  const gesetzt: string[] = []
+  const gewaehlt: BibEffekt[] = []
   for (const e of await ladeBibliothek(daten)) {
     if (e.haeufigkeit.modus === 'manuell' || !passtZu(e, o.kontoId, o.richtung)) continue
     if (entscheid[e.id] === undefined) {
       entscheid[e.id] = istDran(e, e.zaehler ?? 0)
       await writeJsonAtomic(join(effektOrdner(daten, e.id), 'effekt.json'), { ...e, zaehler: (e.zaehler ?? 0) + 1 })
     }
-    if (!entscheid[e.id]) continue
-    const bei = imOriginal(o.behalten, bibZeitpunkt(e, laenge, lautSchnitt))
-    for (const b of alsBausteine(e, bei, true)) {
-      // Bilder: Dauer in Originalzeit über das Ende des Stücks hinaus – die Umrechnung in Schnittzeit kürzt passend
-      if (b['art'] === 'bild') b['bis'] = imOriginal(o.behalten, bibZeitpunkt(e, laenge, lautSchnitt) + (e.bild?.dauer ?? 2))
-      behalten.push(b)
+    if (entscheid[e.id]) gewaehlt.push(e)
+  }
+  if (!gewaehlt.length) return { effekte: bleiben, entscheid, gesetzt: [] }
+  const saetze = (o.saetze ?? []).flatMap((x) => {
+    const bei = imSchnitt(o.behalten, x.ende)
+    return bei === null ? [] : [{ bei: bei + 0.15, text: x.text }]
+  })
+  const plaetze = await waehlePlaetze(gewaehlt.map(alsPlatzEffekt), { laenge, belegt: belegt(bleiben, o.behalten), laut: lautSchnitt, saetze, beschreibung: o.beschreibung ?? `Ein Video der Richtung „${o.richtung}“.`, ki: o.ki ?? null })
+  const neu = [...bleiben]
+  const gesetzt: string[] = []
+  for (const p of plaetze) {
+    const e = gewaehlt.find((x) => x.id === p.id)
+    if (!e) continue
+    for (const b of alsBausteine(e, imOriginal(o.behalten, p.bei), true)) {
+      // Bilder: Ende über ein Stückende hinaus – die Umrechnung in Schnittzeit kürzt passend
+      if (b['art'] === 'bild') b['bis'] = imOriginal(o.behalten, p.bei + (e.bild?.dauer ?? 2))
+      neu.push(b)
     }
     gesetzt.push(e.name)
   }
-  return { effekte: behalten, entscheid, gesetzt }
+  return { effekte: neu, entscheid, gesetzt }
 }

@@ -105,6 +105,7 @@ export const IPC = {
   schnittTranskript: 'schnitt:transkript',
   schnittTranskriptStart: 'schnitt:transkript-start',
   schnittRohschnittStart: 'schnitt:rohschnitt-start',
+  schnittBibVerteilen: 'schnitt:bib-verteilen',
   schnittListe: 'schnitt:liste',
   schnittUmschalten: 'schnitt:umschalten',
   schnittBereich: 'schnitt:bereich',
@@ -249,9 +250,9 @@ export type BibLage = (typeof BIB_LAGEN)[number]
 export interface BibEffektDaten {
   id: string
   name: string
-  video?: { datei: string; greenscreen: boolean; ton: boolean }
+  video?: { datei: string; greenscreen: boolean; ton: boolean; dauer?: number }
   bild?: { datei: string; dauer: number }
-  sound?: { datei: string; lautstaerke: number }
+  sound?: { datei: string; lautstaerke: number; dauer?: number }
   chroma?: BibChroma
   haeufigkeit: { modus: 'immer' | 'manchmal' | 'manuell'; jedes?: number; prozent?: number }
   konten: string[]
@@ -373,6 +374,8 @@ export interface CsApi {
   schnittTranskript(id: string): Promise<SchnittAbschnitt[] | null>
   schnittTranskriptStart(id: string): Promise<string>
   schnittRohschnittStart(id: string): Promise<string>
+  /** Effekte aus der Bibliothek (neu) ins Projekt setzen; automatisch gesetzte werden ersetzt. Gibt die Auftrags-ID zurück. */
+  schnittBibVerteilen(id: string): Promise<string>
   schnittListe(id: string): Promise<SchnittListe | null>
   schnittUmschalten(id: string, index: number): Promise<SchnittListe>
   schnittBereich(id: string, start: number, ende: number, raus: boolean, text?: string): Promise<SchnittListe>

@@ -3,10 +3,13 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { alsBausteine, bibAutomatisch, bibPfad, bibZeitpunkt, dateiInBibliothek, imOriginal, istDran, ladeBibliothek, loescheBibEffekt, passtZu, pruefeBibEffekt, speichereBibEffekt, type BibEffekt } from '../../src/main/schnitt/bibliothek'
+import { alsBausteine, alsPlatzEffekt, bibAutomatisch, bibDauer, bibPfad, dateiInBibliothek, imOriginal, istDran, ladeBibliothek, loescheBibEffekt, passtZu, pruefeBibEffekt, speichereBibEffekt, type BibEffekt } from '../../src/main/schnitt/bibliothek'
 import { chromaFilter, spillArt } from '../../src/main/schnitt/chroma'
 import { effektGraph, lageXY, pruefeEffekte } from '../../src/main/schnitt/effekte'
 import { bibText } from '../../src/main/schnitt/bearbeiten'
+import { festerPlatz, platzOk, regelPlaetze, waehlePlaetze } from '../../src/main/schnitt/platzierung'
+import type { KiSchicht } from '../../src/main/ki/schicht'
+import type { JobContext } from '../../src/main/jobs/queue'
 
 const basis = (x: Partial<BibEffekt> = {}): BibEffekt => pruefeBibEffekt({ name: 'Abo-Animation', video: { datei: 'video.webm', greenscreen: false, ton: true }, ...x })
 
@@ -41,12 +44,44 @@ describe('Effekt-Bibliothek (aus MoinStudio v0.50.0)', () => {
     expect(istDran(basis(), 0)).toBe(false)
   })
 
-  it('wählt den Zeitpunkt fest oder nach dem ersten Höhepunkt', () => {
-    expect(bibZeitpunkt(basis({ platzierung: { modus: 'fest', bezug: 'start', sekunden: 12 } }), 300, [])).toBe(12)
-    expect(bibZeitpunkt(basis({ platzierung: { modus: 'fest', bezug: 'ende', sekunden: 20 } }), 300, [])).toBe(280)
-    expect(bibZeitpunkt(basis(), 300, [10, 55, 120])).toBe(57)
-    expect(bibZeitpunkt(basis(), 300, [])).toBe(45)
-    expect(bibZeitpunkt(basis(), 40, [])).toBe(20)
+  it('hält die festen Grenzen ein: Hook, Höhepunkte, Überschneidung, Abstand (aus MoinStudio v0.51.0)', () => {
+    const o = { laenge: 300, belegt: [{ von: 100, bis: 105 }], bib: [200], laut: [60] }
+    expect(platzOk(10, 3, o)).toBe(false) // Hook
+    expect(platzOk(58, 3, o)).toBe(false) // Höhepunkt
+    expect(platzOk(101, 3, o)).toBe(false) // belegt
+    expect(platzOk(190, 3, o)).toBe(false) // zu nah am anderen Bibliotheks-Effekt
+    expect(platzOk(298, 3, o)).toBe(false) // Ende
+    expect(platzOk(40, 3, o)).toBe(true)
+  })
+
+  it('verteilt per Regel auf Satzenden und lässt weg, was nirgends passt', () => {
+    const p = regelPlaetze([{ id: 'a', dauer: 3 }, { id: 'b', dauer: 3 }], { laenge: 120, satzenden: [5, 20, 41, 45, 80], belegt: [], laut: [] })
+    expect(p).toEqual([{ id: 'a', bei: 41 }, { id: 'b', bei: 80 }])
+    expect(regelPlaetze([{ id: 'a', dauer: 3 }], { laenge: 20, satzenden: [5], belegt: [], laut: [] })).toEqual([])
+  })
+
+  it('setzt feste Zeitpunkte und rückt bei Überschneidung weiter', () => {
+    const e = { id: 'x', name: 'X', dauer: 4, art: 'Video' }
+    expect(festerPlatz({ ...e, fest: { bezug: 'start', sekunden: 12 } }, 300, [])).toBe(12)
+    expect(festerPlatz({ ...e, fest: { bezug: 'ende', sekunden: 20 } }, 300, [])).toBe(280)
+    expect(festerPlatz({ ...e, fest: { bezug: 'start', sekunden: 12 } }, 300, [{ von: 10, bis: 14 }])).toBeCloseTo(14.3)
+    expect(festerPlatz({ ...e, fest: { bezug: 'start', sekunden: 400 } }, 300, [])).toBeNull()
+  })
+
+  it('nimmt passende KI-Vorschläge und rettet unpassende per Regel', async () => {
+    const ki = { kandidaten: async () => ['x'], frage: async () => ({ daten: { plaetze: [{ id: 'a', bei: 50 }, { id: 'b', bei: 5 }] } }) } as unknown as KiSchicht
+    const ctx = {} as JobContext<unknown>
+    const effekte = [{ id: 'a', name: 'Abo', dauer: 3, art: 'Video' }, { id: 'b', name: 'Boom', dauer: 1, art: 'Sound' }]
+    const p = await waehlePlaetze(effekte, { laenge: 200, belegt: [], laut: [], saetze: [{ bei: 20, text: 'x' }, { bei: 120, text: 'y' }], beschreibung: 'Test.', ki: { schicht: ki, ctx } })
+    expect(p).toEqual([{ id: 'a', bei: 50 }, { id: 'b', bei: 120 }])
+    // ohne KI: nur die Regel
+    expect(await waehlePlaetze(effekte, { laenge: 200, belegt: [], laut: [], saetze: [{ bei: 20, text: 'x' }, { bei: 120, text: 'y' }], beschreibung: 'Test.' })).toEqual([{ id: 'a', bei: 20 }, { id: 'b', bei: 120 }])
+  })
+
+  it('kennt die Dauer der Effekte', () => {
+    expect(bibDauer(basis({ video: { datei: 'v.webm', greenscreen: false, ton: true, dauer: 6.5 } }))).toBe(6.5)
+    expect(bibDauer(basis())).toBe(3)
+    expect(alsPlatzEffekt(basis({ platzierung: { modus: 'fest', bezug: 'ende', sekunden: 10 } })).fest).toEqual({ bezug: 'ende', sekunden: 10 })
   })
 
   it('rechnet Schnittzeit in Originalzeit um', () => {
