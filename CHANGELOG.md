@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.7.12] - 2026-10-05
+
+> Vergleich mit den Vorbildern abgeschlossen, leuchtende Minecraft-Schrift
+
 ### Added
 
 - Leuchtende Minecraft-Schrift: Texte im Thumbnail bekommen hinter dem Spielschatten einen weichen Schein in ihrer Farbe,
