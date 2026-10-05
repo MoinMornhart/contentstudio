@@ -43,7 +43,12 @@ Vier Freiform-Aufgaben komplett neu (Planung, Render, Veredeln) und neben die al
 Hintergrund und Farben halten jetzt mit den Vorbildern mit. Noch nicht: Figurgröße und Leuchteffekte – 8.2 bleibt
 offen, bis auch das sitzt.
 
+## Leuchtschrift
+
+Die Minecraft-Pixelschrift bekommt hinter dem Spielschatten einen weichen Schein in ihrer eigenen Farbe (abschaltbar je
+Text mit `leuchten: false`). Nachtest: „HINTER DIR!“ in Türkis auf der Creeper-Szene – der Schein hebt den Text vom
+Hintergrund ab wie „50.000.000“ bei Castcrafter, die Pixelkanten bleiben scharf. Bewertung Text: mittel → gut.
+
 ## Offen
 
-- Leuchtende, farbige Schrift und Glüheffekte als Stilmittel (Vorbilder nutzen sie für Zahlen und Magie).
 - Figur häufiger groß und angeschnitten planen.
