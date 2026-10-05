@@ -1,6 +1,6 @@
 // Herkunft: MoinStudio src/preload/index.ts (MIT).
 import { contextBridge, ipcRenderer, type IpcRendererEvent, webUtils } from 'electron'
-import { IPC, isTabId, type CsApi, type JobAction, type ProfilDateiZweck, type TabId, type ToolId, type ToolProgressEvent, type UpdateStatus } from '@shared/app'
+import { IPC, isTabId, type BibNeu, type CsApi, type JobAction, type ProfilDateiZweck, type TabId, type ToolId, type ToolProgressEvent, type UpdateStatus } from '@shared/app'
 import type { Profil } from '@shared/profil'
 import type { HardwareState } from '@shared/hardware'
 import type { Sprache } from '@shared/i18n'
@@ -114,6 +114,10 @@ const api = {
   schnittBibDatei: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittBibDatei, ...a),
   schnittBibVorschau: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittBibVorschau, ...a),
   schnittBibPipette: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittBibPipette, ...a),
+  schnittBibOrdner: () => ipcRenderer.invoke(IPC.schnittBibOrdner),
+  schnittBibOrdnerHinzu: () => ipcRenderer.invoke(IPC.schnittBibOrdnerHinzu),
+  schnittBibOrdnerEntfernen: (pfad: string) => ipcRenderer.invoke(IPC.schnittBibOrdnerEntfernen, pfad),
+  onSchnittBibNeu: (handler: (neu: BibNeu[]) => void) => ereignis(IPC.schnittBibNeu, handler),
   schnittVorschau: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittVorschau, ...a),
   schnittExport: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittExport, ...a),
   schnittExportInfo: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittExportInfo, ...a),

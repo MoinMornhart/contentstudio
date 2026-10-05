@@ -89,6 +89,8 @@ body { background: var(--bg); color: var(--text); }
 .zl-effekt.on { outline: 2px solid var(--text); z-index: 2; }
 .zl-kopf { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--text); pointer-events: none; z-index: 3; }
 .card.breit { grid-column: 1 / -1; }
+.bib-popup { width: min(900px, 100%); max-height: 100%; overflow: auto; background: var(--bg); border: 1px solid var(--accent); border-radius: 16px; padding: 18px 20px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5); }
+.bib-ordner { display: grid; gap: 2px; margin-top: 10px; padding: 10px 12px; border: 1px dashed var(--border); border-radius: 10px; }
 .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
 .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .card-head h2 { margin: 0; font-size: 15px; }

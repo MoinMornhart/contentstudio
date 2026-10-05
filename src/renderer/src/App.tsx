@@ -10,6 +10,7 @@ import { UpdateBanner } from './components/UpdateBanner'
 import { HardwareBanner } from './components/HardwareCard'
 import { JobsWidget } from './components/JobsWidget'
 import { SetupWizard } from './components/SetupWizard'
+import { NeueEffektePopup } from './schnitt/EffektBibliothek'
 import { OEFFNE_EREIGNIS } from './navigation'
 import { useT } from './i18n'
 
@@ -35,6 +36,7 @@ export function App(): React.JSX.Element {
   return (
     <div className="shell">
       {setupDone === false && <SetupWizard onDone={() => setSetupDone(true)} />}
+      {setupDone !== false && <NeueEffektePopup />}
       <nav className="sidebar" aria-label={t('app.hauptnavigation')}>
         <div className="brand">
           <div className="brand-logo" aria-hidden="true" />

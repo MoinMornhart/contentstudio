@@ -1,7 +1,7 @@
 // Herkunft: MoinStudio src/renderer/src/components/EffektBibliothek.tsx (MIT, v0.50.0), zweisprachig, Konten und
 // Richtungen aus dem Creator-Profil statt fester Kanäle und Videotypen.
 import { useEffect, useState } from 'react'
-import type { BibChroma, BibEffektDaten, BibLage } from '@shared/app'
+import type { BibChroma, BibEffektDaten, BibLage, BibNeu } from '@shared/app'
 import { RICHTUNGEN } from '@shared/profil'
 import type { Schluessel } from '@shared/i18n'
 import { Card } from '../components/Panel'
@@ -126,7 +126,7 @@ function Vorschau({ e, setE }: { e: Entwurf; setE: (f: (x: Entwurf) => Entwurf) 
   )
 }
 
-function Bearbeiten({ start, fertig }: { start: Entwurf; fertig: () => void }): React.JSX.Element {
+export function Bearbeiten({ start, fertig }: { start: Entwurf; fertig: () => void }): React.JSX.Element {
   const { t } = useI18n()
   const { profil } = useProfil()
   const [e, setE] = useState<Entwurf>(start)
@@ -377,8 +377,12 @@ export function EffektBibliothek(): React.JSX.Element {
   const [liste, setListe] = useState<BibEffektDaten[]>([])
   const [offen, setOffen] = useState<Entwurf | null>(null)
   const [fehler, setFehler] = useState<string | null>(null)
+  const [ordner, setOrdner] = useState<string[]>([])
   const laden = (): void => void window.cs.schnittBib().then(setListe, (e: unknown) => setFehler(fehlerText(e)))
   useEffect(laden, [])
+  useEffect(() => void window.cs.schnittBibOrdner().then(setOrdner), [])
+  // neue Effekte aus Ordnern: Liste auffrischen (das Fenster selbst zeigt App.tsx)
+  useEffect(() => window.cs.onSchnittBibNeu(() => laden()), [])
   return (
     <Card title={t('bib.titel')} badge={`${liste.length}`} breit>
       {fehler && <p className="warn small">{fehler}</p>}
@@ -408,9 +412,69 @@ export function EffektBibliothek(): React.JSX.Element {
             <button type="button" className="btn primary" onClick={() => setOffen(neuerEntwurf())}>
               {t('bib.neu')}
             </button>
+            <button type="button" className="btn" title={t('bib.ordner.hinzuHinweis')} onClick={() => void window.cs.schnittBibOrdnerHinzu().then(setOrdner, (e: unknown) => setFehler(fehlerText(e)))}>
+              {t('bib.ordner.hinzu')}
+            </button>
           </div>
+          {ordner.length > 0 && (
+            <div className="bib-ordner">
+              <span className="muted small">{t('bib.ordner.liste')}</span>
+              {ordner.map((o) => (
+                <div key={o} className="row" style={{ alignItems: 'center', marginTop: 4 }}>
+                  <code className="small" style={{ flex: 1 }}>
+                    {o}
+                  </code>
+                  <button type="button" className="btn small" onClick={() => void window.cs.schnittBibOrdnerEntfernen(o).then(setOrdner)}>
+                    {t('bib.ordner.entfernen')}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
     </Card>
+  )
+}
+
+const ART_TEXT: Record<BibNeu['art'], Schluessel> = {
+  transparenz: 'bib.ordner.art.transparenz',
+  greenscreen: 'bib.ordner.art.greenscreen',
+  video: 'bib.ordner.art.video',
+  bild: 'bib.ordner.art.bild',
+  sound: 'bib.ordner.art.sound'
+}
+
+/**
+ * Fenster für neue Effekte aus beobachteten Ordnern (aus MoinStudio v0.56.0): erscheint überall in der App, zeigt die
+ * erkannte Art und das Einrichten-Formular. Mehrere neue Dateien kommen nacheinander. „Später“ lässt den Effekt auf
+ * „nur manuell“.
+ */
+export function NeueEffektePopup(): React.JSX.Element | null {
+  const { t } = useI18n()
+  const [schlange, setSchlange] = useState<BibNeu[]>([])
+  useEffect(() => window.cs.onSchnittBibNeu((neu) => setSchlange((s) => [...s, ...neu.filter((n) => !s.some((x) => x.effekt.id === n.effekt.id))])), [])
+  const jetzt = schlange[0]
+  if (!jetzt) return null
+  const weiter = (): void => setSchlange((s) => s.slice(1))
+  return (
+    <div className="setup-overlay" role="dialog" aria-modal="true" aria-label={t('bib.ordner.popupTitel')}>
+      <div className="bib-popup">
+        <div className="card-head">
+          <h2>{schlange.length > 1 ? t('bib.ordner.popupTitelVon', { anzahl: schlange.length }) : t('bib.ordner.popupTitel')}</h2>
+        </div>
+        <p className="muted small" style={{ marginTop: 0 }}>
+          {t('bib.ordner.popupAus', { name: jetzt.effekt.name })} <code>{jetzt.quelle}</code>
+          <br />
+          {t('bib.ordner.popupErkannt', { art: t(ART_TEXT[jetzt.art]) })}
+        </p>
+        <Bearbeiten key={jetzt.effekt.id} start={{ ...jetzt.effekt }} fertig={weiter} />
+        <div className="row" style={{ justifyContent: 'flex-end' }}>
+          <button type="button" className="btn small" onClick={weiter}>
+            {t('bib.ordner.spaeter')}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }

@@ -2,22 +2,50 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { IPC, type BibDateiErgebnis, type BibEffektDaten } from '@shared/app'
+import { Notification, type BrowserWindow } from 'electron'
+import { IPC, type BibDateiErgebnis, type BibEffektDaten, type BibNeu } from '@shared/app'
 import { t } from '../i18n'
 import { dateiInBibliothek, ladeBibliothek, loescheBibEffekt, speichereBibEffekt, STANDARD_CHROMA, type BibEffekt, type Chroma } from './bibliothek'
 import { dauerVon, keyFarbeErkennen, pixelFarbe, vorschauBild } from './chroma'
 import { ladeProjekte, projektOrdner } from './projekt'
+import { beobachteOrdner, ladeOrdner, ordnerEntfernen, ordnerHinzu, pruefeOrdner, type NeuerEffekt } from './bib-ordner'
 
 type Biete = <A extends unknown[]>(kanal: string, fn: (...a: A) => unknown) => void
 
 /** Oberfläche ↔ Effekt-Bibliothek. Dateien liegen im Datenordner, Pfade werden hier aufgelöst. */
-export function registerBibliothek(o: { biete: Biete; daten: () => Promise<string>; ffmpeg: () => Promise<string>; oeffnen: (optionen: Electron.OpenDialogOptions) => Promise<string | null> }): void {
+export function registerBibliothek(o: { biete: Biete; daten: () => Promise<string>; ffmpeg: () => Promise<string>; oeffnen: (optionen: Electron.OpenDialogOptions) => Promise<string | null>; fenster: () => BrowserWindow | undefined }): void {
   // Ordner eines Effekts, auch wenn er noch nicht gespeichert ist (erste Datei hochgeladen, Name fehlt noch)
   const ordnerDatei = (daten: string, id: string, datei: string): string => join(daten, 'effekte', id, datei)
   const gueltig = (d: unknown): d is string => typeof d === 'string' && /^[\w.-]+$/.test(d)
   const gueltigeId = (id: unknown): id is string => typeof id === 'string' && /^[a-z0-9-]+$/i.test(id)
 
   o.biete(IPC.schnittBib, async (): Promise<BibEffektDaten[]> => ladeBibliothek(await o.daten()))
+
+  // Effekt-Ordner (aus MoinStudio v0.56.0): beobachten, neue Dateien als Effekt anlegen und an die Oberfläche melden
+  const melde = (neu: NeuerEffekt[]): void => {
+    const liste: BibNeu[] = neu.map((n) => ({ effekt: n.effekt, art: n.art, quelle: n.quelle }))
+    const fenster = o.fenster()
+    fenster?.webContents.send(IPC.schnittBibNeu, liste)
+    if (fenster && !fenster.isFocused() && Notification.isSupported()) {
+      new Notification({ title: t(liste.length === 1 ? 'bib.ordner.neuEiner' : 'bib.ordner.neuMehrere', { anzahl: liste.length }), body: t('bib.ordner.neuText', { namen: liste.map((l) => l.effekt.name).join(', ') }) }).show()
+    }
+  }
+  beobachteOrdner(o.daten, () => o.ffmpeg().catch(() => null), melde)
+  o.biete(IPC.schnittBibOrdner, async (): Promise<string[]> => (await ladeOrdner(await o.daten())).ordner)
+  o.biete(IPC.schnittBibOrdnerHinzu, async (): Promise<string[]> => {
+    const pfad = await o.oeffnen({ title: t('bib.ordner.dialog'), properties: ['openDirectory'] })
+    const daten = await o.daten()
+    if (!pfad) return (await ladeOrdner(daten)).ordner
+    const d = await ordnerHinzu(daten, pfad)
+    // gleich durchsehen: was schon im Ordner liegt, kommt sofort als Fenster
+    void o
+      .ffmpeg()
+      .then((ff) => pruefeOrdner(daten, ff))
+      .then((neu) => neu.length && melde(neu))
+      .catch((err: unknown) => console.error('Effekt-Ordner', err))
+    return d.ordner
+  })
+  o.biete(IPC.schnittBibOrdnerEntfernen, async (pfad: unknown): Promise<string[]> => (await ordnerEntfernen(await o.daten(), String(pfad))).ordner)
   o.biete(IPC.schnittBibSpeichern, async (roh: unknown): Promise<BibEffektDaten> => speichereBibEffekt(await o.daten(), roh as Partial<BibEffekt>))
   o.biete(IPC.schnittBibLoeschen, async (id: unknown): Promise<void> => loescheBibEffekt(await o.daten(), String(id)))
 

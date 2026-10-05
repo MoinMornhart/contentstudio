@@ -118,6 +118,10 @@ export const IPC = {
   schnittBibDatei: 'schnitt:bib-datei',
   schnittBibVorschau: 'schnitt:bib-vorschau',
   schnittBibPipette: 'schnitt:bib-pipette',
+  schnittBibOrdner: 'schnitt:bib-ordner',
+  schnittBibOrdnerHinzu: 'schnitt:bib-ordner-hinzu',
+  schnittBibOrdnerEntfernen: 'schnitt:bib-ordner-entfernen',
+  schnittBibNeu: 'schnitt:bib-neu',
   schnittVorschau: 'schnitt:vorschau',
   schnittExport: 'schnitt:export',
   schnittExportInfo: 'schnitt:export-info',
@@ -263,6 +267,13 @@ export interface BibEffektDaten {
   erstellt: string
   zaehler?: number
 }
+/** Neu aus einem beobachteten Ordner übernommener Effekt (Art automatisch erkannt) */
+export interface BibNeu {
+  effekt: BibEffektDaten
+  art: 'transparenz' | 'greenscreen' | 'video' | 'bild' | 'sound'
+  quelle: string
+}
+
 export interface BibDateiErgebnis {
   id: string
   datei: string
@@ -391,6 +402,11 @@ export interface CsApi {
   schnittBibDatei(id: string | null, rolle: 'video' | 'bild' | 'sound', greenscreen?: boolean): Promise<BibDateiErgebnis | null>
   schnittBibVorschau(id: string, o: { video?: string; bild?: string; chroma?: BibChroma | null; zeit?: number; roh?: boolean }): Promise<string | null>
   schnittBibPipette(id: string, datei: string, x: number, y: number, zeit: number): Promise<string>
+  /** Effekt-Ordner: beobachtete Ordner; neue Dateien werden zu Effekten und melden sich per onSchnittBibNeu */
+  schnittBibOrdner(): Promise<string[]>
+  schnittBibOrdnerHinzu(): Promise<string[]>
+  schnittBibOrdnerEntfernen(pfad: string): Promise<string[]>
+  onSchnittBibNeu(handler: (neu: BibNeu[]) => void): () => void
   schnittVorschau(id: string): Promise<string>
   schnittExport(id: string): Promise<string>
   schnittExportInfo(id: string): Promise<SchnittExport | null>

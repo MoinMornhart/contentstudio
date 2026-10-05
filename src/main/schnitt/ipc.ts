@@ -93,7 +93,7 @@ export function registerSchnittIpc(o: {
     const r = win ? await dialog.showOpenDialog(win, optionen) : await dialog.showOpenDialog(optionen)
     return r.canceled ? null : (r.filePaths[0] ?? null)
   }
-  registerBibliothek({ biete, daten, ffmpeg, oeffnen })
+  registerBibliothek({ biete, daten, ffmpeg, oeffnen, fenster: o.fenster })
   // Umbenennen: der Name gilt für Export, Shorts und Schnittprogramme; ein gewählter Namensvorschlag wird zusätzlich
   // Titel – im letzten Export und auf der verknüpften Planungskarte (aus MoinStudio v0.38.0)
   biete(IPC.schnittUmbenennen, async (id: unknown, name: unknown, titel: unknown): Promise<void> => {

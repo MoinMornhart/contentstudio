@@ -22,6 +22,10 @@ Kurzbeschreibung für die README.
 - Premiere: Effekte aus der Bibliothek (z. B. die Abo-Animation, Bilder) liegen als echte Clips in der Sequenz, mit
   Größe und Lage wie im Render; Geräusche und der Ton der Animationen auf Spur A2. Greenscreen-Videos und WebM wandelt
   ContentStudio einmal in ein freigestelltes ProRes-4444-Video im Projektordner (aus MoinStudio v0.55.0).
+- Effekt-Bibliothek: ganze Ordner beobachten („Ordner hinzufügen …“, auch mit Unterordnern). Jede neue Datei wird
+  automatisch zum Effekt – Name aus dem Dateinamen, Art erkannt (Greenscreen samt Key-Farbe, Transparenz, Video, Bild,
+  Sound) – und ein Fenster zum Einrichten erscheint; im Hintergrund kommt eine Windows-Benachrichtigung (aus MoinStudio
+  v0.56.0).
 
 ### Changed
 
