@@ -88,8 +88,12 @@ export function conflictOriginal(name: string, siblings: ReadonlySet<string>): s
       if (candidate !== name && siblings.has(candidate)) return candidate
     }
   }
-  // OneDrive: jede Bindestrich-Position als Trennstelle probieren
+  // OneDrive: jede Bindestrich-Position als Trennstelle probieren. Eigene Zwischenstände der App („v2-r1.json“,
+  // „v2-r1.report.json“, „pruefung-1.json“) sind keine Kopien: Ein Gerätename enthält keinen Punkt und ist weder eine
+  // reine Zahl noch eine Runde wie „r1“ (aus MoinStudio v0.41.4).
   for (let i = stem.indexOf('-'); i > 0; i = stem.indexOf('-', i + 1)) {
+    const suffix = stem.slice(i + 1)
+    if (suffix.includes('.') || /^r?\d+$/i.test(suffix)) continue
     const candidate = `${stem.slice(0, i)}${ext}`
     if (siblings.has(candidate)) return candidate
   }

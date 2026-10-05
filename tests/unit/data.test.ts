@@ -113,6 +113,12 @@ describe('Konfliktkopien der Sync-Dienste', () => {
     expect(conflictOriginal('01HX-DESKTOP-AB12-2.json', files)).toBe('01HX.json')
     expect(conflictOriginal('contentstudio-data.json', files)).toBeNull()
     expect(conflictOriginal('Main_neu-PC.png', new Set(['Main_neu.png']))).toBeNull()
+    // Thumbnail-Runden und Prüfberichte sind keine OneDrive-Kopien (aus MoinStudio v0.41.4)
+    const runden = new Set(['v2.json', 'v2-r1.json', 'v2-r1.report.json', 'pruefung.json', 'pruefung-1.json'])
+    expect(conflictOriginal('v2-r1.json', runden)).toBeNull()
+    expect(conflictOriginal('v2-r1.report.json', runden)).toBeNull()
+    expect(conflictOriginal('pruefung-1.json', runden)).toBeNull()
+    expect(conflictOriginal('v2-LAPTOP.json', runden)).toBe('v2.json')
   })
 
   it('findet Konflikte rekursiv im Datenordner', async () => {
