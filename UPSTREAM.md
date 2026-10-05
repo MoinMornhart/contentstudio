@@ -52,3 +52,7 @@ Der Neubau beruht auf MoinStudio v0.36.2. Neuere MoinStudio-Versionen werden nac
 | v0.49.0 Kanal und Videotyp per Knopf | Schnitt | schon so: Konto und Richtung je Projekt (aus dem Profil, änderbar); die KI rät nichts | – |
 | v0.49.0 Schnitt-Regeln je Videotyp (Recherche) | Schnitt | übernommen und verallgemeinert: gemeinsame Regeln für jede Richtung, eigene für Reactions, Gaming und Hochformat; Pausen Reaction 0,5 s, Gaming 0,6 s | v0.7.3 |
 | v0.50.0 Effekt-Bibliothek mit Greenscreen-Entfernung | Schnitt | übernommen: Konten und Richtungen statt fester Kanäle und Typen; ergänzt um das automatische Einsetzen nach dem Rohschnitt (Häufigkeit, Platzierung) und um die Bibliothek im Wunsch-Prompt | v0.7.3 |
+| v0.37.0 Thumbnail-Änderungen als Verlauf | Thumbnail | übernommen; die Text-Fixes derselben Version waren in ContentStudio nicht nötig (Textfeld steht immer im Plan) | v0.7.3 |
+| v0.38.0 Sprechende Dateinamen | Fundament | übernommen; Shorts/Clips und Thumbnails mit Format-Zusatz | v0.7.3 |
+| v0.38.0 Namensvorschläge und Umbenennen im Schnitt | Schnitt | übernommen über die KI-Schicht und den Titel-Auftrag der Planung; Stichprobe des Transkripts reicht jetzt bis zum Ende | v0.7.3 |
+| v0.41.0 Videos im Schnitt landen automatisch in der Planung, Karten zeigen ihren Stand | Planung | übernommen mit Konten statt Kanälen und mehrsprachigen Füllwörtern | v0.7.3 |

@@ -10,6 +10,18 @@ Kurzbeschreibung für die README.
 
 ### Added
 
+- Thumbnail: Änderungen erscheinen als Verlauf wie in einem Chat unter ihrem Thumbnail – oben der Auftrag, darunter jede
+  Änderung mit Wunsch und neuem Bild, ganz unten das Eingabefeld. Geändert wird das neueste oder das per „Ändern“
+  gewählte Bild; wer den Auftrag löscht, löscht alle Änderungen mit.
+- Schnitt: „Namen vorschlagen“ im Projekt – die KI liest das ganze Transkript und schlägt 5 Titel im Stil des Kontos vor;
+  ein Klick übernimmt den Namen und den Titel für Export und Planungskarte. Projekte lassen sich auch selbst umbenennen
+  (auch über MCP: `video_edit`, Aktion `umbenennen`).
+- Planung: Videos im Schnitt landen von selbst in der Planung – eine passende Karte (gleiches Konto, ähnlicher Titel)
+  wird verknüpft, sonst entsteht eine neue in „Schnitt“. Karten zeigen „Im Schnitt“, „Thumbnail“ und „Text fertig“.
+- Sprechende Dateinamen: Thumbnails heißen beim Speichern `Thumbnail_2026-10-05_19-05.png` (mit Videoname, Variante,
+  Format), das fertige Video heißt wie das Video, Shorts und Clips `<Video>_Short_1.mp4`; Titel, Beschreibung und
+  Kapitel liegen als `<Video>.txt` daneben.
+
 - Schnitt: Effekt-Bibliothek. Eigene Effekte mit Namen anlegen (z. B. „Abo-Animation“, „Boom“) aus Video mit
   Transparenz, Greenscreen-Video, Bild und/oder Sound. Per Knopf: Häufigkeit (in jedem Video / nur in manchen – jedes
   n-te oder X % / nur manuell), Konten, Richtungen, fester Zeitpunkt oder automatisch nach dem ersten Höhepunkt,
@@ -35,6 +47,8 @@ Kurzbeschreibung für die README.
   Zaun …) aus den Blockmodellen; Nether als riesige Höhle mit fünf Biomen; Klippen-Kamera, wenn jemand fast fällt.
 
 ### Fixed
+
+- Schnitt: Der flache Auswahl-Baum aus 0.7.2 wirkte nur beim Podcast-Export, nicht beim Video-Render – jetzt überall.
 
 - Minecraft: Werkzeuge und Waffen sitzen in jeder Hand richtig in der Faust, zeigen ihre Fläche statt der Kante, Bogen
   gespannt, Dreizack als 3D-Modell, flache Items aufrecht; Beine fließen nicht mehr ineinander; Hotbar hinter der
