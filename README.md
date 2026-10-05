@@ -153,11 +153,11 @@ zwölf Schritten durch Profil, Kanäle, Darstellung, Marke und KI. Updates komme
 ## Neueste Änderungen
 
 <!-- CHANGELOG:START -->
+- **0.7.2** (2026-10-05): MoinStudio-Fehlerbehebungen übernommen: lange Videos, Cloud-Ordner, Media offline, KI-Zeitlimit; Orte und Gegenstände im Thumbnail
 - **0.7.1** (2026-09-30): Fix: Foto-Thumbnails brachen zufällig ab; Leistungsbericht; Qualitätsrunde vorbereitet
 - **0.7.0** (2026-09-30): Export: Premiere, After Effects, DaVinci Resolve, CapCut, Photoshop, Selbsttests
 - **0.6.0** (2026-09-30): Planung: Board je Konto, Kalender, KI-Ideen, Cross-Posting, Upload-Paket
 - **0.5.0** (2026-09-30): Schnitt: Transkript, Rohschnitt nach Stil, Effekte in Worten, Hochformat, Spuren, Export je Plattform
-- **0.4.0** (2026-09-30): Thumbnails: Vorbilder, Stilbuch, 3D, Foto, Vorlagen, Selbstprüfung, Export
 <!-- CHANGELOG:END -->
 
 ## Entwicklung

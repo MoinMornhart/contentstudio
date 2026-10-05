@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-10-05
+
+> MoinStudio-Fehlerbehebungen übernommen: lange Videos, Cloud-Ordner, Media offline, KI-Zeitlimit; Orte und Gegenstände im Thumbnail
+
 ### Added
 
 - Thumbnails ohne eigene Engine (Kochen, Vlog, Fitness, Bildung …): echte Orte als Hintergrund (Fotos von Poly Haven,
