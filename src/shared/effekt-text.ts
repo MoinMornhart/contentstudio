@@ -8,6 +8,9 @@ const zahl = (x: unknown): string => (typeof x === 'number' ? String(Math.round(
 
 /** Effekt in einfachen Worten */
 export function effektText(e: SchnittEffekt, t: Uebersetzer): string {
+  // Effekte aus der Bibliothek tragen ihren Namen
+  const bib = e['bib'] as { name?: string; auto?: boolean } | undefined
+  if (bib?.name) return t(bib.auto ? 'schnitt.eff.bibAuto' : 'schnitt.eff.bib', { name: bib.name })
   switch (e.art) {
     case 'tempo':
       return t((e['faktor'] as number) < 1 ? 'schnitt.eff.zeitlupe' : 'schnitt.eff.zeitraffer', { faktor: zahl(e['faktor']) })
@@ -38,6 +41,7 @@ export function effektText(e: SchnittEffekt, t: Uebersetzer): string {
     }
     case 'wackeln':
     case 'bild':
+    case 'video':
     case 'zensur':
       return t(`schnitt.eff.${e.art}` as Schluessel)
     default:

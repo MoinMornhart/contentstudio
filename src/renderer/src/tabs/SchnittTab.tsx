@@ -5,6 +5,7 @@ import { PLATTFORMEN, RICHTUNGEN } from '@shared/profil'
 import type { Schluessel } from '@shared/i18n'
 import { Card, PageHeader } from '../components/Panel'
 import { EffektListe, WunschFeld, zeitText } from '../schnitt/Wunsch'
+import { EffektBibliothek } from '../schnitt/EffektBibliothek'
 import { abholen, OEFFNE_EREIGNIS } from '../navigation'
 import { useProfil } from '../profil/useProfil'
 import { fehlerText, useT } from '../i18n'
@@ -598,6 +599,7 @@ export function SchnittTab(): React.JSX.Element {
                 </button>
               ))}
             </Card>
+            <EffektBibliothek />
           </>
         )}
       </div>

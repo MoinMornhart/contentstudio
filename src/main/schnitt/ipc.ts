@@ -1,4 +1,5 @@
 // Herkunft: MoinStudio src/main/schnitt/ipc.ts (MIT), verallgemeinert auf Konten, KI-Schicht, Spuren und Plattformen.
+import { registerBibliothek } from './bibliothek-ipc'
 import { dialog, ipcMain, shell, type BrowserWindow } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
@@ -89,6 +90,7 @@ export function registerSchnittIpc(o: {
     const r = win ? await dialog.showOpenDialog(win, optionen) : await dialog.showOpenDialog(optionen)
     return r.canceled ? null : (r.filePaths[0] ?? null)
   }
+  registerBibliothek({ biete, daten, ffmpeg, oeffnen })
   const umgebung = async (): Promise<ThumbUmgebung> => {
     const root = werkzeugRoot()
     return { blender: null, uv: await tools.exePath(UV), pyDir: join(root, 'py', 'vorlage'), modelle: join(root, 'py', 'modelle'), skripte: resourceDir('blender'), prompts: resourceDir('prompts'), werkzeugRoot: root, mojangErlaubt: false }

@@ -45,7 +45,7 @@ export async function renderPlan(daten: string, p: Projekt, ziel: ZielRender, hi
   const e = einstellungen(p)
   const hoch = e.format === '9:16'
   const stil = stilFuer([p.richtung], e.format)
-  const eff = hilfe ? await bereiteEffekteVor(ordner, liste, hilfe) : null
+  const eff = hilfe ? await bereiteEffekteVor(daten, ordner, liste, hilfe) : null
   let untertitel: string | null = null
   if (e.untertitel !== 'aus' && abschnitte.length) {
     await writeFile(

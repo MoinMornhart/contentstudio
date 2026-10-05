@@ -1,5 +1,25 @@
 // Herkunft: MoinStudio src/main/schnitt/effekte.ts (MIT).
 import type { Bereich } from './rohschnitt'
+import type { Chroma } from './bibliothek'
+import { alphaDecoder, chromaFilter } from './chroma'
+
+/** Lage im Bild; Ecken für Effekte aus der Bibliothek (Abo-Animation unten rechts …), „voll“ = ganzes Bild */
+export type EffektLage = 'oben' | 'mitte' | 'unten' | 'links' | 'rechts' | 'oben-links' | 'oben-rechts' | 'unten-links' | 'unten-rechts' | 'voll'
+/** Effekt stammt aus der Bibliothek (Name für die Zeitleiste, automatisch oder per Wunsch gesetzt) */
+export interface BibMarke {
+  id: string
+  name: string
+  auto?: boolean
+}
+
+/** x/y-Ausdruck für overlay aus der Lage (4–6 % Randabstand, unten über der Player-Leiste) – aus MoinStudio v0.50.0 */
+export function lageXY(lage: EffektLage | undefined, std: EffektLage): { x: string; y: string } {
+  const l = lage ?? std
+  if (l === 'voll') return { x: '0', y: '0' }
+  const x = l.endsWith('links') ? 'W*0.04' : l.endsWith('rechts') ? 'W*0.96-w' : '(W-w)/2'
+  const y = l.startsWith('oben') ? 'H*0.06' : l.startsWith('unten') ? 'H*0.86-h' : '(H-h)/2'
+  return { x, y }
+}
 
 /**
  * Effekte im Schnitt (ROADMAP 5.4): kombinierbare Bausteine statt fester Effektliste. Zeiten stehen im geschnittenen
@@ -18,8 +38,10 @@ export type Effekt =
   /** Ausblenden (bleibt dunkel, z. B. am Ende) oder Einblenden (aus Schwarz, z. B. am Anfang); Ton geht mit */
   | { art: 'abblende'; von: number; bis: number; richtung: 'aus' | 'ein'; farbe?: 'weiss' | 'schwarz' }
   | { art: 'text'; von: number; bis: number; text: string; lage?: 'oben' | 'mitte' | 'unten'; farbe?: string; groesse?: number; animation?: 'pop' | 'fest' }
-  | { art: 'bild'; von: number; bis: number; datei: string; lage?: 'oben' | 'mitte' | 'unten' | 'links' | 'rechts'; groesse?: number }
-  | { art: 'geraeusch'; bei: number; klang: string; lautstaerke?: number }
+  | { art: 'bild'; von: number; bis: number; datei: string; lage?: EffektLage; groesse?: number; bib?: BibMarke }
+  /** Video mit Alphakanal oder Greenscreen einblenden (Abo-Animation, Grafikpaket): läuft ab `bei` einmal durch, `ton` mischt seinen Ton dazu */
+  | { art: 'video'; bei: number; datei: string; lage?: EffektLage; groesse?: number; ton?: boolean; chroma?: Chroma; bib?: BibMarke }
+  | { art: 'geraeusch'; bei: number; klang: string; lautstaerke?: number; bib?: BibMarke }
   | { art: 'zensur'; von: number; bis: number }
   | { art: 'lautstaerke'; von: number; bis: number; faktor: number }
   /** Vorspann (ROADMAP 5.4): Clips und Titelkarten vor dem Video; klang: false schaltet die automatischen Geräusche ab */
@@ -30,7 +52,7 @@ export type IntroTeil =
   | { art: 'clip'; von: number; bis: number; tempo?: number }
   | { art: 'karte'; text: string; dauer?: number; farbe?: string; hintergrund?: 'unscharf' | 'schwarz' | 'bild'; bei?: number; bild?: string; klang?: string }
 
-export const EFFEKT_ARTEN = ['tempo', 'einfrieren', 'zoom', 'wackeln', 'farbe', 'blitz', 'uebergang', 'text', 'bild', 'geraeusch', 'zensur', 'lautstaerke', 'intro', 'abblende'] as const
+export const EFFEKT_ARTEN = ['tempo', 'einfrieren', 'zoom', 'wackeln', 'farbe', 'blitz', 'uebergang', 'text', 'bild', 'video', 'geraeusch', 'zensur', 'lautstaerke', 'intro', 'abblende'] as const
 
 /** Stück der neuen Zeitleiste: normal (ggf. mit Tempo) oder ein eingefrorenes Standbild */
 export type Stueck = { a: number; b: number; faktor: number } | { frieren: number; dauer: number }
@@ -318,11 +340,27 @@ export function effektGraph(o: EffektOptionen): EffektGraph {
     const breite = e.art === 'text' ? Math.round(o.hoehe * klemme(e.groesse ?? 0.12, 0.07, 0.4) * ((tb?.breite ?? 1) / Math.max(1, (tb?.hoehe ?? 1) / Math.max(1, e.text.split('\n').length)))) : Math.round(o.breite * klemme(e.groesse ?? 0.3, 0.05, 1))
     const pop = e.art === 'text' && (e.animation ?? 'pop') === 'pop' ? `*(0.55+0.45*min(1\\,max(0\\,(t-${z(von)})/0.12)))` : ''
     const lage = e.lage ?? (e.art === 'text' ? 'oben' : 'rechts')
-    const x = lage === 'links' ? 'W*0.05' : lage === 'rechts' ? 'W*0.95-w' : '(W-w)/2'
-    const y = lage === 'oben' ? 'H*0.08' : lage === 'unten' ? 'H*0.78-h' : '(H-h)/2'
+    const ecke = lage.includes('-') || lage === 'voll'
+    const x = ecke ? lageXY(lage, 'rechts').x : lage === 'links' ? 'W*0.05' : lage === 'rechts' ? 'W*0.95-w' : '(W-w)/2'
+    const y = ecke ? lageXY(lage, 'rechts').y : lage === 'oben' ? 'H*0.08' : lage === 'unten' ? 'H*0.78-h' : '(H-h)/2'
     teile.push(`[${idx}:v]setpts=PTS-STARTPTS+${z(von)}/TB,format=rgba,scale=w='${Math.min(o.breite, breite)}${pop}':h=-1:eval=frame,fade=t=in:st=${z(von)}:d=0.1:alpha=1,fade=t=out:st=${z(bis - 0.15)}:d=0.15:alpha=1[ov${i}]`)
     teile.push(`[${v}][ov${i}]overlay=x='${x}':y='${y}':enable='${zwischen(von, bis)}':eof_action=pass[vo${i}]`)
     v = `vo${i}`
+  })
+  // Video-Einblendungen (Abo-Animation, aus MoinStudio v0.46.0/v0.50.0): ab „bei“ einmal durchlaufen lassen; volle Größe
+  // = ganzes Bild (die Animation bringt ihre Lage selbst mit), kleiner nach „lage“ platziert; Greenscreen per Chroma Key
+  const videoTon: { idx: number; zeit: number }[] = []
+  o.effekte.forEach((e, i) => {
+    if (e.art !== 'video' || !e.datei) return
+    const von = E(e.bei)
+    const g = e.lage === 'voll' ? 1 : klemme(e.groesse ?? 1, 0.1, 1)
+    const idx = neueEingabe({ vor: alphaDecoder(e.datei), datei: e.datei })
+    const { x, y } = g >= 1 ? { x: '0', y: '0' } : lageXY(e.lage, 'unten')
+    const key = e.chroma ? chromaFilter(e.chroma) : 'format=rgba'
+    teile.push(`[${idx}:v]${key},scale=${Math.round(o.breite * g)}:-2,fps=${o.fps},setpts=PTS-STARTPTS+${z(von)}/TB[vv${i}]`)
+    teile.push(`[${v}][vv${i}]overlay=x='${x}':y='${y}':eof_action=pass[vvo${i}]`)
+    v = `vvo${i}`
+    if (e.ton) videoTon.push({ idx, zeit: von })
   })
   teile.push(`[${v}]format=yuv420p[v]`)
   // 9. Ton: Lautstärke, Zensur-Stille, Geräusche dazumischen
@@ -348,6 +386,10 @@ export function effektGraph(o: EffektOptionen): EffektGraph {
         teile.push(`[${idx}:a]aresample=48000,aformat=channel_layouts=stereo,adelay=${Math.round(k.zeit * 1000)}:all=1,volume=${z(k.lautstaerke)}[g${j}]`)
         mix.push(`[g${j}]`)
       })
+    videoTon.forEach((tv, j) => {
+      teile.push(`[${tv.idx}:a]aresample=48000,aformat=channel_layouts=stereo,adelay=${Math.round(tv.zeit * 1000)}:all=1[vt${j}]`)
+      mix.push(`[vt${j}]`)
+    })
     // Zensur bekommt automatisch ein Piep
     o.effekte
       .filter((e): e is Extract<Effekt, { art: 'zensur' }> => e.art === 'zensur' && !!o.klaenge['piep'])
@@ -448,6 +490,10 @@ export function pruefeEffekte(roh: unknown, laenge: number): { effekte: Effekt[]
         continue
       }
       effekte.push({ ...(e as object), teile } as Effekt)
+      continue
+    }
+    if ((art === 'video' || art === 'bild') && !String(e['datei'] ?? '').trim()) {
+      fehler.push(`Effekt ${i + 1}: Datei fehlt`)
       continue
     }
     if (art === 'text' && !String(e['text'] ?? '').trim()) {

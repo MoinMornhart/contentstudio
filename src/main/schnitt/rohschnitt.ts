@@ -1,4 +1,6 @@
 // Herkunft: MoinStudio src/main/schnitt/rohschnitt.ts (MIT), auf die KI-Schicht, mehrere Sprachen und den Stil je Richtung umgestellt.
+import { bibAutomatisch } from './bibliothek'
+import { lauteMomente } from './highlights'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
@@ -189,7 +191,11 @@ export async function rohschnittJob(p: RohschnittPayload, ctx: JobContext<unknow
   }
   const liste = schnittliste(pr.quelle.dauer, entfernt)
   await writeFile(join(ordner, 'schnitt.json'), JSON.stringify(liste, null, 1))
-  await aendereProjekt(p.daten, p.projekt, () => ({ rohschnitt: true }))
+  // Eigene Effekte aus der Bibliothek, die in jedes (oder jedes n-te) Video gehören
+  const effekteRoh = JSON.parse(await readFile(join(ordner, 'effekte.json'), 'utf8').catch(() => '[]')) as Record<string, unknown>[]
+  const bib = await bibAutomatisch(p.daten, { kontoId: pr.kontoId, richtung: pr.richtung, behalten: liste.behalten, laut: lauteMomente(wellen), effekte: Array.isArray(effekteRoh) ? effekteRoh : [], entscheid: pr.bibEntscheid ?? {} }).catch(() => null)
+  if (bib && (bib.gesetzt.length || effekteRoh.length !== bib.effekte.length)) await writeFile(join(ordner, 'effekte.json'), JSON.stringify(bib.effekte, null, 1))
+  await aendereProjekt(p.daten, p.projekt, () => ({ rohschnitt: true, ...(bib ? { bibEntscheid: bib.entscheid } : {}) }))
   ctx.progress(100, t('jobs.schritt.fertig'))
   return { projekt: p.projekt, vorher: pr.quelle.dauer, nachher: Math.round(laenge(liste.behalten) * 10) / 10 }
 }

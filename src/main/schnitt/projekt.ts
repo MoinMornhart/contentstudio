@@ -62,6 +62,8 @@ export interface Projekt {
   /** Antwort der KI auf den letzten Wunsch */
   antwort?: { wunsch: string; text: string; zeit: string }
   fehler?: string | null
+  /** Effekt-Bibliothek: ist dieses Projekt für „nur in manchen Videos“ dran? (je Effekt-ID, einmal entschieden) */
+  bibEntscheid?: Record<string, boolean>
 }
 
 export const projektOrdner = (daten: string, id: string): string => join(daten, 'schnitt', id)

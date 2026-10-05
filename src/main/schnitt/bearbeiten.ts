@@ -1,4 +1,5 @@
 // Herkunft: MoinStudio src/main/schnitt/bearbeiten.ts (MIT), auf die KI-Schicht und den Stil je Richtung umgestellt.
+import { alsBausteine, ladeBibliothek, passtZu, type BibEffekt } from './bibliothek'
 import { execFile } from 'node:child_process'
 import { readFile, stat, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -108,12 +109,27 @@ export function bausteinText(schrift: string | null = null): string {
 - geraeusch {bei, klang, lautstaerke 0–3}: Klänge: ${Object.entries(KLAENGE)
     .map(([k, v]) => `${k} (${v.beschreibung})`)
     .join(', ')}
+- video {bei, datei, lage oben|mitte|unten|links|rechts|oben-links|oben-rechts|unten-links|unten-rechts|voll, groesse 0.1–1, ton}: Video mit durchsichtigem Hintergrund einblenden, läuft ab „bei“ einmal durch (groesse 1 = ganzes Bild, ton true = sein Ton läuft mit). datei nur aus der Effekt-Bibliothek (unten)
 - zensur {von, bis}: Bild unscharf, Ton stumm, Piep darüber
 - lautstaerke {von, bis, faktor 0–4}: lauter oder leiser
 - intro {teile, klang}: Vorspann vor dem Video, höchstens eins. teile: {art: "clip", von, bis, tempo} = kurzer Moment aus dem Video, {art: "karte", text, dauer 0.5–6, hintergrund unscharf|schwarz, bei, farbe} = Titelkarte (bei = Zeitpunkt für das unscharfe Hintergrundbild). Zwischen Clips kommt automatisch ein Wusch, zur Karte ein Knall (klang: false schaltet das ab).`
 }
 
-export function wunschPrompt(o: { wunsch: string; kanal: string; plattform: string; stil: string; sprache: string; schrift?: string | null; liste: Schnittliste; saetze: { start: number; ende: number; text: string }[]; effekte: Effekt[]; laut: number[]; sicht?: boolean }): string {
+/**
+ * Eigene Effekte aus der Bibliothek für die KI (aus MoinStudio v0.50.0): Name und fertige Bausteine mit Verweis, damit
+ * „blend die Abo-Animation ein“ genau diesen Effekt setzt. Lage und Größe sind die des Creators, die KI wählt nur die Zeit.
+ */
+export function bibText(bib: BibEffekt[]): string {
+  if (!bib.length) return ''
+  const zeilen = bib.map((e) => `- „${e.name}“: ${JSON.stringify(alsBausteine(e, 0, false).map((b) => ({ ...b, bei: undefined, von: undefined, bis: undefined })))}`)
+  return `
+Effekt-Bibliothek des Creators (eigene Effekte; nimm sie, wenn der Wunsch sie beim Namen nennt oder sie genau passen – Bausteine
+genau so übernehmen, nur die Zeit setzen: „bei“, bei Bildern „von“ und „bis“ mit der angegebenen Dauer):
+${zeilen.join('\n')}
+`
+}
+
+export function wunschPrompt(o: { wunsch: string; kanal: string; plattform: string; stil: string; sprache: string; schrift?: string | null; liste: Schnittliste; saetze: { start: number; ende: number; text: string }[]; effekte: Effekt[]; laut: number[]; sicht?: boolean; bibliothek?: BibEffekt[] }): string {
   const { liste } = o
   const raus = (a: number, b: number): boolean => liste.entfernt.some((e) => !e.aus && (a + b) / 2 >= e.start && (a + b) / 2 <= e.ende)
   const nachher = liste.behalten.reduce((s, b) => s + b.ende - b.start, 0)
@@ -134,7 +150,7 @@ Aktuelle Effekte (Originalzeit): ${JSON.stringify(o.effekte)}
 
 Effekt-Bausteine – frei kombinierbar, beliebig viele, jeder Wunsch lässt sich daraus bauen:
 ${bausteinText(o.schrift ?? null)}
-
+${bibText(o.bibliothek ?? [])}
 Regeln:
 - Setze den Wunsch vollständig um und kombiniere Bausteine frei. Effekte passen zum Stil oben: genau an Höhepunkten
   (Ausrufe, laute Momente, Pointen, wichtige Schritte), nicht überall.
@@ -162,7 +178,8 @@ export async function wunschJob(p: WunschPayload, ctx: JobContext<unknown>, d: {
   ctx.progress(10, t('schnitt.schritt.wunsch'))
   // Sichtbogen nur, wenn eine Bild-KI da ist
   const sicht = p.ffmpeg && pr.quelle && (await d.ki.verfuegbar(true)) ? await sichtbogen(p.ffmpeg, pr.proxy ? join(ordner, 'proxy.mp4') : pr.quelle.pfad, ordner, liste.dauer) : null
-  const basis = { wunsch: p.wunsch, kanal: pr.kanal, plattform: pr.plattform, stil: stilText(stilFuer([pr.richtung], pr.einstellungen?.format ?? '16:9'), [pr.richtung], pr.einstellungen?.format ?? '16:9'), sprache: sprachName(hauptSprache()), schrift: p.schrift ?? null, liste, saetze, effekte, laut: lauteMomente(wellen), sicht: !!sicht }
+  const bibliothek = (await ladeBibliothek(p.daten)).filter((e) => passtZu(e, pr.kontoId, pr.richtung))
+  const basis = { bibliothek, wunsch: p.wunsch, kanal: pr.kanal, plattform: pr.plattform, stil: stilText(stilFuer([pr.richtung], pr.einstellungen?.format ?? '16:9'), [pr.richtung], pr.einstellungen?.format ?? '16:9'), sprache: sprachName(hauptSprache()), schrift: p.schrift ?? null, liste, saetze, effekte, laut: lauteMomente(wellen), sicht: !!sicht }
   let prompt = wunschPrompt(basis)
   let a: { schritte?: { art: 'entfernen' | 'zurueck'; von: number; bis: number; warum?: string }[]; effekte?: unknown; antwort?: string } = {}
   let geprueft: Effekt[] = effekte

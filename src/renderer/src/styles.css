@@ -582,3 +582,20 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; }
 .momente { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
 .momente figure { margin: 0; display: grid; gap: 4px; }
 .momente img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 6px; }
+/* Effekt-Bibliothek (Schnitt) */
+.bib-liste { display: grid; gap: 6px; }
+.bib-edit { display: grid; gap: 14px; }
+.bib-zeile { display: grid; gap: 6px; justify-items: start; }
+.bib-zeile .input { width: min(420px, 100%); }
+.bib-vorschau { display: grid; gap: 8px; max-width: 640px; }
+.bib-bild { position: relative; }
+.bib-bild img, .bib-bild .thumb-placeholder { width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: #000; border-radius: 8px; display: block; }
+.bib-bild.pipette img { cursor: crosshair; outline: 2px solid var(--accent); }
+.bib-laedt { position: absolute; top: 6px; right: 10px; color: #fff; font-weight: 700; }
+.bib-chroma { display: grid; gap: 6px; }
+.bib-regler { display: grid; grid-template-columns: minmax(150px, 220px) 1fr 52px; gap: 10px; align-items: center; }
+.bib-farbe { width: 22px; height: 22px; border-radius: 5px; border: 1px solid var(--border); display: inline-block; }
+.bib-raster { display: grid; grid-template-columns: repeat(3, 26px); grid-template-rows: repeat(3, 16px); gap: 3px; padding: 4px; background: #000; border-radius: 6px; }
+.bib-raster button { border: 1px solid var(--border); background: var(--bg-2); border-radius: 3px; cursor: pointer; padding: 0; }
+.bib-raster button.on { background: var(--accent); border-color: var(--accent); }
+.mono { font-family: 'Cascadia Mono', Consolas, monospace; font-variant-numeric: tabular-nums; }

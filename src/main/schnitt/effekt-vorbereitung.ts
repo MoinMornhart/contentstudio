@@ -6,6 +6,7 @@ import { effekteInSchnittzeit, introDauer, pruefeEffekte, zeitleiste, type Effek
 import type { Bereich } from './rohschnitt'
 import { sichereKlaenge } from './klaenge'
 import { liesMitKonfliktkopien } from '../data/jsonfile'
+import { bibPfad } from './bibliothek'
 
 /** Was die Aufträge für Effekte brauchen (ROADMAP 5.4) */
 export interface EffektHilfe {
@@ -52,12 +53,26 @@ function textBild(hilfe: EffektHilfe, datei: string, text: string, farbe: string
 }
 
 /** Lädt die Effekte eines Projekts und legt Text-Bilder und Geräusche an; null, wenn es keine Effekte gibt. */
-export async function bereiteEffekteVor(ordner: string, schnitt: { dauer: number; behalten: Bereich[] }, hilfe: EffektHilfe): Promise<VorbereiteteEffekte | null> {
-  // gespeichert in Originalzeit, gerendert in Schnittzeit
-  const liste = effekteInSchnittzeit(await ladeEffekte(ordner, schnitt.dauer), schnitt.behalten)
+export async function bereiteEffekteVor(daten: string, ordner: string, schnitt: { dauer: number; behalten: Bereich[] }, hilfe: EffektHilfe): Promise<VorbereiteteEffekte | null> {
+  // gespeichert in Originalzeit, gerendert in Schnittzeit; Bibliotheks-Dateien („bib:<id>/<datei>“) auf diesem Gerät
+  // auflösen – fehlt eine Datei (Effekt gelöscht), fällt der Effekt weg statt das Rendern abzubrechen
+  const roh = effekteInSchnittzeit(await ladeEffekte(ordner, schnitt.dauer), schnitt.behalten)
   const laenge = schnitt.behalten.reduce((s, b) => s + b.ende - b.start, 0)
+  if (!roh.length) return null
+  const klaenge: Record<string, string> = { ...(await sichereKlaenge(hilfe.ffmpeg, join(hilfe.lokal, 'klaenge'))) }
+  const liste = roh.flatMap((e): Effekt[] => {
+    if ((e.art === 'video' || e.art === 'bild') && e.datei.startsWith('bib:')) {
+      const pfad = bibPfad(daten, e.datei)
+      return pfad ? [{ ...e, datei: pfad }] : []
+    }
+    if (e.art === 'geraeusch' && e.klang.startsWith('bib:')) {
+      const pfad = bibPfad(daten, e.klang)
+      if (!pfad) return []
+      klaenge[e.klang] = pfad
+    }
+    return [e]
+  })
   if (!liste.length) return null
-  const klaenge = await sichereKlaenge(hilfe.ffmpeg, join(hilfe.lokal, 'klaenge'))
   const textBilder: VorbereiteteEffekte['textBilder'] = {}
   // Texte der Effekte (Schlüssel „i“) und der Intro-Karten (Schlüssel „i.j“)
   const texte: { schluessel: string; text: string; farbe?: string }[] = []
