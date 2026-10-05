@@ -240,7 +240,7 @@ export function auswahlAusdruck(stuecke: readonly { start: number; ende: number 
 
 /** Filtergraph (kommt in eine Datei – bei Stunden-Streams wäre er für die Windows-Befehlszeile zu lang). */
 export function filterGraph(o: RenderOptionen): string {
-  const auswahl = o.liste.behalten.map((b) => `between(t\\,${zahl(b.start)}\\,${zahl(b.ende)})`).join('+') || '0'
+  const auswahl = auswahlAusdruck(o.liste.behalten)
   const idx = spurIndex(o)
   const teile: string[] = []
   const basis = `select='${auswahl}',setpts=N/FRAME_RATE/TB,fps=${o.fps}`

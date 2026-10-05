@@ -79,5 +79,10 @@ describe('Schnitt: Untertitel, Zooms, Render (ROADMAP M5, MoinStudio 6.6)', () =
       expect(auswerten(t), `t=${t}`).toBe(soll)
     }
     expect(auswahlAusdruck([])).toBe('0')
+    // der Filtergraph des Renders nutzt den Baum (0.7.2 hatte ihn nur im Podcast-Export)
+    const viele = { quelle: 'p.mp4', liste: { ...liste, behalten: stuecke }, zooms: [], untertitel: null, breite: 640, hoehe: 360, fps: 30, audio: true, encoder: [], ausgabe: 'v.mp4' }
+    const g = filterGraph(viele as unknown as Parameters<typeof filterGraph>[0])
+    expect(g).toContain("select='if(lt(t")
+    expect(g).not.toContain(')+between(')
   })
 })
