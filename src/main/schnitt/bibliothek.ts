@@ -1,10 +1,10 @@
 // Herkunft: MoinStudio src/main/schnitt/bibliothek.ts (MIT, v0.50.0), Konten und Richtungen aus dem Creator-Profil
 // statt fester Kanäle, dazu das automatische Einsetzen nach dem Rohschnitt.
 import { randomUUID } from 'node:crypto'
-import { copyFile, mkdir, readdir, readFile, rm } from 'node:fs/promises'
+import { copyFile, mkdir, readdir, rm } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { extname, join } from 'node:path'
-import { writeJsonAtomic } from '../data/jsonfile'
+import { liesMitKonfliktkopien, writeJsonAtomic } from '../data/jsonfile'
 import { t } from '../i18n'
 import type { JobContext } from '../jobs/queue'
 import type { KiSchicht } from '../ki/schicht'
@@ -99,7 +99,7 @@ export async function ladeBibliothek(daten: string): Promise<BibEffekt[]> {
   const liste: BibEffekt[] = []
   for (const id of ids) {
     try {
-      liste.push(JSON.parse(await readFile(join(effektOrdner(daten, id), 'effekt.json'), 'utf8')) as BibEffekt)
+      liste.push(JSON.parse(await liesMitKonfliktkopien(join(effektOrdner(daten, id), 'effekt.json'))) as BibEffekt)
     } catch {
       // halb angelegter oder fremder Ordner
     }
@@ -109,7 +109,7 @@ export async function ladeBibliothek(daten: string): Promise<BibEffekt[]> {
 
 export async function ladeBibEffekt(daten: string, id: string): Promise<BibEffekt | null> {
   if (!gueltigeId(id)) return null
-  return JSON.parse(await readFile(join(effektOrdner(daten, id), 'effekt.json'), 'utf8').catch(() => 'null')) as BibEffekt | null
+  return JSON.parse(await liesMitKonfliktkopien(join(effektOrdner(daten, id), 'effekt.json')).catch(() => 'null')) as BibEffekt | null
 }
 
 export async function speichereBibEffekt(daten: string, roh: Partial<BibEffekt>): Promise<BibEffekt> {

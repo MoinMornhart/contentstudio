@@ -1,5 +1,6 @@
 // Herkunft: MoinStudio src/main/schnitt/vorschau.ts (MIT), erweitert um Stil je Richtung, Hochformat und Spuren.
-import { readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { liveOrdner, livePfad } from './medien'
 import { join } from 'node:path'
 import type { SchnittEinstellungen } from '@shared/schnitt'
 import type { JobContext } from '../jobs/queue'
@@ -20,7 +21,7 @@ import { sichereVerfolgung } from './highlights'
  * um das Ergebnis vor dem Export anzusehen. Der Export (5.7) nutzt dieselben Bausteine mit dem Original.
  */
 
-export const STANDARD: SchnittEinstellungen = { untertitel: 'aus', zooms: true, format: '16:9' }
+export const STANDARD: SchnittEinstellungen = { untertitel: 'aus', zooms: true, format: '16:9', zuschauen: true }
 
 export const einstellungen = (p: Projekt): SchnittEinstellungen => ({ ...STANDARD, ...(p.einstellungen ?? {}) })
 
@@ -96,6 +97,14 @@ export async function verfolgungFallsNoetig(p: Projekt, ordner: string, ffmpeg: 
   await sichereVerfolgung(u, ffmpeg, p.quelle, ordner, ctx).catch(() => [])
 }
 
+/** Zuschauen: Live-Bild lokal anlegen (altes vorher weg, damit kein Bild vom letzten Mal erscheint) */
+export async function mitLiveBild(o: RenderOptionen, p: Projekt): Promise<void> {
+  if (!einstellungen(p).zuschauen) return
+  await mkdir(liveOrdner(), { recursive: true })
+  await rm(livePfad(p.id), { force: true })
+  o.live = livePfad(p.id)
+}
+
 export async function vorschauJob(p: VorschauPayload, ctx: JobContext<unknown>): Promise<{ projekt: string; laenge: number }> {
   const pr = await ladeProjekt(p.daten, p.projekt)
   if (!pr?.proxy || !pr.rohschnitt) throw new Error(t('schnitt.fehler.erstRohschnitt'))
@@ -108,6 +117,7 @@ export async function vorschauJob(p: VorschauPayload, ctx: JobContext<unknown>):
     { quelle: 'proxy.mp4', breite: hoch ? 540 : 960, hoehe: hoch ? 960 : 540, fps: Math.min(30, Math.round(pr.quelle?.fps || 30)), encoder: ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '26'], ausgabe: 'vorschau.mp4', untertitelDatei: 'vorschau.ass', proxy: true },
     p.hilfe
   )
+  await mitLiveBild(o, pr)
   await writeFile(join(ordner, 'vorschau-filter.txt'), filterGraph(o))
   const laenge = o.laengeEnde ?? zeitAbbildung(o.liste.behalten).laenge
   await ffmpegMitFortschritt(p.ffmpeg, renderArgs(o, 'vorschau-filter.txt'), ctx, laenge, (a) => ctx.progress(a * 99, t('schnitt.schritt.vorschau', { prozent: Math.round(a * 100) })), ordner)

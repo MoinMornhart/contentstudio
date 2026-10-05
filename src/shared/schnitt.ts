@@ -61,6 +61,9 @@ export interface SchnittEinstellungen {
   zooms: boolean
   /** Hochformat für Shorts, Reels, TikTok (ROADMAP 5.5); Ausschnitt folgt Gesicht oder Aktion */
   format: SchnittFormat
+  /** Zuschauen (aus MoinStudio v0.54.0): an = Live-Bild beim Rendern, nach dem Rohschnitt automatisch die Vorschau;
+   *  aus = alles im Hintergrund bis zum fertigen Export, dann eine Benachrichtigung */
+  zuschauen: boolean
 }
 
 /** Export-Ergebnis */
@@ -98,7 +101,9 @@ export interface SchnittProjekt {
   highlights: number | null
   clipsStand: number | null
   vorschauUrl: string | null
-  auftrag: { state: string; progress: number | null; step: string; error: string | null } | null
+  /** Zuschauen: Live-Bild des laufenden Renders (cs-media://…?v=…), solange gerendert wird */
+  liveUrl: string | null
+  auftrag: { state: string; progress: number | null; step: string; error: string | null; art: string } | null
 }
 
 /**

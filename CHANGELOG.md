@@ -16,12 +16,18 @@ Kurzbeschreibung für die README.
 - Schnitt: Timeline über der ganzen Aufnahme – oben der Schnitt (grün bleibt, rot fliegt raus, Klick schaltet um),
   darunter Spuren für Bibliothek, Bild & Text, Kamera & Tempo und Ton; Klick auf einen Effekt springt hin, schaltet ihn
   an oder aus oder löscht ihn; Zoom für lange Streams (aus MoinStudio v0.52.0).
+- Schnitt: Schalter „Zuschauen“. An: Schritte mit Fortschritt und beim Rendern jede Sekunde das aktuelle Bild; nach dem
+  Rohschnitt startet die Vorschau von selbst. Aus: alles läuft im Hintergrund bis zum fertigen Export, dann kommt eine
+  Windows-Benachrichtigung (aus MoinStudio v0.54.0).
 
 ### Changed
 
 - Export mindestens in 1080p (kleinere Aufnahmen werden hochskaliert), Gaming immer mit 60 fps, sonst mindestens 30 fps.
 - Export-Ton auf die Lautheit der Plattform gebracht (Video −14 LUFS, Podcast −16 LUFS, Spitzen höchstens −1 dBTP).
 - Effekt-Bibliothek nimmt die ganze Breite ein.
+- Konfliktkopien aus Cloud-Ordnern („projekt(1).json“, „projekt 2.json“ …) werden zusammengeführt: die neueste gültige
+  Fassung gewinnt, fehlende Felder kommen aus der älteren, die Kopien landen in %LOCALAPPDATA%\ContentStudio\
+  konflikt-sicherung statt gelöscht zu werden. Beim Öffnen eines Schnitt-Projekts zählt, was im Ordner fertig liegt.
 
 ## [0.7.12] - 2026-10-05
 

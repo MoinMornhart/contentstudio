@@ -12,7 +12,7 @@ import { ffmpegMitFortschritt } from './import'
 import { aendereProjekt, ladeProjekt, projektOrdner } from './projekt'
 import { auswahlAusdruck, filterGraph, lautheitFilter, renderArgs, zeitAbbildung } from './render'
 import { liesAbschnitte } from './transkript'
-import { einstellungen, renderPlan, verfolgungFallsNoetig } from './vorschau'
+import { einstellungen, mitLiveBild, renderPlan, verfolgungFallsNoetig } from './vorschau'
 import type { ThumbUmgebung } from '../thumbnail/umgebung'
 import type { EffektHilfe } from './effekt-vorbereitung'
 import { istGaming, stilFuer, stilText } from './stil'
@@ -287,6 +287,7 @@ export async function exportJob(p: ExportPayload, ctx: JobContext<unknown>, d: {
     await writeFile(join(ordner, 'export-kapitel.txt'), kapitelMetadaten(text.kapitel, laenge))
     await ffmpegMitFortschritt(p.ffmpeg, ['-i', pr.quelle.pfad, '-i', 'export-kapitel.txt', '-map_metadata', '1', '-map_chapters', '1', '-vn', '-af', `aselect='${auswahl}',asetpts=N/SR/TB,${lautheitFilter(zielLautheit(true))}`, '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-movflags', '+faststart', `export.${endung}`], ctx, laenge, (a) => ctx.progress(8 + a * 88, t('schnitt.schritt.export', { prozent: Math.round(a * 100) })), ordner)
   } else {
+    await mitLiveBild(plan, pr)
     await writeFile(join(ordner, 'export-filter.txt'), filterGraph(plan))
     await ffmpegMitFortschritt(p.ffmpeg, renderArgs(plan, 'export-filter.txt'), ctx, laenge, (a) => ctx.progress(8 + a * 88, t('schnitt.schritt.export', { prozent: Math.round(a * 100) })), ordner)
   }

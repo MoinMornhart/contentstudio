@@ -167,6 +167,8 @@ export interface RenderOptionen {
   audio: boolean
   /** Ton auf diese Lautheit bringen (LUFS, Spitzen höchstens −1 dBTP) – nur beim Export (aus MoinStudio v0.52.0) */
   lautheit?: number
+  /** Zuschauen: Datei, in die FFmpeg jede Sekunde das aktuelle Bild schreibt (aus MoinStudio v0.54.0) */
+  live?: string
   /**
    * Hochformat (Shorts, Reels, TikTok): mit Facecam-Bereich im Original (Anteile x0,y0,x1,y1) oben die Facecam und
    * darunter das Spiel; sonst ein Ausschnitt, der der Verfolgung folgt (Punkte in Originalzeit, x = Mitte 0–1).
@@ -245,7 +247,9 @@ export function auswahlAusdruck(stuecke: readonly { start: number; ende: number 
 export const lautheitFilter = (lufs: number): string => `loudnorm=I=${lufs}:TP=-1:LRA=11,aresample=48000`
 
 export function filterGraph(o: RenderOptionen): string {
-  const g = filterGraphRoh(o)
+  const roh = filterGraphRoh(o)
+  // Zuschauen: das fertige Bild zusätzlich einmal pro Sekunde klein als Live-Bild ausgeben
+  const g = o.live ? `${roh.split('[v]').join('[vfertig]')};\n[vfertig]split=2[v][vl];[vl]fps=1,scale=640:-2[vlive]` : roh
   // [a] ist immer nur Ausgang des Graphen: Marke umbenennen und die Normalisierung dahinter hängen. Nur die ganze Marke
   // „[a]“ ersetzen – ein Ersetzen per /[a]/ traf jedes einzelne „a“ (scale → sc[aroh]le; MoinStudio v0.53.1)
   return o.lautheit !== undefined && o.audio ? `${g.split('[a]').join('[aroh]')};\n[aroh]${lautheitFilter(o.lautheit)}[a]` : g
@@ -310,5 +314,5 @@ function spurEingabe(s: RenderSpur): string[] {
 export function renderArgs(o: RenderOptionen, graphDatei: string): string[] {
   const spuren = [...(o.spuren?.facecam ? spurEingabe(o.spuren.facecam) : []), ...(o.spuren?.ton ? spurEingabe(o.spuren.ton) : [])]
   const eingaben = (effektTeil(o)?.eingaben ?? []).flatMap((e) => [...e.vor, '-i', e.datei])
-  return ['-i', o.quelle, ...spuren, ...eingaben, '-/filter_complex', graphDatei, '-map', '[v]', ...(o.audio ? ['-map', '[a]', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000'] : []), ...o.encoder, '-movflags', '+faststart', o.ausgabe]
+  return ['-i', o.quelle, ...spuren, ...eingaben, '-/filter_complex', graphDatei, '-map', '[v]', ...(o.audio ? ['-map', '[a]', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000'] : []), ...o.encoder, '-movflags', '+faststart', o.ausgabe, ...(o.live ? ['-map', '[vlive]', '-update', '1', '-q:v', '5', '-f', 'image2', o.live] : [])]
 }

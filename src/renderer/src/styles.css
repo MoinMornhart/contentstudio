@@ -61,6 +61,15 @@ body { background: var(--bg); color: var(--text); }
 .page-header p { margin: 0 0 22px; color: var(--muted); }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 18px; }
+/* Zuschauen beim Schneiden (aus MoinStudio v0.54.0) */
+.zuschauen { display: grid; gap: 8px; padding: 10px 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-2); }
+.zuschauen.aktiv { border-color: var(--accent); }
+.zuschauen-schritte { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.zuschauen-schritte li { padding: 3px 10px; border-radius: 999px; font-size: 12px; background: var(--bg); color: var(--muted); }
+.zuschauen-schritte li.fertig { color: var(--text); }
+.zuschauen-schritte li.jetzt { background: var(--accent); color: #fff; font-weight: 600; }
+.zuschauen-text { margin: 0; font-size: 15px; }
+.zuschauen-live { width: 100%; height: auto; border-radius: 10px; }
 /* Timeline (Schnitt, aus MoinStudio v0.52.0) */
 .zeitleiste { display: grid; gap: 8px; margin-top: 12px; }
 .zl-rahmen { display: grid; grid-template-columns: 110px 1fr; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg-2); }

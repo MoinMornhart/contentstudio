@@ -67,6 +67,21 @@ describe('Schnitt: Untertitel, Zooms, Render (ROADMAP M5, MoinStudio 6.6)', () =
     expect(filterGraph({ ...o, audio: false, lautheit: -14 })).not.toContain('loudnorm')
   })
 
+  it('Zuschauen: zusätzliches Live-Bild einmal pro Sekunde, Hauptausgabe bleibt [v] (aus MoinStudio v0.54.0)', () => {
+    const o = { quelle: 'proxy.mp4', liste, zooms: [], untertitel: null, breite: 960, hoehe: 540, fps: 30, audio: true, encoder: ['-c:v', 'libx264'], ausgabe: 'v.mp4', live: 'C:/live/x.jpg' }
+    const g = filterGraph(o)
+    expect(g).toContain('[vfertig]split=2[v][vl];[vl]fps=1,scale=640:-2[vlive]')
+    expect(g.split('[v]').length - 1).toBe(1)
+    const args = renderArgs(o, 'f.txt')
+    expect(args.slice(-9)).toEqual(['-map', '[vlive]', '-update', '1', '-q:v', '5', '-f', 'image2', 'C:/live/x.jpg'])
+    expect(args.indexOf('v.mp4')).toBeLessThan(args.indexOf('[vlive]'))
+    // mit Lautheit zusammen: beide Ausgänge je genau einmal
+    const beide = filterGraph({ ...o, lautheit: -14 })
+    expect(beide.match(/\[a\]/g)).toHaveLength(1)
+    expect(beide.split('[v]').length - 1).toBe(1)
+    expect(filterGraph({ ...o, live: undefined })).not.toContain('vlive')
+  })
+
   it('Auswahl auch bei Hunderten Stücken: flacher Baum, wählt genau die behaltenen Zeiten', () => {
     const stuecke = Array.from({ length: 700 }, (_, i) => ({ start: i * 10, ende: i * 10 + 4 }))
     const a = auswahlAusdruck(stuecke)

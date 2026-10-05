@@ -7,6 +7,7 @@ import type { Schluessel } from '@shared/i18n'
 import { Card, PageHeader } from '../components/Panel'
 import { EffektListe, WunschFeld, zeitText } from '../schnitt/Wunsch'
 import { Zeitleiste } from '../schnitt/Zeitleiste'
+import { Zuschauen } from '../schnitt/Zuschauen'
 import { EffektBibliothek } from '../schnitt/EffektBibliothek'
 import { abholen, OEFFNE_EREIGNIS } from '../navigation'
 import { useProfil } from '../profil/useProfil'
@@ -412,11 +413,7 @@ function ProjektAnsicht({ p, ki, zurueck, loeschen, neuLaden }: { p: SchnittProj
           {sicher ? t('schnitt.loeschenSicher') : t('schnitt.loeschen')}
         </button>
       </div>
-      {p.auftrag && (
-        <p className={p.auftrag.state === 'failed' ? 'warn' : 'muted'}>
-          {p.auftrag.state === 'failed' ? t('schnitt.fehlerText', { fehler: p.auftrag.error ?? '' }) : `${p.auftrag.step || t('schnitt.wartet')}${p.auftrag.progress !== null ? ` (${Math.round(p.auftrag.progress)} %)` : ''}`}
-        </p>
-      )}
+      <Zuschauen p={p} neuLaden={neuLaden} />
       {p.proxyUrl ? (
         <video ref={video} className="schnitt-player" src={`${p.proxyUrl}#t=0.1`} controls preload="metadata" onTimeUpdate={(e) => zeitUpdate(e.currentTarget.currentTime)} />
       ) : (

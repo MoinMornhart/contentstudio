@@ -381,7 +381,7 @@ export interface CsApi {
   schnittBereich(id: string, start: number, ende: number, raus: boolean, text?: string): Promise<SchnittListe>
   schnittWunsch(id: string, wunsch: string): Promise<string>
   /** Untertitel, Zooms, Format (16:9/9:16) und Stil-Richtung einstellen */
-  schnittEinstellungen(id: string, patch: { untertitel?: 'aus' | 'an' | 'karaoke'; zooms?: boolean; format?: '16:9' | '9:16'; richtung?: string; plattform?: Plattform }): Promise<void>
+  schnittEinstellungen(id: string, patch: { untertitel?: 'aus' | 'an' | 'karaoke'; zooms?: boolean; zuschauen?: boolean; format?: '16:9' | '9:16'; richtung?: string; plattform?: Plattform }): Promise<void>
   /** Projekt umbenennen; `titel` = als Titel übernehmen (Export und verknüpfte Planungskarte) */
   schnittUmbenennen(id: string, name: string, titel?: boolean): Promise<void>
   /** Effekt-Bibliothek (eigene Effekte mit Video, Greenscreen, Bild, Sound) */

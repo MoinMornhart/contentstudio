@@ -2,7 +2,7 @@
 import { videoDateiname, videoName } from '../dateinamen'
 import { registerBibliothek } from './bibliothek-ipc'
 import { aendereKarte, ladeKarten } from '../planung/karten'
-import { dialog, ipcMain, shell, type BrowserWindow } from 'electron'
+import { dialog, ipcMain, Notification, shell, type BrowserWindow } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { copyFile, readdir, readFile, writeFile } from 'node:fs/promises'
@@ -32,7 +32,7 @@ import { einstellungen, vorschauJob, type VorschauPayload } from './vorschau'
 import { exportJob, kapitelText, type ExportErgebnis, type ExportPayload } from './export'
 import { clipsJob, highlightJob, type ClipsPayload, type Highlight, type HighlightPayload } from './highlights'
 import { importJob, type ImportPayload } from './import'
-import { medienUrl } from './medien'
+import { livePfad, medienUrl } from './medien'
 import type { EffektHilfe } from './effekt-vorbereitung'
 import { aendereProjekt, ladeProjekt, ladeProjekte, loescheProjekt, projektOrdner, speichereProjekt, type Projekt } from './projekt'
 import { spurJob, type SpurPayload } from './spuren'
@@ -176,7 +176,8 @@ export function registerSchnittIpc(o: {
       clipsStand: p.clips ?? null,
       antwort: p.antwort ?? null,
       vorschauUrl: p.vorschau ? `${medienUrl(join(ordner, 'vorschau.mp4'))}?v=${p.vorschau}` : null,
-      auftrag: job && job.state !== 'done' ? { state: job.state, progress: job.progress, step: job.step, error: job.error ?? null } : null
+      auftrag: job && job.state !== 'done' ? { state: job.state, progress: job.progress, step: job.step, error: job.error ?? null, art: job.kind } : null,
+      liveUrl: job && job.state === 'running' && (job.kind === 'schnitt-vorschau' || job.kind === 'schnitt-export') && einstellungen(p).zuschauen && existsSync(livePfad(p.id)) ? `${medienUrl(livePfad(p.id))}?v=${Date.now()}` : null
     }
   }
 
@@ -239,7 +240,18 @@ export function registerSchnittIpc(o: {
     const projekt = await ladeProjekt(ordnerDaten, id)
     if (!projekt) throw new Error(t('schnitt.fehler.projekt'))
     const payload: RohschnittPayload = { daten: ordnerDaten, projekt: id }
-    return merkeAuftrag(id, 'schnitt-rohschnitt', t('schnitt.titel.rohschnitt', { name: projekt.name }), payload)
+    const auftrag = await merkeAuftrag(id, 'schnitt-rohschnitt', t('schnitt.titel.rohschnitt', { name: projekt.name }), payload)
+    // Rohvideo rein, fertiges Video raus (aus MoinStudio v0.54.0): mit Zuschauen die Vorschau mit Live-Bild, ohne gleich
+    // der Export im Hintergrund
+    void queue
+      .waitFor(auftrag)
+      .then(async (j) => {
+        if (j.state !== 'done') return
+        const p = await ladeProjekt(ordnerDaten, id)
+        if (p) await (einstellungen(p).zuschauen ? starteVorschau(id) : starteExport(id))
+      })
+      .catch(() => undefined)
+    return auftrag
   }
 
   const starteVerteilen = async (id: string): Promise<string> => {
@@ -306,12 +318,13 @@ export function registerSchnittIpc(o: {
   )
   biete(IPC.schnittWunsch, (id: unknown, wunsch: unknown) => starteWunsch(id, wunsch))
   biete(IPC.schnittEinstellungen, async (id: unknown, patch: unknown) => {
-    const q = (patch ?? {}) as { untertitel?: string; zooms?: boolean; format?: string; richtung?: string; plattform?: string }
+    const q = (patch ?? {}) as { untertitel?: string; zooms?: boolean; zuschauen?: boolean; format?: string; richtung?: string; plattform?: string }
     await aendereProjekt(await daten(), String(id), (p) => ({
       einstellungen: {
         ...p.einstellungen,
         ...(q.untertitel === 'aus' || q.untertitel === 'an' || q.untertitel === 'karaoke' ? { untertitel: q.untertitel } : {}),
         ...(typeof q.zooms === 'boolean' ? { zooms: q.zooms } : {}),
+        ...(typeof q.zuschauen === 'boolean' ? { zuschauen: q.zuschauen } : {}),
         ...(q.format === '16:9' || q.format === '9:16' ? { format: q.format } : {})
       },
       ...(typeof q.richtung === 'string' ? { richtung: q.richtung.trim().slice(0, 60) } : {}),
@@ -351,15 +364,30 @@ export function registerSchnittIpc(o: {
     }))
   })
   // Export je Plattform (ROADMAP 5.7)
-  biete(IPC.schnittExport, async (id: unknown): Promise<string> => {
+  const starteExport = async (id: unknown): Promise<string> => {
     const ordnerDaten = await daten()
     const ff = await ffmpeg()
     const p = await ladeProjekt(ordnerDaten, String(id))
     if (!p) throw new Error(t('schnitt.fehler.projekt'))
     const hwProfil = await o.hardware.profiles.load()
     const payload: ExportPayload = { daten: ordnerDaten, projekt: p.id, ffmpeg: ff, ffprobe: join(dirname(ff), 'ffprobe.exe'), encoder: hwProfil ? ProfileStore.effective(hwProfil).encoder : 'libx264', hilfe: await effektHilfe(p, ff), umgebung: await umgebung() }
-    return merkeAuftrag(p.id, 'schnitt-export', t('schnitt.titel.export', { name: p.name }), payload)
-  })
+    const auftrag = await merkeAuftrag(p.id, 'schnitt-export', t('schnitt.titel.export', { name: p.name }), payload)
+    // Ohne Zuschauen kommt nur das Ergebnis: Benachrichtigung, wenn das Video fertig ist oder scheitert (aus MoinStudio v0.54.0)
+    if (!einstellungen(p).zuschauen) {
+      void queue
+        .waitFor(auftrag)
+        .then((j) => {
+          if (!Notification.isSupported()) return
+          const fertig = j.state === 'done'
+          const n = new Notification({ title: t(fertig ? 'schnitt.zuschauen.fertigTitel' : 'schnitt.zuschauen.fehlerTitel'), body: fertig ? t('schnitt.zuschauen.fertigText', { name: p.name }) : t('schnitt.zuschauen.fehlerText', { name: p.name, fehler: j.error ?? '' }) })
+          n.on('click', () => o.fenster()?.show())
+          n.show()
+        })
+        .catch(() => undefined)
+    }
+    return auftrag
+  }
+  biete(IPC.schnittExport, starteExport)
   biete(IPC.schnittExportInfo, async (id: unknown) => {
     const text = await readFile(join(projektOrdner(await daten(), String(id)), 'export.json'), 'utf8').catch(() => null)
     if (!text) return null

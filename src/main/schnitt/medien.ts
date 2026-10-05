@@ -2,7 +2,7 @@
 import { app, protocol } from 'electron'
 import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
-import { extname, resolve, sep } from 'node:path'
+import { extname, join, resolve, sep } from 'node:path'
 import { Readable } from 'node:stream'
 import type { SettingsStore } from '../data/settings'
 
@@ -18,6 +18,17 @@ const TYPEN: Record<string, string> = { '.mp4': 'video/mp4', '.m4a': 'audio/mp4'
 /** Muss vor „app ready“ aufgerufen werden. */
 export function medienSchemaAnmelden(): void {
   protocol.registerSchemesAsPrivileged([{ scheme: MEDIEN_SCHEMA, privileges: { stream: true, supportFetchAPI: true, secure: true, standard: true } }])
+}
+
+/** Live-Bilder beim Zuschauen (aus MoinStudio v0.54.0): lokal statt im Datenordner – sonst lädt der Cloud-Dienst jede
+ *  Sekunde ein neues Bild hoch. */
+export function liveOrdner(): string {
+  return join(process.env['LOCALAPPDATA'] ?? app.getPath('temp'), 'ContentStudio', 'live')
+}
+
+/** Live-Bild eines Schnitt-Projekts */
+export function livePfad(projekt: string): string {
+  return join(liveOrdner(), `${projekt}.jpg`)
 }
 
 /** Adresse für eine Datei im Datenordner. */
@@ -43,7 +54,9 @@ export function medienBedienen(settings: SettingsStore): void {
     protocol.handle(MEDIEN_SCHEMA, async (req) => {
       const pfad = decodeURIComponent(new URL(req.url).pathname.replace(/^\//, '')) // ?v=… (neu laden) wird ignoriert
       const daten = (await settings.load()).dataDir
-      if (!daten || !resolve(pfad).startsWith(resolve(daten) + sep)) return new Response('verboten', { status: 403 })
+      // Datenordner oder der lokale Ordner für Live-Bilder beim Zuschauen (liegt bewusst nicht im Cloud-Ordner)
+      const imOrdner = (o: string): boolean => resolve(pfad).startsWith(resolve(o) + sep)
+      if (!(daten && imOrdner(daten)) && !imOrdner(liveOrdner())) return new Response('verboten', { status: 403 })
       const info = await stat(pfad).catch(() => null)
       if (!info?.isFile()) return new Response('nicht gefunden', { status: 404 })
       const typ = TYPEN[extname(pfad).toLowerCase()] ?? 'application/octet-stream'

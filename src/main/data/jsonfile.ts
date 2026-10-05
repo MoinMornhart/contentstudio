@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto'
-import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import type { z } from 'zod'
 
@@ -54,20 +54,32 @@ export async function readJson<T>(path: string, schema: z.ZodType<T>): Promise<R
   return { ok: true, value: parsed.data }
 }
 
-/**
- * Liest eine Datei im geteilten Datenordner und repariert Konfliktkopien: iCloud legt beim schnellen Ersetzen
- * „name 2.json“ an (und das Original kann fehlen), OneDrive „name-GERÄT.json“, Dropbox „name (… conflicted copy …).json“
- * bzw. „name (Konfliktkopie …).json“, Google Drive „name (1).json“. Die jüngste gültige Fassung wird wieder unter dem
- * richtigen Namen abgelegt, die Kopien werden entfernt. Fehlt alles, wirft sie wie readFile.
- */
-export async function liesMitKonfliktkopien(pfad: string): Promise<string> {
-  const ordner = dirname(pfad)
-  const name = basename(pfad)
+/** Konfliktkopien eines Dateinamens: iCloud „name 2.json“ und „name(1).json“, Google Drive „name (1).json“, OneDrive
+ * „name-GERÄT.json“, Dropbox „name (… conflicted copy …).json“ bzw. „name (Konfliktkopie …).json“. */
+export function konfliktMuster(name: string): RegExp {
   const punkt = name.lastIndexOf('.')
   const stamm = punkt > 0 ? name.slice(0, punkt) : name
   const endung = punkt > 0 ? name.slice(punkt) : ''
   const roh = (t: string): string => t.replace(/[.*+?^$()|[\]{}\\]/g, '\\$&')
-  const muster = new RegExp('^' + roh(stamm) + '( \\d+| \\(\\d+\\)| \\([^()]*(?:conflicted copy|Konfliktkopie)[^()]*\\)|-[^.]+)' + roh(endung) + '$', 'i')
+  return new RegExp('^' + roh(stamm) + '( \\d+| ?\\(\\d+\\)| \\([^()]*(?:conflicted copy|Konfliktkopie)[^()]*\\)|-[^.]+)' + roh(endung) + '$', 'i')
+}
+
+/** Wohin Konfliktkopien verschoben werden: lokal, nicht in den Cloud-Ordner – nie löschen (aus MoinStudio v0.54.0) */
+export function konfliktSicherung(): string {
+  return join(process.env['LOCALAPPDATA'] ?? process.env['TEMP'] ?? '.', 'ContentStudio', 'konflikt-sicherung')
+}
+
+/**
+ * Liest eine Datei im geteilten Datenordner und repariert Konfliktkopien (Muster siehe `konfliktMuster`; das Original
+ * kann fehlen). Die jüngste gültige Fassung kommt wieder unter den richtigen Namen; bei JSON-Objekten werden Felder
+ * ergänzt, die nur in einer älteren Kopie stehen. Die Kopien werden nicht gelöscht, sondern nach
+ * %LOCALAPPDATA%\ContentStudio\konflikt-sicherung verschoben. Fehlt alles, wirft sie wie readFile.
+ */
+export async function liesMitKonfliktkopien(pfad: string): Promise<string> {
+  const ordner = dirname(pfad)
+  const name = basename(pfad)
+  const json = name.toLowerCase().endsWith('.json')
+  const muster = konfliktMuster(name)
   const kopien = (await readdir(ordner).catch(() => [] as string[])).filter((n) => muster.test(n))
   if (!kopien.length) return readFile(pfad, 'utf8')
   const kandidaten = await Promise.all(
@@ -75,22 +87,39 @@ export async function liesMitKonfliktkopien(pfad: string): Promise<string> {
       const p = join(ordner, n)
       const info = await stat(p).catch(() => null)
       const text = info ? await readFile(p, 'utf8').catch(() => null) : null
-      const gueltig = ((): boolean => {
-        if (text === null) return false
-        if (endung !== '.json') return true
+      let wert: unknown = undefined
+      let gueltig = text !== null
+      if (text !== null && json) {
         try {
-          JSON.parse(text)
-          return true
+          wert = JSON.parse(text.charCodeAt(0) === 0xfeff ? text.slice(1) : text)
         } catch {
-          return false
+          gueltig = false
         }
-      })()
-      return { p, text, zeit: info?.mtimeMs ?? 0, gueltig }
+      }
+      return { p, text, wert, zeit: info?.mtimeMs ?? 0, gueltig }
     })
   )
-  const beste = kandidaten.filter((k) => k.gueltig).sort((a, b) => b.zeit - a.zeit)[0]
+  const gute = kandidaten.filter((k) => k.gueltig).sort((a, b) => b.zeit - a.zeit)
+  const beste = gute[0]
   if (!beste || beste.text === null) return readFile(pfad, 'utf8')
-  if (beste.p !== pfad) await writeFile(pfad, beste.text, 'utf8')
-  for (const k of kandidaten) if (k.p !== pfad) await rm(k.p, { force: true })
-  return beste.text
+  let text = beste.text
+  const istObjekt = (x: unknown): x is Record<string, unknown> => !!x && typeof x === 'object' && !Array.isArray(x)
+  if (json && istObjekt(beste.wert)) {
+    const zusammen: Record<string, unknown> = { ...beste.wert }
+    for (const k of gute.slice(1)) if (istObjekt(k.wert)) for (const [f, v] of Object.entries(k.wert)) if (!(f in zusammen)) zusammen[f] = v
+    if (Object.keys(zusammen).length !== Object.keys(beste.wert).length) text = `${JSON.stringify(zusammen, null, 2)}\n`
+  }
+  if (beste.p !== pfad || text !== beste.text) await writeFile(pfad, text, 'utf8')
+  const sicherung = join(konfliktSicherung(), new Date().toISOString().replace(/[:.]/g, '-'))
+  for (const k of kandidaten) {
+    if (k.p === pfad || k.zeit === 0) continue
+    await mkdir(sicherung, { recursive: true }).catch(() => undefined)
+    const ziel = join(sicherung, `${basename(ordner)}-${basename(k.p)}`)
+    // anderes Laufwerk: kopieren, dann entfernen
+    await rename(k.p, ziel).catch(async () => {
+      await copyFile(k.p, ziel)
+      await rm(k.p, { force: true })
+    })
+  }
+  return text
 }
