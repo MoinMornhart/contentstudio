@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { luecken, plusTage, rhythmusAus, tagVon, wochentag, type Rhythmus } from '@shared/kalender'
-import { TEXT_REGELN, titelFuer, type Idee, type PlanungKiArt, type PlanungKiErgebnis, type TitelVorschlag, type WochenPlan } from '@shared/planung'
+import { TEXT_REGELN, titelFuer, type AndererTermin, type Idee, type PlanungKiArt, type PlanungKiErgebnis, type TitelVorschlag, type WochenPlan } from '@shared/planung'
 import type { Konto, Profil } from '@shared/profil'
 import type { JobContext } from '../jobs/queue'
 import type { KiSchicht } from '../ki/schicht'
@@ -32,6 +32,8 @@ export interface PlanungKiPayload {
   projekt?: string
   /** Heute als „2026-09-29“ (für Tests fest vorgebbar) */
   heute?: string
+  /** Andere Termine des Creators aus seinen Kalendern (nur woche), damit der Plan drumherum passt – aus MoinStudio v0.53.0 */
+  termine?: AndererTermin[]
 }
 
 const IdeenZ = z.object({ ideen: z.array(z.object({ titel: z.string(), idee: z.string(), warum: z.string() })) })
@@ -155,7 +157,7 @@ export function transkriptProbe(saetze: string[], max: number): string {
   return probe.join(' … ')
 }
 
-export function wochenPrompt(o: { konten: Konto[]; karten: Karte[]; frei: { kanal: string; tag: string; zeit: string }[]; heute: string }): string {
+export function wochenPrompt(o: { konten: Konto[]; karten: Karte[]; frei: { kanal: string; tag: string; zeit: string }[]; heute: string; termine?: AndererTermin[] }): string {
   const tag = (x: string): string => `${['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][wochentag(x)]} ${x.slice(8)}.${x.slice(5, 7)}.`
   const name = (id: string): string => o.konten.find((k) => k.id === id)?.name || id
   return `Du planst die nächsten zwei Wochen für die Konten eines Creators. Heute ist ${tag(o.heute)} (${o.heute}).
@@ -164,16 +166,33 @@ ${o.konten.map((k) => `- ${k.id}: ${kontoBeschreibung(k)}`).join('\n')}
 Freie Upload-Termine laut Rhythmus:
 ${o.frei.map((f) => `- ${name(f.kanal)} (${f.kanal}): ${tag(f.tag)} ${f.zeit} → Termin "${f.tag}T${f.zeit}"`).join('\n') || '(keine)'}
 
+Andere Termine des Creators (aus seinen Kalendern) – an vollen Tagen bleibt wenig Zeit zum Aufnehmen und Schneiden:
+${andereTermine(o.termine ?? [], tag) || '(keine bekannt)'}
+
 Karten ohne Termin (id: Konto, Stand, Titel):
 ${o.karten.map((k) => `- ${k.id}: ${k.kontoId}, ${STAND[k.spalte]}, ${k.titel}`).join('\n') || '(keine)'}
 
 Aufgabe:
 - „plan“: Ordne Karten freien Terminen desselben Kontos zu. Videos, die schon weiter sind (Upload, Thumbnail, Schnitt), zuerst; eine Idee braucht noch Aufnahme und Schnitt, also frühestens in 5 Tagen. Nur Termine aus der Liste, jede Karte und jeder Termin höchstens einmal.
-- „aufnehmen“: bis zu 3 Karten, die diese Woche aufgenommen werden sollten, damit die Termine klappen.
+- „aufnehmen“: bis zu 3 Karten, die diese Woche aufgenommen werden sollten, damit die Termine klappen – an Tagen, an denen laut Kalender Zeit ist (nenne den Tag im Grund).
+- Ist der Creator an einem Upload-Tag laut Kalender unterwegs oder im Urlaub, plane dort nur Videos, die schon fertig geschnitten sind.
 - „hinweis“: ein Satz, z. B. wenn Ideen fehlen.
 - „grund“: kurz, warum. Gründe und Hinweis auf Deutsch.
 
 Antworte nur mit JSON nach dem Schema.`
+}
+
+/** Andere Termine als Liste für den Prompt (höchstens 60): „- Mo 12.10. 18:00–19:00: Titel“, ganztägige mit „bis“ */
+export function andereTermine(termine: AndererTermin[], tag: (x: string) => string): string {
+  return termine
+    .slice(0, 60)
+    .map((x) => {
+      const von = x.start.slice(0, 10)
+      const bis = x.ende.slice(0, 10)
+      const wann = x.ganztag ? (bis > von ? ` bis ${tag(bis)} (ganztägig)` : ' (ganztägig)') : ` ${x.start.slice(11, 16)}–${x.ende.slice(11, 16)}`
+      return `- ${tag(von)}${wann}: ${x.titel}`
+    })
+    .join('\n')
 }
 
 /** Prüft den Wochenplan: nur bekannte Karten, nur freie Termine des richtigen Kontos, alles höchstens einmal. */
@@ -253,7 +272,7 @@ export async function planungKiJob(p: PlanungKiPayload, ctx: JobContext<unknown>
   ctx.progress(10, t('planung.schritt.woche'))
   const frei = luecken(rhythmusAusProfil(profil), karten.map((k) => ({ kanal: k.kontoId, termin: k.termin })), heute, plusTage(heute, 13), heute)
   const ohne = karten.filter((k) => !k.termin && k.spalte !== 'veroeffentlicht')
-  const prompt = wochenPrompt({ konten: profil.konten, karten: ohne, frei, heute })
+  const prompt = wochenPrompt({ konten: profil.konten, karten: ohne, frei, heute, termine: p.termine })
   const a = await d.ki.frage({ name: 'planung-woche', system: 'You plan upload schedules for video creators.', prompt, schema: WocheZ, stufe: 'schnell', maxAusgabe: 2500 }, ctx)
   ctx.progress(100, t('jobs.schritt.fertig'))
   return { art: 'woche', woche: pruefeWoche(a.daten, ohne, frei) }

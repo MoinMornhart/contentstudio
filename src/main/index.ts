@@ -26,6 +26,7 @@ import { registerLogoIpc } from './logo/ipc'
 import { registerSchnittIpc } from './schnitt/ipc'
 import { medienBedienen, medienSchemaAnmelden } from './schnitt/medien'
 import { registerPlanungIpc } from './planung/ipc'
+import { registerKalenderIpc } from './kalender/ipc'
 import { registerProgrammeIpc } from './programme/ipc'
 import { installiereCloudGeduld } from './data/cloud-geduld'
 
@@ -61,7 +62,9 @@ const thumbnail = registerThumbnailIpc({ queue: jobs, settings, profil, hardware
 registerLogoIpc({ queue: jobs, profil, ki: ki.schicht, umgebung: thumbnail.umgebung, fenster: mainWindow })
 const schnitt = registerSchnittIpc({ queue: jobs, profil, tools, hardware, ki: ki.schicht, fenster: mainWindow, starteVideo: thumbnail.starteVideo })
 registerProgrammeIpc({ queue: jobs, profil, tools, fenster: mainWindow, userData: app.getPath('userData') })
-const planung = registerPlanungIpc({ queue: jobs, profil, ki: ki.schicht, fenster: mainWindow, userData: app.getPath('userData'), starteThumbnail: thumbnail.starte, starteImport: schnitt.starteImport })
+// Kalender-Abgleich nach der Planung (braucht deren Datenordner); der Wochenplan fragt ihn nach anderen Terminen
+const planung = registerPlanungIpc({ queue: jobs, profil, ki: ki.schicht, fenster: mainWindow, userData: app.getPath('userData'), starteThumbnail: thumbnail.starte, starteImport: schnitt.starteImport, andereTermine: async () => (await kalender.sync.stand()).termine })
+const kalender = registerKalenderIpc({ daten: planung.daten, geraet: app.getPath('userData'), profil, fenster: mainWindow })
 medienBedienen(settings)
 
 // Fester Name für den Autostart-Eintrag (HKCU\...\Run). Ohne ihn leitet Electron den Namen
@@ -214,6 +217,7 @@ if (toolsArg === 'install' || toolsArg === 'install-all') {
       // Verbindung für MCP-Server und Fernsteuerung
       startAppRpc({ settings, hardware, jobs, enqueueProbe, starteThumbnail: thumbnail.starte, schnitt, planung, profil, konten: async () => (await profil.laden()).konten.map((k) => ({ id: k.id, name: k.name, plattform: k.plattform, richtungen: k.richtungen })) }).catch((err: unknown) => console.error('pipe server:', err))
       setupUpdater(mainWindow)
+      kalender.starte()
     }
     // Erster Start bzw. geändertes Gerät: Hardware-Test im Hintergrund (nur in der installierten App,
     // damit Entwicklungsläufe nicht jedes Mal Werkzeuge herunterladen).

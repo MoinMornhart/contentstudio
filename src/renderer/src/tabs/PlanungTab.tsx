@@ -1,9 +1,10 @@
 // Herkunft: MoinStudio src/renderer/src/tabs/PlanungTab.tsx (MIT), für die Konten des Creator-Profils und übersetzbar.
 import { useCallback, useEffect, useState } from 'react'
-import { SPALTEN, type PlanungAenderung, type PlanungKarte, type Spalte } from '@shared/planung'
+import { SPALTEN, type KalenderStand, type PlanungAenderung, type PlanungKarte, type Spalte } from '@shared/planung'
 import type { Schluessel } from '@shared/i18n'
 import { PageHeader } from '../components/Panel'
 import { PlanungKalender, kontoFarbe } from '../planung/Kalender'
+import { KalenderAbgleich } from '../planung/KalenderAbgleich'
 import { KartenVideo } from '../planung/KartenVideo'
 import { IdeenFinder, TitelVorschlaege } from '../planung/Ki'
 import { useProfil } from '../profil/useProfil'
@@ -39,6 +40,13 @@ export function PlanungTab(): React.JSX.Element {
   const [ansicht, setAnsicht] = useState<'board' | 'kalender'>('board')
   const [ideen, setIdeen] = useState(false)
   const [youtube, setYoutube] = useState<string[]>([])
+  // Kalender-Abgleich (aus MoinStudio v0.53.0): Termine anderer Kalender und Stand der Verbindungen
+  const [kalender, setKalender] = useState<KalenderStand | null>(null)
+  const kalenderLaden = useCallback((): void => void window.cs.kalenderStand().then(setKalender, () => undefined), [])
+  useEffect(() => {
+    kalenderLaden()
+    return window.cs.onKalenderGeaendert(kalenderLaden)
+  }, [kalenderLaden])
   const kontoId = kontoWahl && konten.some((k) => k.id === kontoWahl) ? kontoWahl : (konten[0]?.id ?? '')
 
   const laden = useCallback((): void => {
@@ -120,7 +128,7 @@ export function PlanungTab(): React.JSX.Element {
       )}
       {fehler && <p className="warn">{fehler}</p>}
       {karten && ansicht === 'board' && kontoId && <Board karten={imKonto} oeffne={setOffen} verschieben={verschieben} neu={neu} />}
-      {karten && ansicht === 'kalender' && <PlanungKalender karten={karten} oeffne={setOffen} aendern={aendern} />}
+      {karten && ansicht === 'kalender' && <PlanungKalender karten={karten} oeffne={setOffen} aendern={aendern} fremde={kalender?.termine} abgleich={<KalenderAbgleich stand={kalender} neuLaden={kalenderLaden} />} />}
       {offeneKarte && (
         <KartenDetails
           key={offeneKarte.id}

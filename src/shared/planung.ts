@@ -148,3 +148,38 @@ export function hashtagsFuer(text: string, plattform: Plattform): string {
   const behalten = hashtagsIn(text).filter((h, i, alle) => alle.findIndex((x) => x.toLowerCase() === h.toLowerCase()) === i).slice(0, r.max)
   return behalten.length ? `${ohne}\n\n${behalten.join(' ')}` : ohne
 }
+
+/** Kalender-Abgleich (aus MoinStudio v0.53.0): Planung ↔ Apple Kalender, Google, Outlook, iCal-Links */
+export interface KalenderLink {
+  id: string
+  name: string
+  url: string
+  farbe?: string
+  an: boolean
+  fehler?: string
+}
+/** Termin aus einem anderen Kalender (nur zum Anzeigen); Zeiten lokal wie in der Planung */
+export interface FremderTermin {
+  id: string
+  uid: string
+  quelle: string
+  quelleName: string
+  farbe: string
+  titel: string
+  /** „YYYY-MM-DDTHH:MM“ oder bei ganztägigen „YYYY-MM-DD“ */
+  start: string
+  ende: string
+  ganztag: boolean
+  ort?: string
+}
+/** Stand für die Oberfläche – enthält nie das Passwort */
+export interface KalenderStand {
+  apple: { benutzer: string; verbunden: boolean; eintragen: boolean; ausgeblendet: string[]; kalender: { href: string; name: string; farbe: string; eigen: boolean }[]; fehler?: string } | null
+  links: KalenderLink[]
+  termine: FremderTermin[]
+  /** letzter erfolgreicher Abgleich (ISO) */
+  stand: string | null
+  laeuft: boolean
+}
+/** Anderer Termin in Kurzform (für den KI-Wochenplan) */
+export type AndererTermin = Pick<FremderTermin, 'titel' | 'start' | 'ende' | 'ganztag'>

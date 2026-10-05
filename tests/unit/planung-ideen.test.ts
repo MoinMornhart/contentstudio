@@ -116,6 +116,21 @@ describe('Planung mit der KI (ROADMAP 6.3)', () => {
     const w = wochenPrompt({ konten: [KONTEN[0]!], karten: [karte({ id: 'abc', kontoId: 'kochen', titel: 'Suppe' })], frei: [{ kanal: 'kochen', tag: '2026-10-03', zeit: '17:00' }], heute: '2026-09-29' })
     expect(w).toContain('- @kochmitkim (kochen): Sa 03.10. 17:00 → Termin "2026-10-03T17:00"')
     expect(w).toContain('- abc: kochen, Idee, Suppe')
+    expect(w).toContain('Andere Termine des Creators (aus seinen Kalendern)')
+    expect(w).toContain('(keine bekannt)')
+    // Kalender-Abgleich (aus MoinStudio v0.53.0): andere Termine stehen im Wochenplan, ganztägige mit „bis“
+    const mitTerminen = wochenPrompt({
+      konten: [KONTEN[0]!],
+      karten: [],
+      frei: [],
+      heute: '2026-09-29',
+      termine: [
+        { titel: 'Zahnarzt', start: '2026-10-01T09:00', ende: '2026-10-01T10:00', ganztag: false },
+        { titel: 'Urlaub', start: '2026-10-05', ende: '2026-10-07', ganztag: true }
+      ]
+    })
+    expect(mitTerminen).toContain('- Do 01.10. 09:00–10:00: Zahnarzt')
+    expect(mitTerminen).toContain('- Mo 05.10. bis Mi 07.10. (ganztägig): Urlaub')
   })
 
   it('lässt im Wochenplan nur freie Termine des richtigen Kontos und jede Karte einmal zu', () => {

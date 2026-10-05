@@ -7,7 +7,7 @@ import type { KiWegStand, McpZiel } from './ki'
 import type { ExportFormat, Stilbuch, ThumbAuftragInfo, ThumbStart, VarianteInfo, VideoErgebnis, Vorbild } from './thumbnail'
 import type { ProgrammeStand, ProgrammId, SchnittZiel } from './programme'
 import type { LogoAuftragInfo, LogoEintrag, LogoExport, LogoStart, LogoVarianteInfo } from './logo'
-import type { PlanungAenderung, PlanungKarte, PlanungKiArt, PlanungKiStand, PlanungThumbStand, Spalte } from './planung'
+import type { KalenderLink, KalenderStand, PlanungAenderung, PlanungKarte, PlanungKiArt, PlanungKiStand, PlanungThumbStand, Spalte } from './planung'
 import type { SchnittAbschnitt, SchnittEffekt, SchnittExport, SchnittHighlight, SchnittListe, SchnittProjekt, SpurArt } from './schnitt'
 
 /** Reiter der Hauptoberfläche. Reihenfolge = Reihenfolge in der Navigation. */
@@ -150,6 +150,13 @@ export const IPC = {
   planungKiStand: 'planung:ki-stand',
   planungCrossPlan: 'planung:cross-plan',
   planungPaket: 'planung:paket',
+  kalenderStand: 'kalender:stand',
+  kalenderApple: 'kalender:apple',
+  kalenderAppleTrennen: 'kalender:apple-trennen',
+  kalenderEinstellen: 'kalender:einstellen',
+  kalenderLinkPruefen: 'kalender:link-pruefen',
+  kalenderJetzt: 'kalender:jetzt',
+  kalenderGeaendert: 'kalender:geaendert',
   uploadVerbindungen: 'upload:verbindungen',
   uploadVerbinden: 'upload:verbinden',
   uploadTrennen: 'upload:trennen',
@@ -440,6 +447,14 @@ export interface CsApi {
   planungCrossPlan(id: string): Promise<PlanungKarte>
   /** Upload-Paket in einen Ordner der Wahl (null bei Abbruch) */
   planungPaket(id: string): Promise<string | null>
+  /** Kalender-Abgleich: Stand (ohne Passwort), Apple-ID verbinden, Einstellungen, Links prüfen, sofort abgleichen */
+  kalenderStand(): Promise<KalenderStand>
+  kalenderApple(benutzer: string, passwort: string): Promise<void>
+  kalenderAppleTrennen(): Promise<void>
+  kalenderEinstellen(e: { eintragen?: boolean; ausgeblendet?: string[]; links?: KalenderLink[] }): Promise<void>
+  kalenderLinkPruefen(url: string): Promise<number>
+  kalenderJetzt(): Promise<void>
+  onKalenderGeaendert(handler: () => void): () => void
   uploadVerbindungen(): Promise<{ plattform: 'youtube'; kontoId: string; verbunden: string }[]>
   uploadVerbinden(kontoId: string, klient: { clientId: string; clientSecret: string }): Promise<{ plattform: 'youtube'; kontoId: string; verbunden: string }[]>
   uploadTrennen(kontoId: string): Promise<{ plattform: 'youtube'; kontoId: string; verbunden: string }[]>

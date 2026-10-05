@@ -3,7 +3,8 @@ import { dialog, ipcMain, safeStorage, shell, type BrowserWindow } from 'electro
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, extname, isAbsolute, join, relative } from 'node:path'
 import { IPC } from '@shared/app'
-import { hashtagsIn, type PlanungKarte, type PlanungKiArt, type PlanungKiErgebnis, type PlanungKiStand, type PlanungThumbStand } from '@shared/planung'
+import { plusTage, tagVon } from '@shared/kalender'
+import { hashtagsIn, type AndererTermin, type PlanungKarte, type PlanungKiArt, type PlanungKiErgebnis, type PlanungKiStand, type PlanungThumbStand } from '@shared/planung'
 import type { JobQueue } from '../jobs/queue'
 import type { KiSchicht } from '../ki/schicht'
 import { t } from '../i18n'
@@ -44,6 +45,8 @@ export interface PlanungVerbindung {
   userData: string
   starteThumbnail: (roh: unknown) => Promise<string>
   starteImport: (video: string, kontoId: string) => Promise<string>
+  /** Termine aus den verbundenen Kalendern (für den Wochenplan, aus MoinStudio v0.53.0) */
+  andereTermine?: () => Promise<AndererTermin[]>
 }
 
 export function registerPlanungIpc(v: PlanungVerbindung): { aufruf: (kanal: string, ...a: unknown[]) => Promise<unknown>; daten: () => Promise<string> } {
@@ -163,7 +166,11 @@ export function registerPlanungIpc(v: PlanungVerbindung): { aufruf: (kanal: stri
   const starteKi = async (art: PlanungKiArt, o: { kontoId?: string; wunsch?: string; karte?: string; projekt?: string } = {}): Promise<string> => {
     if (!(art in ART_TITEL)) throw new Error(t('planung.fehler.aktion', { aktion: String(art) }))
     if (!(await v.ki.kandidaten()).length) throw new Error(t('planung.fehler.ohneKi'))
-    const payload: PlanungKiPayload = { art, daten: await daten(), kontoId: art === 'ideen' ? await kontoPruefen(o.kontoId) : undefined, wunsch: o.wunsch, karte: o.karte, projekt: typeof o.projekt === 'string' ? o.projekt : undefined }
+    // für den Wochenplan: andere Termine der nächsten zwei Wochen
+    const heute = tagVon(new Date())
+    const bis = plusTage(heute, 15)
+    const termine = art === 'woche' && v.andereTermine ? (await v.andereTermine().catch((): AndererTermin[] => [])).filter((x) => x.ende.slice(0, 10) >= heute && x.start.slice(0, 10) <= bis).map(({ titel, start, ende, ganztag }) => ({ titel, start, ende, ganztag })) : undefined
+    const payload: PlanungKiPayload = { art, daten: await daten(), kontoId: art === 'ideen' ? await kontoPruefen(o.kontoId) : undefined, wunsch: o.wunsch, karte: o.karte, projekt: typeof o.projekt === 'string' ? o.projekt : undefined, ...(termine ? { termine } : {}) }
     const konto = (await profil.laden()).konten.find((k) => k.id === payload.kontoId)
     return queue.enqueue('planung-ki', t(ART_TITEL[art] as 'planung.titel.ideen', { konto: konto?.name ?? '' }), payload)
   }

@@ -26,6 +26,9 @@ Kurzbeschreibung für die README.
   automatisch zum Effekt – Name aus dem Dateinamen, Art erkannt (Greenscreen samt Key-Farbe, Transparenz, Video, Bild,
   Sound) – und ein Fenster zum Einrichten erscheint; im Hintergrund kommt eine Windows-Benachrichtigung (aus MoinStudio
   v0.56.0).
+- Planung: Kalender-Abgleich – Upload-Termine erscheinen im Apple-Kalender „ContentStudio“, dort verschobene Termine
+  übernimmt die Planung; Google, Outlook und andere per iCal-Link erscheinen gepunktet im Kalender, der KI-Wochenplan
+  kennt sie. Das app-spezifische Passwort liegt nur verschlüsselt auf dem Gerät (aus MoinStudio v0.53.0).
 
 ### Changed
 

@@ -1,7 +1,8 @@
-// Herkunft: MoinStudio src/renderer/src/components/PlanungKalender.tsx (MIT), für beliebig viele Konten und übersetzbar.
+// Herkunft: MoinStudio src/renderer/src/components/PlanungKalender.tsx (MIT, bis v0.53.0), für beliebig viele Konten und
+// übersetzbar; Termine anderer Kalender gepunktet (Kalender-Abgleich).
 import { useState } from 'react'
 import { luecken, monatsRaster, plusTage, rhythmusAus, tagVon, teileTermin, terminAufTag, WOCHE, wochenTage, wochentagKurz, type Luecke } from '@shared/kalender'
-import type { PlanungAenderung, PlanungKarte } from '@shared/planung'
+import type { FremderTermin, PlanungAenderung, PlanungKarte } from '@shared/planung'
 import type { Konto } from '@shared/profil'
 import { RhythmusEditor } from '../profil/Bausteine'
 import { useProfil } from '../profil/useProfil'
@@ -13,7 +14,21 @@ const FARBEN = ['#ffc23d', '#7aa2ff', '#5fd38d', '#ff7ab6', '#b48cff', '#ff9a5c'
 export const kontoFarbe = (konten: Konto[], id: string): React.CSSProperties => ({ ['--kanal' as string]: FARBEN[Math.max(0, konten.findIndex((k) => k.id === id)) % FARBEN.length] })
 
 /** Kalender der Upload-Termine aller Konten mit Upload-Rhythmus und Lücken (ROADMAP 6.1). */
-export function PlanungKalender({ karten, oeffne, aendern }: { karten: PlanungKarte[]; oeffne: (id: string) => void; aendern: (id: string, a: PlanungAenderung) => void }): React.JSX.Element {
+export function PlanungKalender({
+  karten,
+  oeffne,
+  aendern,
+  fremde = [],
+  abgleich
+}: {
+  karten: PlanungKarte[]
+  oeffne: (id: string) => void
+  aendern: (id: string, a: PlanungAenderung) => void
+  /** Termine aus Apple, Google, Outlook … (nur anzeigen) */
+  fremde?: FremderTermin[]
+  /** Bereich „Kalender-Abgleich“ für die Seitenleiste */
+  abgleich?: React.ReactNode
+}): React.JSX.Element {
   const { t, locale } = useI18n()
   const { profil, aendere } = useProfil()
   const konten = profil?.konten ?? []
@@ -21,6 +36,7 @@ export function PlanungKalender({ karten, oeffne, aendern }: { karten: PlanungKa
   const [ansicht, setAnsicht] = useState<'monat' | 'woche'>('monat')
   const [bezug, setBezug] = useState(heute)
   const [versteckt, setVersteckt] = useState<Set<string>>(new Set())
+  const [andereAn, setAndereAn] = useState(true)
   const [ziel, setZiel] = useState<string | null>(null)
   const [ziehe, setZiehe] = useState<string | null>(null)
 
@@ -89,6 +105,12 @@ export function PlanungKalender({ karten, oeffne, aendern }: { karten: PlanungKa
                 {name(k.id)}
               </button>
             ))}
+            {fremde.length > 0 && (
+              <button className={`chip legende k-andere${andereAn ? ' on' : ''}`} onClick={() => setAndereAn(!andereAn)}>
+                <span className="punkt-farbe" />
+                {t('kalender.legende')}
+              </button>
+            )}
             <span className="segment">
               <button className={ansicht === 'monat' ? 'on' : ''} onClick={() => setAnsicht('monat')}>
                 {t('planung.kal.monat')}
@@ -109,6 +131,8 @@ export function PlanungKalender({ karten, oeffne, aendern }: { karten: PlanungKa
           {tage.map((tag) => {
             const termine = mitTermin.filter((k) => k.termin!.startsWith(tag)).sort((x, y) => x.termin!.localeCompare(y.termin!))
             const frei = lueckenHier.filter((l) => l.tag === tag)
+            // andere Termine: ganztägige über alle ihre Tage, sonst am Starttag; ganztägige zuerst
+            const andere = andereAn ? fremde.filter((f) => (f.ganztag ? f.start.slice(0, 10) <= tag && f.ende.slice(0, 10) >= tag : f.start.startsWith(tag))).sort((x, y) => Number(y.ganztag) - Number(x.ganztag) || x.start.localeCompare(y.start)) : []
             const fremd = ansicht === 'monat' && Number(tag.slice(5, 7)) !== b.getMonth() + 1
             return (
               <div
@@ -128,6 +152,18 @@ export function PlanungKalender({ karten, oeffne, aendern }: { karten: PlanungKa
                 }}
               >
                 <span className="kalender-nr">{ansicht === 'woche' ? tagText(tag) : Number(tag.slice(8))}</span>
+                {andere.map((f) => (
+                  <span
+                    key={f.id}
+                    className="termin-pille fremd-termin"
+                    style={{ ['--kanal' as string]: f.farbe }}
+                    title={`${f.quelleName}: ${f.titel} ${f.ganztag ? t('kalender.ganztaegig') : `${teileTermin(f.start).zeit}–${teileTermin(f.ende).zeit}`}${f.ort ? ` · ${f.ort}` : ''}`}
+                  >
+                    <span className="pille-text">
+                      {!f.ganztag && <span className="zeit">{teileTermin(f.start).zeit}</span>} {f.titel}
+                    </span>
+                  </span>
+                ))}
                 {termine.map((k) => (
                   <button
                     key={k.id}
@@ -170,6 +206,7 @@ export function PlanungKalender({ karten, oeffne, aendern }: { karten: PlanungKa
           <h3>{t('planung.kal.vierWochen')}</h3>
           <LueckenText luecken={lueckenBald} rhythmusLeer={Object.values(rhythmus).every((s) => s.length === 0)} name={name} tagText={tagText} />
         </section>
+        {abgleich}
         <WochenPlaner karten={karten} termin={(id, termin) => aendern(id, { termin })} />
         <section>
           <h3>{t('konten.rhythmus')}</h3>

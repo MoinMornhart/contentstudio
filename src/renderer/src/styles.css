@@ -650,3 +650,13 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; }
 .logo-felder { display: grid; gap: 6px; }
 .logo-felder .check { display: inline-flex; gap: 4px; align-items: center; margin-right: 10px; }
 .logo-hochladen { margin: 10px 0 6px; }
+/* Kalender-Abgleich (Apple, Google, Outlook) – aus MoinStudio v0.53.0 */
+.termin-pille.fremd-termin { cursor: default; background: transparent; border-left-style: dotted; color: var(--muted); }
+.termin-pille.fremd-termin:hover { background: transparent; }
+.termin-pille.fremd-termin .zeit { color: var(--kanal); }
+.chip.legende.k-andere { --kanal: #7c8a99; }
+.kalender-abgleich { display: grid; gap: 6px; }
+.kalender-abgleich p { margin: 0; }
+.kalender-verwalten { display: grid; gap: 6px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
+.kalender-verwalten h4 { margin: 6px 0 0; font-size: 12.5px; }
+.kalender-verwalten input[type='color'] { width: 22px; height: 22px; padding: 0; border: 0; background: none; }
