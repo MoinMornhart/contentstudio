@@ -204,7 +204,7 @@ function Board({ karten, oeffne, verschieben, neu }: { karten: PlanungKarte[]; o
 }
 
 function Kachel({ karte, oeffne, ziehen }: { karte: PlanungKarte; oeffne: (id: string) => void; ziehen: (id: string | null) => void }): React.JSX.Element {
-  const { locale } = useI18n()
+  const { locale, t } = useI18n()
   const erledigt = karte.checkliste.filter((c) => c.erledigt).length
   const notiz = karte.notizen.split('\n').find((z) => z.trim())
   return (
@@ -224,7 +224,7 @@ function Kachel({ karte, oeffne, ziehen }: { karte: PlanungKarte; oeffne: (id: s
       {karte.bildUrl && <img className="kachel-bild" src={karte.bildUrl} alt="" draggable={false} />}
       <span className="kachel-titel">{karte.titel}</span>
       {notiz && <span className="kachel-notiz">{notiz}</span>}
-      {(karte.termin || karte.checkliste.length > 0 || karte.crossposting.length > 0) && (
+      {(karte.termin || karte.checkliste.length > 0 || karte.crossposting.length > 0 || karte.schnitt || karte.thumbnail?.gewaehlt || karte.texte) && (
         <span className="kachel-fuss">
           {karte.termin && <span className={`termin${ueberfaellig(karte) ? ' spaet' : ''}`}>{terminText(karte.termin, locale)}</span>}
           {karte.checkliste.length > 0 && (
@@ -233,6 +233,9 @@ function Kachel({ karte, oeffne, ziehen }: { karte: PlanungKarte; oeffne: (id: s
             </span>
           )}
           {karte.crossposting.length > 1 && <span className="haken">↗ {karte.crossposting.length - 1}</span>}
+          {karte.schnitt && <span className="kachel-chip schnitt" title={t('planung.chip.schnittInfo')}>✂ {t('planung.chip.schnitt')}</span>}
+          {karte.thumbnail?.gewaehlt && <span className="kachel-chip bild" title={t('planung.chip.bildInfo')}>🖼 {t('planung.chip.bild')}</span>}
+          {karte.texte && <span className="kachel-chip text" title={t('planung.chip.textInfo')}>✎ {t('planung.chip.text')}</span>}
         </span>
       )}
     </button>

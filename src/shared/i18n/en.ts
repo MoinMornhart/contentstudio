@@ -1149,5 +1149,12 @@ export const en: Record<Schluessel, string> = {
   'schnitt.eff.bib': '“{name}”',
   'schnitt.eff.bibAuto': '“{name}” (automatic)',
 
-  'planung.autoKarte': 'Created automatically because the video went into editing.'
+  'planung.autoKarte': 'Created automatically because the video went into editing.',
+
+  'planung.chip.schnitt': 'Editing',
+  'planung.chip.schnittInfo': 'Linked to a video in editing',
+  'planung.chip.bild': 'Thumbnail',
+  'planung.chip.bildInfo': 'Thumbnail chosen',
+  'planung.chip.text': 'Text ready',
+  'planung.chip.textInfo': 'Title, text and chapters from the export'
 }

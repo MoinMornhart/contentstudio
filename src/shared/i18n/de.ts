@@ -1150,7 +1150,14 @@ export const de = {
   'schnitt.eff.bib': '„{name}“',
   'schnitt.eff.bibAuto': '„{name}“ (automatisch)',
 
-  'planung.autoKarte': 'Automatisch angelegt, weil das Video in den Schnitt kam.'
+  'planung.autoKarte': 'Automatisch angelegt, weil das Video in den Schnitt kam.',
+
+  'planung.chip.schnitt': 'Im Schnitt',
+  'planung.chip.schnittInfo': 'Mit einem Video im Schnitt verknüpft',
+  'planung.chip.bild': 'Thumbnail',
+  'planung.chip.bildInfo': 'Thumbnail ausgewählt',
+  'planung.chip.text': 'Text fertig',
+  'planung.chip.textInfo': 'Titel, Text und Kapitel aus dem Export'
 } as const
 
 export type Schluessel = keyof typeof de

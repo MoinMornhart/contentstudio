@@ -599,3 +599,7 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; }
 .bib-raster button { border: 1px solid var(--border); background: var(--bg-2); border-radius: 3px; cursor: pointer; padding: 0; }
 .bib-raster button.on { background: var(--accent); border-color: var(--accent); }
 .mono { font-family: 'Cascadia Mono', Consolas, monospace; font-variant-numeric: tabular-nums; }
+.kachel-chip { border-radius: 999px; padding: 1px 7px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+.kachel-chip.schnitt { color: #7cc4ff; border-color: color-mix(in srgb, #7cc4ff 45%, transparent); }
+.kachel-chip.bild { color: #ffcf5a; border-color: color-mix(in srgb, #ffcf5a 45%, transparent); }
+.kachel-chip.text { color: #8be28b; border-color: color-mix(in srgb, #8be28b 45%, transparent); }
