@@ -1050,5 +1050,12 @@ export const en: Record<Schluessel, string> = {
 
   'programme.fehler.quelleFehlt': 'The source video “{name}” is not on this device ({pfad}). Export the program files once on the device that has the video – a copy then goes into the project folder in your data folder.',
 
-  'ki.zeitlimit': 'No answer after {minuten} min – cancelled'
+  'ki.zeitlimit': 'No answer after {minuten} min – cancelled',
+
+  'thumb.schritt.veredeln': 'Refining the image …',
+  'thumb.schritt.grafikWerkzeuge': 'Setting up the graphics tools (once, small) …',
+  'thumb.schritt.teilbilder': 'Rendering the other image parts …',
+  'thumb.warn.grafikFehlt': 'Graphics (hotbar, magnifier, label …) could not be added',
+  'thumb.warn.teilFehlt': 'Image part {nr} could not be rendered',
+  'thumb.warn.splitFehlt': 'The split image could not be put together'
 }

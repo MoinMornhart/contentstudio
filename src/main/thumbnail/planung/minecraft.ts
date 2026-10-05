@@ -36,16 +36,24 @@ export const SzeneZ = z.looseObject({
     )
     .min(1),
   mobs: z.array(z.looseObject({ art: z.string(), position: Zahlen.optional(), blick: z.union([z.number(), z.string()]).optional(), groesse: z.number().optional() })).optional(),
-  objekte: z.array(z.looseObject({ block: z.string(), position: Zahlen.optional(), drehung: Zahlen.optional(), groesse: z.number().optional(), wichtig: z.boolean().optional() })).optional(),
+  objekte: z.array(z.looseObject({ block: z.string(), position: Zahlen.optional(), drehung: Zahlen.optional(), groesse: z.number().optional(), wichtig: z.boolean().optional(), schwebt: z.boolean().optional() })).optional(),
   kamera: z.looseObject({ modus: z.string().optional(), seite: z.string().optional(), thema: z.union([z.string(), Zahlen]).optional() })
 })
 export type Szene = z.infer<typeof SzeneZ>
 
 export const TextZ = z.array(z.object({ text: z.string(), farbe: z.string().optional() }))
 
+/** Grafik-Ebene wie bei großen Minecraft-Kanälen: Hotbar, Level, Etikett, Lupe, Abzeichen, großer Text (blender/grafik_setzen.py) */
+export const GRAFIK_ARTEN = ['hud', 'level', 'etikett', 'lupe', 'abzeichen', 'grosstext'] as const
+export const GrafikZ = z.looseObject({ art: z.string() })
+export type GrafikElement = z.infer<typeof GrafikZ>
+
+/** Geteiltes Bild (10€/100€/1000€, Vorher/Nachher, Noob/Pro): 2–3 Szenen nebeneinander, je mit Etikett */
+export const SplitZ = z.object({ teile: z.array(z.object({ szene: SzeneZ, etikett: z.string().optional() })) })
+
 export const McPlanZ = z.object({
   varianten: z
-    .array(z.object({ titel: z.string(), vorbild: z.string(), warum: z.string(), text: TextZ.optional(), szene: SzeneZ }))
+    .array(z.object({ titel: z.string(), vorbild: z.string(), warum: z.string(), text: TextZ.optional(), grafik: z.array(GrafikZ).optional(), split: SplitZ.optional(), szene: SzeneZ }))
     .min(1)
 })
 export type McPlan = z.infer<typeof McPlanZ>
@@ -98,7 +106,7 @@ export function mcPrompt(vorlage: string, o: McPlanEingabe): string {
  * Prüft und repariert eine geplante Szene gegen den Katalog. Gibt die Fehler zurück, die sich nicht sicher
  * reparieren lassen (dann wird neu geplant); kleine Abweichungen werden still korrigiert.
  */
-export function pruefeSzene(s: Szene, k: Katalog, figurIds: string[]): string[] {
+export function pruefeSzene(s: Szene, k: Katalog, figurIds: string[], teilbild = false): string[] {
   const fehler: string[] = []
   const posen = new Set(k.posen.map((p) => p.name))
   const welten = new Set(k.welten.map((w) => w.name))
@@ -116,7 +124,10 @@ export function pruefeSzene(s: Szene, k: Katalog, figurIds: string[]): string[] 
     if (f.item && !/^[a-z0-9_]+$/.test(f.item.name)) fehler.push(`Ungültiges Item „${f.item.name}“`)
     if (f.item && f.item.hand !== 'r' && f.item.hand !== 'l') f.item.hand = 'l'
   }
-  if (s.figuren?.[0] && s.figuren[0].id !== figurIds[0]) fehler.push(`Die erste Figur muss „${figurIds[0]}“ sein`)
+  // Weiterer Teil eines geteilten Bilds: dort darf auch ein Freund vorn stehen („ich gegen meinen Freund“, aus MoinStudio v0.40.0)
+  if (s.figuren?.[0] && (teilbild ? !figurIds.includes(s.figuren[0].id) : s.figuren[0].id !== figurIds[0])) {
+    fehler.push(teilbild ? `Die erste Figur muss eine von ${figurIds.map((f) => `„${f}“`).join(', ')} sein` : `Die erste Figur muss „${figurIds[0]}“ sein`)
+  }
   for (const m of s.mobs ?? []) if (!k.mobs.includes(m.art)) fehler.push(`Unbekannter Mob „${m.art}“`)
   for (const o of s.objekte ?? []) if (!bloecke.has(o.block) || o.block === 'luft') fehler.push(`Unbekannter Block „${o.block}“`)
   s.kamera = s.kamera ?? {}
@@ -142,6 +153,20 @@ export function pruefePlan(plan: McPlan, k: Katalog, figurIds: string[], vorbild
     if (!bekannt.has(v.vorbild) && vorbilder[0]) v.vorbild = vorbilder[0].id
     // Stilbuch: höchstens ein Text mit 1–4 Wörtern – längere Texte werden gekürzt statt abgelehnt
     v.text = (v.text ?? []).slice(0, 1).map((t) => ({ ...t, text: t.text.split(/\s+/).slice(0, 4).join(' ') }))
+    // Grafik: nur bekannte Elemente, höchstens drei (sonst wird das Bild unruhig)
+    v.grafik = (v.grafik ?? []).filter((g) => (GRAFIK_ARTEN as readonly string[]).includes(g.art)).slice(0, 3)
+    // Geteiltes Bild: 2–3 Teile, jede Teil-Szene muss gültig sein; die erste ist die Haupt-Szene der Variante
+    if (v.split) {
+      const teile = v.split.teile.slice(0, 3)
+      if (teile.length < 2) delete v.split
+      else {
+        v.split = { teile: teile.map((t) => ({ szene: t.szene, ...(t.etikett ? { etikett: t.etikett.split(/\s+/).slice(0, 3).join(' ') } : {}) })) }
+        v.szene = teile[0]!.szene
+        teile.slice(1).forEach((t, n) => {
+          for (const f of pruefeSzene(t.szene, k, figurIds, true)) fehler.push(`Variante ${i + 1}, Teil ${n + 2}: ${f}`)
+        })
+      }
+    }
     for (const f of pruefeSzene(v.szene, k, figurIds)) fehler.push(`Variante ${i + 1}: ${f}`)
   })
   return fehler

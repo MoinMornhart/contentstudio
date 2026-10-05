@@ -12,22 +12,29 @@ from mathutils import Matrix, Vector
 
 # Modi: Brennweite, Kopfanteil an der Bildhöhe, Kopf-Lage (u, v; 0,0 = unten links), Wunschlage des Themas,
 # Höhenwinkel (positiv = Kamera höher als der Kopf, schaut hinab)
+# Brennweiten nach Recherche (30.09.): Nahaufnahme lang, damit Gesicht und nahe Dinge nicht verzerren (Kinoregel
+# 85–100 mm, hier 50 mm als Mittelweg mit etwas Minecraft-Dynamik), halbe Figur ~45 mm, ganze Figur ~30 mm.
+# Luftaufnahmen über Abgründen (tiefe, abgrund, klippe_wand) bleiben weitwinklig.
 MODI = {
-    "nah": {"linse": 24, "kopf_anteil": 0.42, "kopf_uv": (0.27, 0.58), "thema_uv": (0.72, 0.45), "hoehe": 10},
-    "gefahr": {"linse": 24, "kopf_anteil": 0.32, "kopf_uv": (0.24, 0.62), "thema_uv": (0.70, 0.30), "hoehe": 18},
+    # Kopf höchstens gut ein Drittel der Bildhöhe (Vergleich mit BastiGHG 30.09.: 42 % wirkte erdrückend, Gesicht oft angeschnitten)
+    "nah": {"linse": 50, "kopf_anteil": 0.34, "kopf_uv": (0.27, 0.58), "thema_uv": (0.72, 0.45), "hoehe": 10},
+    "gefahr": {"linse": 30, "kopf_anteil": 0.32, "kopf_uv": (0.24, 0.62), "thema_uv": (0.70, 0.30), "hoehe": 18},
     "tiefe": {"linse": 22, "kopf_anteil": 0.13, "kopf_uv": (0.32, 0.72), "thema_uv": (0.60, 0.20), "hoehe": 42},
-    "klippe": {"linse": 24, "kopf_anteil": 0.30, "kopf_uv": (0.26, 0.66), "thema_uv": (0.72, 0.30), "hoehe": 4},
+    "klippe": {"linse": 32, "kopf_anteil": 0.30, "kopf_uv": (0.26, 0.66), "thema_uv": (0.72, 0.30), "hoehe": 4},
     "klippe_wand": {"linse": 22, "kopf_anteil": 0.18, "kopf_uv": (0.30, 0.74), "thema_uv": (0.58, 0.28), "hoehe": 12},
     "abgrund": {"linse": 20, "kopf_anteil": 0.13, "kopf_uv": (0.40, 0.78), "thema_uv": (0.52, 0.16), "hoehe": 26},
-    "held": {"linse": 22, "kopf_anteil": 0.34, "kopf_uv": (0.30, 0.66), "thema_uv": (0.72, 0.50), "hoehe": -8},
-    # Kampf (GommeHD Helden): beide Gegner groß im Bild, Kamera leicht von unten, Gegner in der anderen Hälfte
-    "kampf": {"linse": 26, "kopf_anteil": 0.29, "kopf_uv": (0.30, 0.74), "thema_uv": (0.70, 0.66), "hoehe": -6},
-    "brust": {"linse": 35, "kopf_anteil": 0.26, "kopf_uv": (0.30, 0.68), "thema_uv": (0.70, 0.45), "hoehe": 5},
+    # von unten mit längerer Brennweite: 22 mm nah von unten bläst die Beine auf (MoinStudio, 30.09.)
+    "held": {"linse": 35, "kopf_anteil": 0.30, "kopf_uv": (0.30, 0.62), "thema_uv": (0.72, 0.50), "hoehe": -5},
+    # Kampf/Duell (GommeHD-Duelle; MoinStudio, 30.09.: nicht immer er riesig vorn): beide gleich groß auf gleicher Höhe,
+    # längere Brennweite gegen perspektivisches Aufblähen, Kamera fast auf Augenhöhe
+    "kampf": {"linse": 45, "kopf_anteil": 0.17, "kopf_uv": (0.30, 0.42), "thema_uv": (0.70, 0.42), "hoehe": 2},
+    "brust": {"linse": 45, "kopf_anteil": 0.26, "kopf_uv": (0.30, 0.68), "thema_uv": (0.70, 0.45), "hoehe": 5},
     # Mob als Thema (BastiGHG, Paluten): Figur halbnah links, Mob groß rechts auf Augenhöhe – statt Riesenkopf mit winzigem Mob
-    "mob": {"linse": 28, "kopf_anteil": 0.22, "kopf_uv": (0.28, 0.52), "thema_uv": (0.70, 0.50), "hoehe": 3},
+    "mob": {"linse": 45, "kopf_anteil": 0.17, "kopf_uv": (0.30, 0.44), "thema_uv": (0.68, 0.46), "hoehe": 3},
     # Ganze Figur mit Umgebung (Freiform-Test): für besondere Orte und Körperhaltungen (Yoga, Handstand, Klettern, Surfen),
     # damit Ort und Handlung zu sehen sind statt nur ein großer Kopf
-    "ganz": {"linse": 24, "kopf_anteil": 0.12, "kopf_uv": (0.30, 0.72), "thema_uv": (0.70, 0.42), "hoehe": 10},
+    # 35 statt 30 mm: Weitwinkel bläst die Beine am unteren Bildrand auf (Noob/Pro, 01.10.)
+    "ganz": {"linse": 35, "kopf_anteil": 0.12, "kopf_uv": (0.30, 0.72), "thema_uv": (0.70, 0.42), "hoehe": 10},
 }
 
 # Dreiviertelprofil: Winkel zwischen Blickrichtung des Gesichts und Richtung zur Kamera (Stilbuch: 20–45°)
@@ -43,7 +50,7 @@ def _blick_matrix(pos, richtung):
     return Matrix.Translation(pos) @ rot
 
 
-def _bewerte(scene, cam, pos, ziel, kopf, kopf_oben, kopf_unten, thema, m, kopf_uv, thema_uv, seite, gesicht):
+def _bewerte(scene, cam, pos, ziel, kopf, kopf_oben, kopf_unten, thema, m, kopf_uv, thema_uv, seite, gesicht, thema_gesicht=None):
     cam.matrix_world = _blick_matrix(pos, ziel - pos)
     pk = world_to_camera_view(scene, cam, kopf)
     pt = world_to_camera_view(scene, cam, thema)
@@ -55,7 +62,9 @@ def _bewerte(scene, cam, pos, ziel, kopf, kopf_oben, kopf_unten, thema, m, kopf_
     # Thema: muss in seiner Bildhälfte liegen (Bereich statt Punkt), sanft zur Wunschstelle gezogen
     tx0, tx1 = (0.55, 0.95) if seite == "links" else (0.05, 0.45)
     raus = max(0.0, tx0 - pt.x) + max(0.0, pt.x - tx1) + max(0.0, 0.08 - pt.y) + max(0.0, pt.y - 0.75)
-    fehler += raus * raus * 8 + ((pt.x - thema_uv[0]) ** 2 + (pt.y - thema_uv[1]) ** 2) * 0.15
+    # das Thema ist der Grund des Bildes: liegt es außerhalb seines Bereichs, muss das mehr kosten als ein nicht ganz
+    # perfekter Gesichtswinkel (Test 30.09.: Riesen-Creeper am Rand, weil 5 % daneben nur 0,02 kostete)
+    fehler += raus * 30 + raus * raus * 40 + ((pt.x - thema_uv[0]) ** 2 + (pt.y - thema_uv[1]) ** 2) * 0.15
     fehler += ((po.y - pu.y) - m["kopf_anteil"]) ** 2 * 3
     if gesicht is not None:
         d = gesicht.dot((pos - kopf).normalized())
@@ -64,10 +73,15 @@ def _bewerte(scene, cam, pos, ziel, kopf, kopf_oben, kopf_unten, thema, m, kopf_
         rechts = cam.matrix_world.to_3x3() @ Vector((1, 0, 0))
         zur_mitte = gesicht.dot(rechts) * (1 if seite == "links" else -1)
         fehler += 6 if zur_mitte < 0.05 else 0
+    if thema_gesicht is not None:
+        # Ist das Thema eine Figur (Duell, „ich gegen meinen Freund“), muss auch ihr Gesicht zu sehen sein – sonst stand die
+        # Kamera vor der Hauptfigur und zeigte den Gegner von hinten (Test 01.10.)
+        d2 = thema_gesicht.dot((pos - thema).normalized())
+        fehler += max(0.0, 0.45 - d2) ** 2 * 12 + (8 if d2 < 0.1 else 0)
     return fehler, (round(pk.x, 2), round(pk.y, 2)), (round(pt.x, 2), round(pt.y, 2)), round(po.y - pu.y, 2)
 
 
-def _rand_strafe(scene, cam, ecken, rand=0.03):
+def _rand_strafe(scene, cam, ecken, rand=0.05):
     """Wie weit Punkte (z. B. die Kopf-Ecken) aus dem Bild ragen: 0, wenn alle mit Abstand `rand` drin sind."""
     strafe = 0.0
     for p in ecken:
@@ -76,7 +90,7 @@ def _rand_strafe(scene, cam, ecken, rand=0.03):
     return strafe
 
 
-def rahme(scene, cam, kopf_oben, kopf_unten, thema, modus="nah", seite="links", gesicht=None, erlaubt=None, kopf_ecken=None, still=False, anpassung=None):
+def rahme(scene, cam, kopf_oben, kopf_unten, thema, modus="nah", seite="links", gesicht=None, erlaubt=None, kopf_ecken=None, still=False, anpassung=None, thema_gesicht=None):
     """Sucht Brennweite, Position und Blickrichtung. `seite`: wo die Figur im Bild steht (das Thema gegenüber).
     `gesicht`: Blickrichtung des Kopfes (Weltvektor); die Kamera sieht das Gesicht im Dreiviertelprofil, nie von
     hinten. `erlaubt(pos)`: optionale Vorgabe, wo die Kamera stehen darf (z. B. über dem Abgrund).
@@ -89,9 +103,12 @@ def rahme(scene, cam, kopf_oben, kopf_unten, thema, modus="nah", seite="links", 
     kopf_h = (kopf_oben - kopf_unten).length
     richtung = (thema - kopf).normalized()
     gesicht = gesicht.normalized() if gesicht is not None else None
+    thema_gesicht = thema_gesicht.normalized() if thema_gesicht is not None else None
     sensor_h = cam.data.sensor_width * scene.render.resolution_y / scene.render.resolution_x
     beste = None
     alle = []
+    bpy.context.view_layer.update()
+    tiefe = bpy.context.evaluated_depsgraph_get()
     for linse in sorted({max(18, m["linse"] - 4), m["linse"], m["linse"] + 4}):
         cam.data.lens = linse
         vfov = 2 * math.atan(sensor_h / 2 / linse)
@@ -103,11 +120,18 @@ def rahme(scene, cam, kopf_oben, kopf_unten, thema, modus="nah", seite="links", 
                 pos = kopf + Vector((math.sin(az) * math.cos(el), math.cos(az) * math.cos(el), math.sin(el))) * abstand
                 if erlaubt and not erlaubt(pos):
                     continue
+                # freie Sicht auf den Kopf? Mit längeren Brennweiten steht die Kamera weiter weg (Nahaufnahme ~3 Blöcke) –
+                # in Höhlen, Häusern und Wäldern darf sie nicht in einer Wand stecken
+                strahl = kopf - pos
+                versperrt, *_ = scene.ray_cast(tiefe, pos, strahl.normalized(), distance=max(0.0, strahl.length - 0.35))
+                wand = 20.0 if versperrt else 0.0
                 for i in range(16):  # Blickziel: 0–3 m vom Kopf Richtung Thema
                     ziel = kopf + richtung * (i * 0.2)
-                    r = _bewerte(scene, cam, pos, ziel, kopf, kopf_oben, kopf_unten, thema, m, kopf_uv, thema_uv, seite, gesicht)
+                    r = _bewerte(scene, cam, pos, ziel, kopf, kopf_oben, kopf_unten, thema, m, kopf_uv, thema_uv, seite, gesicht, thema_gesicht)
                     if r and kopf_ecken:
                         r = (r[0] + 25.0 * _rand_strafe(scene, cam, kopf_ecken),) + tuple(r[1:])
+                    if r and wand:
+                        r = (r[0] + wand,) + tuple(r[1:])
                     if r:
                         alle.append((r[0], linse, az_deg, m["hoehe"] + dh, i))
                     if r and (beste is None or r[0] < beste[0]):
@@ -125,6 +149,13 @@ def rahme(scene, cam, kopf_oben, kopf_unten, thema, modus="nah", seite="links", 
         az, el = math.radians(az_deg), math.radians(el_deg)
         pos = kopf + Vector((math.sin(az) * math.cos(el), math.cos(az) * math.cos(el), math.sin(el))) * abstand
         KANDIDATEN.append((f, linse, _blick_matrix(pos, kopf + richtung * (i * 0.2) - pos), az_deg, el_deg))
+    # Thema (z. B. Riesen-Creeper) passt nicht ins Bild: mit kleinerem Kopf, also weiter weg, noch einmal suchen –
+    # höchstens zweimal (Test 30.09.: „Level 19 – Riesen-Creeper“ lag bei 104 % der Bildbreite, der Creeper fehlte)
+    tu, tv = beste[4]
+    stufe = (anpassung or {}).get("_weiter", 0)
+    if (tu < 0.03 or tu > 0.97 or tv < 0.03 or tv > 0.97) and stufe < 2:
+        weiter = dict(anpassung or {}, kopf_anteil=m["kopf_anteil"] * 0.72, _weiter=stufe + 1)
+        return rahme(scene, cam, kopf_oben, kopf_unten, thema, modus, seite, gesicht, erlaubt, kopf_ecken, still, weiter, thema_gesicht)
     cam.data.lens = beste[2]
     cam.matrix_world = beste[1]
     if not still:

@@ -42,7 +42,7 @@ ARTEN = {
     "oak_planks": {"alle": ("oak_planks", None)},
     "oak_leaves": {"alle": ("oak_leaves", LAUB), "durchsichtig": True},
     "water": {"alle": ("water_still", WASSER), "fluessig": True, "durchsichtig": True},
-    "lava": {"alle": ("lava_still", None), "fluessig": True, "leuchtet": 3.0},
+    "lava": {"alle": ("lava_still", None), "fluessig": True, "leuchtet": 1.8},
     "snow_block": {"alle": ("snow", None)},
     "ice": {"alle": ("ice", None), "durchsichtig": True},
     "netherrack": {"alle": ("netherrack", None)},
@@ -132,6 +132,16 @@ def dunst_einbauen(mat):
     em.inputs["Color"].default_value = (*DUNST["farbe"], 1)
     em.inputs["Strength"].default_value = 1.0
     mix = nt.nodes.new("ShaderNodeMixShader")
+    # Durchsichtige Stellen (Glas, Laub, Flammen, Ranken) bekommen keinen Dunst – sonst stand dort ein bläuliches
+    # Rechteck (Prüfbogen 02.10.): Dunst-Anteil mal Deckkraft der Textur
+    bsdf = next((n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"), None)
+    alpha = next((lk.from_socket for lk in nt.links if bsdf and lk.to_socket == bsdf.inputs["Alpha"]), None)
+    if alpha is not None:
+        mal = nt.nodes.new("ShaderNodeMath")
+        mal.operation = "MULTIPLY"
+        nt.links.new(faktor.outputs[0], mal.inputs[0])
+        nt.links.new(alpha, mal.inputs[1])
+        faktor = mal
     nt.links.new(faktor.outputs[0], mix.inputs[0])
     nt.links.new(shader, mix.inputs[1])
     nt.links.new(em.outputs["Emission"], mix.inputs[2])
@@ -303,6 +313,7 @@ def art_info(art, texturen=None):
         # nur ein Modell mit echten Texturen zählt (pointed_dripstone.json ist eine leere Vorlage)
         if kette and any(isinstance(v, dict) or (isinstance(v, str) and not v.startswith("#")) for v in tex.values()):
             break
+    modell = kette[0] if kette else None
 
     def t(*schluessel):
         for s in schluessel:
@@ -344,10 +355,96 @@ def art_info(art, texturen=None):
             info["vorn"] = (vorn, None)
         if any(k in art for k in ("glass", "leaves", "ice")) and "packed" not in art:
             info["durchsichtig"] = True
-        if any(k in art for k in ("glowstone", "lantern", "shroomlight", "sea_lantern", "magma", "froglight", "lamp_on")):
+        if any(k in art for k in ("glowstone", "lantern", "shroomlight", "sea_lantern", "magma", "froglight", "lamp_on", "campfire", "torch", "candle")):
             info["leuchtet"] = 1.5
+        # Kein voller Würfel (Laterne, Lagerfeuer, Sculk-Sensor, Kette, Treppe …): echte Form aus dem Blockmodell
+        # statt einer Kiste mit Textur (Test 02.10.: Seelenlaterne schwebte als Würfel über dem Kopf)
+        elemente = _elemente(texturen.ordner, modell) if modell else None
+        if elemente and not _voller_wuerfel(elemente):
+            info["modell"] = {"elemente": elemente, "texturen": {k: t(k) for k in tex}}
+            info["durchsichtig"] = True
     _GENERISCH[art] = info
     return info
+
+
+def _elemente(ordner, name, tiefe=0):
+    """Quader („elements“) des Blockmodells, vom Modell selbst oder vom nächsten Elternmodell, das welche hat."""
+    pfad = os.path.join(ordner, "..", "models", "block", f"{name}.json")
+    if tiefe > 8 or not os.path.exists(pfad):
+        return None
+    import json as _json
+    with open(pfad, encoding="utf-8") as fh:
+        m = _json.load(fh)
+    if m.get("elements"):
+        return m["elements"]
+    eltern = m.get("parent", "").split("/")[-1].replace("minecraft:", "")
+    return _elemente(ordner, eltern, tiefe + 1) if eltern else None
+
+
+def _voller_wuerfel(elemente):
+    return len(elemente) == 1 and list(elemente[0].get("from", [])) == [0, 0, 0] and list(elemente[0].get("to", [])) == [16, 16, 16]
+
+
+# Minecraft-Flächen: Standard-UV aus den Koordinaten (wie das Spiel sie ohne „uv“ ableitet), Ecken außen gesehen
+_MC_FLAECHEN = {
+    "north": (lambda x, y, z: (16 - x, 16 - y), lambda f, t: [(t[0], f[1], f[2]), (f[0], f[1], f[2]), (f[0], t[1], f[2]), (t[0], t[1], f[2])]),
+    "south": (lambda x, y, z: (x, 16 - y), lambda f, t: [(f[0], f[1], t[2]), (t[0], f[1], t[2]), (t[0], t[1], t[2]), (f[0], t[1], t[2])]),
+    "west": (lambda x, y, z: (z, 16 - y), lambda f, t: [(f[0], f[1], f[2]), (f[0], f[1], t[2]), (f[0], t[1], t[2]), (f[0], t[1], f[2])]),
+    "east": (lambda x, y, z: (16 - z, 16 - y), lambda f, t: [(t[0], f[1], t[2]), (t[0], f[1], f[2]), (t[0], t[1], f[2]), (t[0], t[1], t[2])]),
+    "up": (lambda x, y, z: (x, z), lambda f, t: [(f[0], t[1], t[2]), (t[0], t[1], t[2]), (t[0], t[1], f[2]), (f[0], t[1], f[2])]),
+    "down": (lambda x, y, z: (x, 16 - z), lambda f, t: [(f[0], f[1], f[2]), (t[0], f[1], f[2]), (t[0], f[1], t[2]), (f[0], f[1], t[2])]),
+}
+
+
+def _drehen_mc(p, rot):
+    """Element-Drehung wie im Spiel: um `origin`, Achse x/y/z, Winkel in Grad."""
+    import math as _m
+    if not rot:
+        return p
+    o = rot.get("origin", [8, 8, 8])
+    w = _m.radians(rot.get("angle", 0))
+    c, s = _m.cos(w), _m.sin(w)
+    x, y, z = p[0] - o[0], p[1] - o[1], p[2] - o[2]
+    a = rot.get("axis", "y")
+    if a == "x":
+        y, z = y * c - z * s, y * s + z * c
+    elif a == "y":
+        x, z = x * c + z * s, -x * s + z * c
+    else:
+        x, y = x * c - y * s, x * s + y * c
+    return (x + o[0], y + o[1], z + o[2])
+
+
+def _modell_flaechen(x, y, z, info, versatz):
+    """Flächen eines Modell-Blocks in Zelle (x, y, z): Liste (4 Ecken in Metern, 4 UV in Pixeln 0–16, Texturname).
+    Minecraft (x Ost, y oben, z Süd) → MoinStudio (x, −z, y), damit Süden zur Kamera-Vorderseite −Y zeigt."""
+    texn = info["modell"]["texturen"]
+    flaechen = []
+    for el in info["modell"]["elemente"]:
+        f, t = el.get("from", [0, 0, 0]), el.get("to", [16, 16, 16])
+        for seite, fl in (el.get("faces") or {}).items():
+            if seite not in _MC_FLAECHEN:
+                continue
+            uv_std, ecken_mc = _MC_FLAECHEN[seite]
+            ecken = ecken_mc(f, t)
+            std = [uv_std(*e) for e in ecken]
+            u_lo, u_hi = min(u for u, _ in std), max(u for u, _ in std)
+            v_lo, v_hi = min(v for _, v in std), max(v for _, v in std)
+            u1, v1, u2, v2 = fl.get("uv", [u_lo, v_lo, u_hi, v_hi])
+            uv = [(u1 + ((u - u_lo) / (u_hi - u_lo) if u_hi > u_lo else 0) * (u2 - u1),
+                   v1 + ((v - v_lo) / (v_hi - v_lo) if v_hi > v_lo else 0) * (v2 - v1)) for u, v in std]
+            dreh = int(fl.get("rotation", 0)) // 90 % 4
+            uv = uv[dreh:] + uv[:dreh]
+            ref = fl.get("texture", "").lstrip("#")
+            name = texn.get(ref) or (ref.split("/")[-1] if ref and "/" in ref else None)
+            if not name:
+                continue
+            welt_ecken = []
+            for e in ecken:
+                mx, my, mz = _drehen_mc(e, el.get("rotation"))
+                welt_ecken.append(((x + mx / 16) * BLOCK + versatz[0], (y + 1 - mz / 16) * BLOCK + versatz[1], (z - 1 + my / 16) * BLOCK + versatz[2]))
+            flaechen.append((welt_ecken, uv, name))
+    return flaechen
 
 
 def _seiten_textur(art, seite):
@@ -373,6 +470,25 @@ def baue(welt, texturen, name="welt", collection=None, versatz=(0.0, 0.0, 0.0)):
         info = art_info(art, texturen)
         if info.get("kreuz"):
             kreuze.append((x, y, z, art))
+            continue
+        if info.get("modell"):
+            for ecken_w, uv_px, tname in _modell_flaechen(x, y, z, info, versatz):
+                key = ((tname, None), None)
+                if key not in mat_nr:
+                    try:
+                        m = texturen.material(tname, None, None, True, info.get("leuchtet", 0.0))
+                    except FileNotFoundError:
+                        continue  # Textur liegt nicht unter block/ – Fläche weglassen statt die Welt scheitern lassen
+                    mat_nr[key] = len(mats)
+                    mats.append(m)
+                img = mats[mat_nr[key]].node_tree.nodes.get("Image Texture").image
+                w, h = img.size
+                f = w / h if h > w else 1.0  # animierte Streifen: erstes Bild
+                base = len(verts)
+                verts.extend(ecken_w)
+                faces.append((base, base + 1, base + 2, base + 3))
+                uvs.extend([(u / 16, 1 - (v / 16) * f) for u, v in uv_px])
+                mat_idx.append(mat_nr[key])
             continue
         for seite, ((nx, ny, nz), ecken) in SEITEN.items():
             nachbar = welt.get((x + nx, y + ny, z + nz))

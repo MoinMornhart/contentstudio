@@ -35,7 +35,7 @@ def maske(bild, box, logo=False):
     return m
 
 
-def maske_farbe(bild, box, farbe):
+def maske_farbe(bild, box, farbe, grenze=55, weich=25):
     """Titelpixel in einer bekannten Farbe (z. B. schwarzes „007“, goldenes Logo): Farbabstand im Lab-Raum."""
     h, w = bild.shape[:2]
     x0, y0, x1, y1 = (int(box[0] * w), int(box[1] * h), int(box[2] * w), int(box[3] * h))
@@ -43,7 +43,7 @@ def maske_farbe(bild, box, farbe):
     r, g, b = (int(farbe[i:i + 2], 16) for i in (1, 3, 5))
     ziel = cv2.cvtColor(np.uint8([[[b, g, r]]]), cv2.COLOR_BGR2LAB).astype(np.float32)[0, 0]
     abstand = np.linalg.norm(lab - ziel, axis=2)
-    a = np.clip((55 - abstand) / 25, 0, 1)
+    a = np.clip((grenze - abstand) / weich, 0, 1)
     a = cv2.morphologyEx(a, cv2.MORPH_OPEN, np.ones((2, 2), np.uint8))
     m = np.zeros((h, w), np.float32)
     m[y0:y1, x0:x1] = a
@@ -72,8 +72,14 @@ def main(vorlage, render, ausgabe, boxen):
             farbe, box = b[len("farbe="):].split(":")
             teil, ist_hell = maske_farbe(o, [float(z) for z in box.split(",")], farbe)
             if not ist_hell and person is not None:
-                # dunkle Schrift ist auf der alten Person nicht von Haaren oder Kleidung zu trennen: dort weglassen
-                teil = teil * (1 - person)
+                # dunkle Schrift ist auf der alten Person schwer von Haaren oder Kleidung zu trennen: dort nur Pixel
+                # sehr genau in der Schriftfarbe, und nur Flächen, die über die Person hinaus weiterlaufen (Buchstaben
+                # tun das, ein dunkler Anzug nicht). Vorher fehlte das Logo über der Figur ganz (Lethal Company 01.10.)
+                streng, _ = maske_farbe(o, [float(z) for z in box.split(",")], farbe, grenze=28, weich=10)
+                anzahl, beschr = cv2.connectedComponents((streng > 0.5).astype(np.uint8), connectivity=8)
+                draussen = (streng > 0.5) & (person < 0.5)
+                behalten = np.isin(beschr, [j for j in range(1, anzahl) if draussen[beschr == j].any()])
+                teil = teil * (1 - person) + streng * behalten * person
             hell = hell or ist_hell
             m = np.maximum(m, teil)
             continue

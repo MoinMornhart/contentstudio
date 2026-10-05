@@ -1051,7 +1051,14 @@ export const de = {
 
   'programme.fehler.quelleFehlt': 'Das Rohvideo „{name}“ ist auf diesem Gerät nicht da ({pfad}). Exportiere die Programmdateien einmal auf dem Gerät, auf dem das Video liegt – dann landet eine Kopie im Projektordner des Datenordners.',
 
-  'ki.zeitlimit': 'Keine Antwort nach {minuten} min – abgebrochen'
+  'ki.zeitlimit': 'Keine Antwort nach {minuten} min – abgebrochen',
+
+  'thumb.schritt.veredeln': 'Bild veredeln …',
+  'thumb.schritt.grafikWerkzeuge': 'Richte die Grafik-Werkzeuge ein (einmalig, klein) …',
+  'thumb.schritt.teilbilder': 'Weitere Bildteile rendern …',
+  'thumb.warn.grafikFehlt': 'Grafik (Hotbar, Lupe, Etikett …) konnte nicht gesetzt werden',
+  'thumb.warn.teilFehlt': 'Bildteil {nr} konnte nicht gerendert werden',
+  'thumb.warn.splitFehlt': 'Geteiltes Bild konnte nicht zusammengesetzt werden'
 } as const
 
 export type Schluessel = keyof typeof de

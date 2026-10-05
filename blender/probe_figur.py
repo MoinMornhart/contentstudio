@@ -1,6 +1,6 @@
 """Probe für ROADMAP 4.1/4.2: eine Figur in einer Stilbuch-Pose, Nahaufnahme mit Stilbuch-Licht.
 
-blender -b --factory-startup --python blender/probe_figur.py -- <skin.png> <ausgabe.png> <pose> [kamera: nah|brust|ganz]
+blender -b --factory-startup --python blender/probe_figur.py -- <skin.png> <ausgabe.png> <pose> [kamera: nah|brust|ganz|schraeg]
 """
 import math
 import os
@@ -15,7 +15,7 @@ from minecraft.posen import POSEN  # noqa: E402
 from minecraft import items as mitems  # noqa: E402
 
 args = sys.argv[sys.argv.index("--") + 1:]
-skin, out, pose_name = args[0], args[1], args[2]
+skin, out, pose_name = args[0], os.path.abspath(args[1]), args[2]  # Blender deutet relative Pfade anders
 modus = args[3] if len(args) > 3 else "nah"
 
 # leere Szene
@@ -75,6 +75,10 @@ elif modus == "brust":
     cam_data.lens = 35
     ziel = kopf + Vector((0.25, 0, -0.45))
     cam.location = kopf + Vector((0.5, -2.3, -0.3))
+elif modus == "schraeg":  # Dreiviertel von der Seite: gebeugte Beine (Sitzen, Knien, Klettern) frontal verkürzt
+    cam_data.lens = 50
+    ziel = Vector((0, 0, 0.8))
+    cam.location = Vector((3.9, -3.9, 1.6))
 else:
     cam_data.lens = 50
     ziel = Vector((0, 0, 0.95))

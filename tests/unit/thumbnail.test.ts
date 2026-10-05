@@ -11,7 +11,8 @@ import { kontextTexte, stilKontext, type AuftragsVorbildDaten } from '../../src/
 import { findeInstallation, McFehlt, sichereMcAssets } from '../../src/main/thumbnail/minecraft/assets'
 import { wendeVorbilderAn } from '../../src/main/thumbnail/nachbearbeitung'
 import { allgemeinOhneKi, pruefeAllgemein, type AllgemeinPlan } from '../../src/main/thumbnail/planung/allgemein'
-import { ernsteWarnungen, pruefeSzene, type Szene } from '../../src/main/thumbnail/planung/minecraft'
+import { ernsteWarnungen, pruefePlan, pruefeSzene, type McPlan, type Szene } from '../../src/main/thumbnail/planung/minecraft'
+import { streifenSzene } from '../../src/main/thumbnail/job'
 import { autoKorrektur, technischePruefung } from '../../src/main/thumbnail/pruefung'
 import { gefuehlAus, naechstePose, seiteFuer } from '../../src/main/thumbnail/reaktion'
 import { szenenAus, waehleMomente, zeit } from '../../src/main/thumbnail/video'
@@ -126,6 +127,35 @@ describe('Planung prüfen (ROADMAP 4.6)', () => {
     expect(s.kamera.modus).toBe('nah')
     const f = pruefeSzene({ welt: { art: 'mond' }, figuren: [{ id: 'fremd', pose: 'fliegen' }], mobs: [{ art: 'drache' }], kamera: { thema: 'mob:3' } } as Szene, k, ['ich'])
     expect(f.join('|')).toMatch(/Welt.*mond.*Figur.*fremd.*Pose.*fliegen.*erste Figur.*Mob.*drache.*Kamera-Thema/)
+  })
+
+  it('Minecraft: Teilbild eines geteilten Bilds darf mit einem Freund beginnen (aus MoinStudio v0.40.0)', () => {
+    const nurFreund = { welt: { art: 'wiese' }, figuren: [{ id: 'freund', pose: 'zeigen' }], mobs: [{ art: 'zombie' }], kamera: { thema: 'mob:0' } } as Szene
+    expect(pruefeSzene(structuredClone(nurFreund), k, ['ich', 'freund']).join()).toMatch(/erste Figur/)
+    expect(pruefeSzene(structuredClone(nurFreund), k, ['ich', 'freund'], true)).toEqual([])
+    expect(pruefeSzene({ ...structuredClone(nurFreund), figuren: [{ id: 'fremd', pose: 'zeigen' }] }, k, ['ich', 'freund'], true).join()).toMatch(/erste Figur/)
+  })
+
+  it('Minecraft: nur bekannte Grafik-Elemente (höchstens drei), geteiltes Bild mit 2–3 Teilen (aus MoinStudio v0.39.0)', () => {
+    const szene = (id = 'ich'): Szene => ({ welt: { art: 'wiese' }, figuren: [{ id, pose: 'zeigen' }], kamera: { modus: 'nah' } })
+    const plan: McPlan = {
+      varianten: [
+        { titel: 'a', vorbild: 'v1', warum: '', szene: szene(), grafik: [{ art: 'level', zahl: 19 }, { art: 'feuerwerk' }, { art: 'hud', items: ['torch'] }, { art: 'lupe', ziel: 'ich' }, { art: 'abzeichen', typ: 'haken' }] },
+        { titel: 'b', vorbild: 'v1', warum: '', szene: szene(), split: { teile: [{ szene: szene(), etikett: '10€ und mehr Text' }, { szene: szene('freund'), etikett: '1000€' }] } },
+        { titel: 'c', vorbild: 'v1', warum: '', szene: szene(), split: { teile: [{ szene: szene() }] } }
+      ]
+    }
+    expect(pruefePlan(plan, k, ['ich', 'freund'], [{ id: 'v1', kanal: '', titel: '', zeigt: '', rezept: '', link: null }])).toEqual([])
+    expect(plan.varianten[0]!.grafik!.map((g) => g.art)).toEqual(['level', 'hud', 'lupe'])
+    expect(plan.varianten[1]!.split!.teile.map((t) => t.etikett)).toEqual(['10€ und mehr', '1000€'])
+    expect(plan.varianten[2]!.split).toBeUndefined()
+  })
+
+  it('Minecraft: Teilbilder werden im Format ihres Streifens gerendert, Bauwerke mit ganzer Figur', () => {
+    const s = streifenSzene({ welt: { art: 'wiese' }, figuren: [{ id: 'ich', pose: 'zeigen' }], kamera: { modus: 'nah', thema: [4, 4, 1] }, render: { hoehe: 720 } }, 3)
+    expect(s['render']).toEqual({ hoehe: 720, breite: Math.round(1280 / 3 + 720 * 0.16) })
+    expect(s.kamera.modus).toBe('ganz')
+    expect(streifenSzene({ welt: { art: 'wiese' }, figuren: [{ id: 'ich', pose: 'zeigen' }], kamera: { modus: 'nah', thema: 'mob:0' } }, 2).kamera.modus).toBe('nah')
   })
 
   it('Foto-Plan: Vorbild, Hintergrund, Personen und Seiten werden geprüft', () => {

@@ -98,6 +98,46 @@ describe.runIf(!!BLENDER)('Minecraft: 10 Beschreibungen (echter Render)', () => 
   }
 })
 
+// Grafik-Ebene, Bodenmarkierung und geteilte Bilder (aus MoinStudio v0.39.0–v0.43.0), Veredeln nach dem Render
+const wiese = (pose: string, x: Record<string, unknown> = {}): Record<string, unknown> => ({ welt: { art: 'wiese', seed: 5 }, himmel: 'tag', figuren: [{ id: 'ich', pose, mimik: 'froh', position: [0, 0], blick: 25 }], kamera: { modus: 'brust', seite: 'links' }, ...x })
+const MINECRAFT_GRAFIK: { beschreibung: string; variante: Record<string, unknown> }[] = [
+  { beschreibung: 'Jedes Level macht die Welt größer – ich bin bei Level 19', variante: { szene: wiese('jubeln'), grafik: [{ art: 'level', zahl: 19 }, { art: 'hud', items: ['diamond_pickaxe', 'torch', 'bread'], auswahl: 0, herzen: 3, hunger: 10, level: 19 }] } },
+  { beschreibung: 'Ich darf nicht angreifen und nicht abbauen', variante: { szene: wiese('haende_hueften', { markierungen: [{ von: [-3, -3], bis: [3, 3], farbe: 'rot' }], kamera: { modus: 'ganz', seite: 'links', hoehe: 25 } }), grafik: [{ art: 'grosstext', zeilen: ['KEIN ANGREIFEN', 'KEIN ABBAUEN'], farbe: 'rot' }] } },
+  { beschreibung: 'Ich finde den versteckten Diamanten', variante: { szene: { welt: { art: 'hoehle' }, figuren: [{ id: 'ich', pose: 'zeigen', mimik: 'erschrocken', position: [0, 0], blick: 30 }], objekte: [{ block: 'diamond_ore', position: [3, 3, 1], wichtig: true }], kamera: { modus: 'nah', seite: 'links', thema: 'objekt:0' } }, grafik: [{ art: 'lupe', ziel: 'objekt:0' }] } },
+  {
+    beschreibung: 'Ein Haus für 10€, 100€ und 1000€',
+    variante: {
+      szene: wiese('neutral'),
+      split: {
+        teile: [
+          { szene: wiese('achselzucken', { objekte: [{ block: 'dirt', position: [2, 2, 0], wichtig: true }] }), etikett: '10€' },
+          { szene: wiese('zeigen', { objekte: [{ block: 'oak_planks', position: [2, 2, 0], wichtig: true }] }), etikett: '100€' },
+          { szene: wiese('jubeln', { objekte: [{ block: 'diamond_block', position: [2, 2, 0], wichtig: true }] }), etikett: '1000€' }
+        ]
+      }
+    }
+  }
+]
+
+describe.runIf(!!BLENDER && !!UV)('Minecraft: Grafik-Ebene und geteilte Bilder (echter Render)', () => {
+  const skin = join(ROOT, 'mc', '26.3', 'extracted', 'assets', 'minecraft', 'textures', 'entity', 'player', 'wide', 'alex.png')
+  for (const [i, m] of MINECRAFT_GRAFIK.entries()) {
+    it(`${i + 1}. ${m.beschreibung}`, async () => {
+      const { schicht } = fakeKi((a) => (a.prompt.includes('Korrektur nach dem Render') ? { szene: m.variante['szene'] } : { varianten: [{ titel: m.beschreibung, vorbild: 'frei', warum: 'Test', text: [], ...structuredClone(m.variante) }] }), { bilder: false })
+      const erg = await thumbnailJob(payload('minecraft', [figur({ skin, slim: true })], `mc-grafik-${i + 1}`, m.beschreibung), ctx(), { ki: schicht })
+      const v = erg.varianten[0]!
+      console.log(`  → ${v.bild} · Prüfung: ${JSON.stringify(v.pruefung)}`)
+      expect(v.fehler).toBeNull()
+      expect(v.bild && existsSync(v.bild)).toBe(true)
+      if (m.variante['split']) expect(v.bild).toMatch(/\.split/)
+      else {
+        expect(v.pruefung.technisch.join()).not.toMatch(/Grafik/)
+        expect(v.roh).toMatch(/\.grafik\.png$/)
+      }
+    })
+  }
+})
+
 describe.runIf(!!BLENDER && !!UV)('GLB-Test-Avatar: 5 Beschreibungen', () => {
   const glb = join(AUS, 'avatar.glb')
   const POSEN = [

@@ -1,5 +1,6 @@
 // Herkunft des Minecraft-Teils: MoinStudio src/main/thumbnail/job.ts (MIT), verallgemeinert auf alle Engines.
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
+import type { Box } from '../bild/komposit'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { KiAnalyseSchema, type Engine } from '@shared/thumbnail'
@@ -19,7 +20,7 @@ import { ernsteWarnungen, korrekturPrompt, mcOhneKi, McPlanZ, mcPrompt, pruefePl
 import { autoKorrektur, kiPruefung, technischePruefung, type Befund } from './pruefung'
 import { minecraftEbenen, renderFoto, renderMinecraft, renderModell, setzeTextUndLogo, type Bericht } from './render'
 import type { FigurDaten, ThumbErgebnisDaten, ThumbPayload, VarianteErgebnis } from './typen'
-import { sicherePython } from './umgebung'
+import { py, sichereGrafikPython, sicherePython, type PyUmgebung } from './umgebung'
 
 /** Höchstens so viele Korrekturen je Variante nach der Selbstprüfung */
 const KORREKTUREN = 2
@@ -124,34 +125,69 @@ async function minecraftLauf(p: ThumbPayload, ctx: JobContext<Checkpoint>, d: Th
   const plan = cp.mcPlan
   const fertig: VarianteErgebnis[] = [...(cp.fertig ?? [])]
   const skins = new Map(p.figuren.map((f) => [f.id, f]))
+  // Kleine Python-Umgebung für Veredeln, Grafik und geteilte Bilder – erst beim ersten Gebrauch; ohne sie bleibt das Bild roh
+  let grafikPy: Promise<PyUmgebung | null> | null = null
+  const grafikPython = (): Promise<PyUmgebung | null> => (grafikPy ??= sichereGrafikPython(u, c).catch(() => null))
+  const mitSkins = (s: Szene): Szene & { figuren: { id: string; skin?: string; slim?: boolean | null }[] } => {
+    const szene = structuredClone(s) as Szene & { figuren: { id: string; skin?: string; slim?: boolean | null }[] }
+    for (const f of szene.figuren) {
+      const sk = skins.get(f.id)
+      f.skin = sk?.skin ?? join(mc.textures, 'entity', 'player', 'wide', 'steve.png')
+      if (sk?.slim !== undefined && sk.slim !== null) f.slim = sk.slim
+    }
+    szene['mob_tabelle'] = mobs.tabelle
+    return szene
+  }
 
   for (let i = fertig.length; i < plan.varianten.length; i++) {
     await ctx.yield()
     const v = plan.varianten[i]!
     const anteil = (x: number): number => Math.round(12 + ((i + x) / plan.varianten.length) * 86)
-    let szeneAktuell: Szene = v.szene
+    const teile = v.split?.teile.length ?? 0
+    let szeneAktuell: Szene = teile ? streifenSzene(v.szene, teile) : v.szene
     let bestes: { ergebnis: VarianteErgebnis; ernst: number } | null = null
     let renderFehler: string | null = null
     for (let versuch = 0; versuch <= KORREKTUREN; versuch++) {
       await ctx.yield()
       ctx.progress(anteil(versuch * 0.3), t('thumb.schritt.variante', { nr: i + 1, von: plan.varianten.length, titel: v.titel }))
       const basis = join(p.ausgabe, `variante-${i + 1}.v${versuch}`)
-      const szene = structuredClone(szeneAktuell) as Szene & { figuren: { id: string; skin?: string; slim?: boolean | null }[] }
-      for (const f of szene.figuren) {
-        const s = skins.get(f.id)
-        f.skin = s?.skin ?? join(mc.textures, 'entity', 'player', 'wide', 'steve.png')
-        if (s?.slim !== undefined && s.slim !== null) f.slim = s.slim
-      }
-      szene['mob_tabelle'] = mobs.tabelle
-      const r = await renderMinecraft(u, szene, mc.textures, basis, c)
+      const r = await renderMinecraft(u, mitSkins(szeneAktuell), mc.textures, basis, c)
       if (!r.roh) {
         renderFehler = r.fehler
         break
       }
       let roh = r.roh
+      const maske = `${basis}.maske.png`
+      await copyFile(r.roh.replace(/\.png$/, '.maske.png'), maske).catch(() => undefined)
       if (await wendeVorbilderAn(roh, stil.auftrag, `${basis}.vorbild.png`)) roh = `${basis}.vorbild.png`
-      await minecraftEbenen(roh, basis)
-      const tl = await setzeTextUndLogo(u, null, roh, r.bericht, { texte: v.text ?? [], minecraftAssets: mc.assets, logo: p.marke.logo }, basis, c)
+      // Veredeln wie der Photoshop-Schritt großer Kanäle: Hintergrund weicher und dunkler, Figuren knackiger, Randlicht
+      // aus dem Hintergrund (aus MoinStudio v0.42.0). Ohne Maske oder Python bleibt das Bild, wie es ist.
+      const gp = await grafikPython()
+      if (gp && !teile) {
+        ctx.progress(anteil(versuch * 0.3 + 0.1), t('thumb.schritt.veredeln'))
+        if (await py(gp, join(u.skripte, 'veredeln.py'), [roh, maske, `${basis}.fein.png`], c).then(() => true, () => false)) roh = `${basis}.fein.png`
+      }
+      await minecraftEbenen(roh, basis, maske)
+      // Grafik-Ebene (Hotbar, Level, Etikett, Lupe, Abzeichen, großer Text) vor dem Text: der Text weicht ihr aus
+      const bericht: Bericht = { ...r.bericht }
+      const grafik = teile ? [] : (v.grafik ?? [])
+      const grafikWarnungen: string[] = []
+      if (grafik.length) {
+        if (!gp) grafikWarnungen.push(t('thumb.warn.grafikFehlt'))
+        else {
+          try {
+            await writeFile(`${basis}.grafik.json`, JSON.stringify(grafik))
+            const aus = await py(gp, join(u.skripte, 'grafik_setzen.py'), [roh, `${basis}.bericht.json`, `${basis}.grafik.json`, mc.assets, `${basis}.grafik.png`], c)
+            bericht.grafik_boxen = (JSON.parse(/CS_GRAFIK (.*)/.exec(aus)?.[1] ?? '{}') as { boxen?: Box[] }).boxen ?? []
+            roh = `${basis}.grafik.png`
+            await writeFile(`${basis}.bericht.json`, JSON.stringify(bericht))
+          } catch {
+            grafikWarnungen.push(t('thumb.warn.grafikFehlt'))
+          }
+        }
+      }
+      const tl = await setzeTextUndLogo(u, null, roh, bericht, { texte: teile ? [] : (v.text ?? []), minecraftAssets: mc.assets, logo: teile ? null : p.marke.logo }, basis, c)
+      tl.warnungen.push(...grafikWarnungen)
       const befunde = await technischePruefung(tl.bild, r.bericht, {
         textBoxen: tl.textBoxen,
         logoBox: tl.logoBox,
@@ -168,9 +204,32 @@ async function minecraftLauf(p: ThumbPayload, ctx: JobContext<Checkpoint>, d: Th
       try {
         const e = await d.ki.frage({ name: 'thumbnail-korrektur', system: SYSTEM_PLAN, prompt: korrekturPrompt(vorlage, eingabe, { ...v, szene: szeneAktuell }, ernst.map((b) => b.text), r.bericht), schema: SzeneAntwortZ, stufe: 'stark', maxAusgabe: 6000 }, c)
         if (pruefeSzene(e.daten.szene, katalog, ids).length) break
-        szeneAktuell = e.daten.szene
+        // Die korrigierte Szene kennt das Streifenformat nicht – ohne erneutes Aufbereiten wird wieder breit gerendert
+        szeneAktuell = teile ? streifenSzene(e.daten.szene, teile) : e.daten.szene
       } catch {
         break
+      }
+    }
+    // Geteiltes Bild: weitere Teile je einmal rendern und mit schrägen Trennlinien zusammensetzen (aus MoinStudio v0.39.0)
+    if (bestes && v.split && teile) {
+      ctx.progress(anteil(0.85), t('thumb.schritt.teilbilder'))
+      const basis = join(p.ausgabe, `variante-${i + 1}`)
+      const teilBilder: [string, string][] = [[bestes.ergebnis.bild!, v.split.teile[0]!.etikett ?? '-']]
+      for (const [n, teil] of v.split.teile.slice(1).entries()) {
+        const r = await renderMinecraft(u, mitSkins(streifenSzene(teil.szene, teile)), mc.textures, `${basis}.teil${n + 2}`, c)
+        if (r.roh) teilBilder.push([r.roh, teil.etikett ?? '-'])
+        else bestes.ergebnis.pruefung.technisch.push(t('thumb.warn.teilFehlt', { nr: n + 2 }))
+      }
+      const gp = await grafikPython()
+      if (gp && teilBilder.length >= 2) {
+        const ziel = `${basis}.split.png`
+        const aus = await py(gp, join(u.skripte, 'split_setzen.py'), [mc.assets, ziel, ...teilBilder.flat()], c).catch(() => null)
+        if (aus !== null) {
+          // Etiketten sind belegt: das Logo weicht ihnen aus
+          const etiketten = (JSON.parse(/CS_SPLIT (.*)/.exec(aus)?.[1] ?? '{}') as { boxen?: Box[] }).boxen ?? []
+          const tl = await setzeTextUndLogo(u, null, ziel, { grafik_boxen: etiketten }, { texte: [], minecraftAssets: mc.assets, logo: p.marke.logo }, `${basis}.split`, c)
+          bestes.ergebnis = { ...bestes.ergebnis, bild: tl.bild, roh: ziel }
+        } else bestes.ergebnis.pruefung.technisch.push(t('thumb.warn.splitFehlt'))
       }
     }
     fertig.push(bestes?.ergebnis ?? fehlerVariante(v, 'minecraft', renderFehler))
@@ -187,6 +246,19 @@ async function minecraftLauf(p: ThumbPayload, ctx: JobContext<Checkpoint>, d: Th
  * die Messung schlechter ist (aus MoinStudio v0.46.1).
  */
 export const punkte = (befunde: readonly { ernst: boolean }[], ki: readonly { ernst: boolean }[] | null): number => befunde.filter((b) => b.ernst).length * 3 + (ki ?? []).filter((b) => b.ernst).length
+
+/**
+ * Teil eines geteilten Bilds gleich im Format seines Streifens rendern (1/n der Breite plus Zugabe für die schräge
+ * Trennlinie) – die Kamera rahmt dann ganz normal. Im 16:9-Bild nur die Mitte zu nutzen, blies Beine auf oder
+ * verdeckte das Thema (aus MoinStudio v0.40.0). Ein Bauwerk als Thema braucht die ganze Figur.
+ */
+export function streifenSzene(s: Szene, n: number): Szene {
+  const k = s.kamera ?? {}
+  const bauwerk = Array.isArray(k.thema) && ['nah', 'brust'].includes(k.modus ?? '')
+  const r = (s['render'] ?? {}) as { breite?: number; hoehe?: number }
+  const hoehe = r.hoehe ?? 720
+  return { ...s, kamera: { ...k, ...(bauwerk ? { modus: 'ganz' } : {}) }, render: { ...r, breite: Math.round((hoehe * 16) / 9 / n + hoehe * 0.16), hoehe } }
+}
 
 const SYSTEM_PLAN = 'You plan video thumbnails as structured JSON for an automatic renderer. Follow the catalogue and rules exactly; never invent ids that are not listed.'
 

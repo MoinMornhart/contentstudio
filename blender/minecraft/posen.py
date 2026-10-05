@@ -32,11 +32,12 @@ POSEN = {
         "bein_r": {"seitlich": 3},
         "bein_l": {"seitlich": 3},
     },
-    # 8 Heldenstand: Arme verschränkt (beide ~80° vor, 45° nach innen), Beine 5–10° gespreizt
+    # 8 Heldenstand: Arme verschränkt vor der Brust, Beine 5–10° gespreizt. Oberarme nur leicht vor, Unterarme
+    # waagerecht – mit 80° Oberarm und 70° Beugung lagen die Hände vor dem Gesicht (Test 01.10.)
     "held": {
         "kopf": {"nicken": -3, "neigen": 3},
-        "arm_r": {"heben": 80, "seitlich": -45, "beugen": 70},
-        "arm_l": {"heben": 76, "seitlich": -45, "beugen": 70},
+        "arm_r": {"heben": 32, "seitlich": -38, "beugen": 62},
+        "arm_l": {"heben": 28, "seitlich": -38, "beugen": 66},
         "bein_r": {"seitlich": 6},
         "bein_l": {"seitlich": 6},
     },
@@ -285,9 +286,139 @@ POSEN = {
     # Genervt: Arme verschränkt, Kopf schief weg (dazu Mimik „skeptisch“)
     "genervt": {
         "kopf": {"neigen": -12, "drehen": -10, "nicken": 4},
-        "arm_r": {"heben": 78, "seitlich": -45, "beugen": 20},
-        "arm_l": {"heben": 74, "seitlich": -45, "beugen": 20},
+        "arm_r": {"heben": 34, "seitlich": -38, "beugen": 58},
+        "arm_l": {"heben": 30, "seitlich": -38, "beugen": 62},
         "bein_r": {"seitlich": 6},
         "bein_l": {"seitlich": 4},
+    },
+    # Ganzkörperposen aus Spiele-Thumbnails (Spiele-Vorlage, MoinStudio, 30.09.: „alles können“)
+    # Klettern an einer Wand: Arme hoch und versetzt, ein Knie hochgezogen, das andere Bein gestreckt nach unten
+    "klettern": {
+        "koerper": {"vor": 8},
+        "kopf": {"nicken": 18},
+        "arm_r": {"heben": 165, "seitlich": 12, "beugen": 35},
+        "arm_l": {"heben": 125, "seitlich": 18, "beugen": 55},
+        "bein_r": {"vor": 70, "seitlich": 10, "beugen": 95},
+        "bein_l": {"vor": -8, "seitlich": 6, "beugen": 15},
+    },
+    # Hechtsprung / Sprung nach etwas greifen: Körper nach vorn geneigt in der Luft, ein Arm weit vorgestreckt,
+    # der andere schwingt nach hinten, Beine ziehen nach
+    "hechtsprung": {
+        "kippen": -38,
+        "koerper": {"drehen": -12, "vor": 10},
+        "kopf": {"nicken": -30, "drehen": 10},
+        "arm_r": {"heben": 125, "seitlich": 28, "beugen": 8},
+        "arm_l": {"heben": 60, "seitlich": 75, "drehen": -20, "beugen": 12},
+        "bein_r": {"vor": -35, "seitlich": 10, "beugen": 60},
+        "bein_l": {"vor": 20, "seitlich": 14, "beugen": 35},
+    },
+    # Hängen: an einer oder beiden Händen, Arme gestreckt nach oben, Beine baumeln locker
+    "haengen": {
+        "koerper": {"vor": -4},
+        "kopf": {"nicken": 22},
+        "arm_r": {"heben": 172, "seitlich": 10, "beugen": 6},
+        "arm_l": {"heben": 168, "seitlich": 16, "beugen": 10},
+        "bein_r": {"vor": 12, "seitlich": 4, "beugen": 25},
+        "bein_l": {"vor": -6, "seitlich": 8, "beugen": 10},
+    },
+    # Sitzen (Stuhl, Kante, Couch): Oberschenkel waagerecht nach vorn, Unterschenkel hängen senkrecht
+    "sitzen": {
+        "kopf": {"nicken": 4},
+        "arm_r": {"heben": 38, "seitlich": 8, "beugen": 40},
+        "arm_l": {"heben": 34, "seitlich": 8, "beugen": 45},
+        "bein_r": {"vor": 90, "seitlich": 6, "beugen": 90},
+        "bein_l": {"vor": 88, "seitlich": 8, "beugen": 88},
+    },
+    # Knien: ein Knie am Boden, das andere Bein aufgestellt
+    "knien": {
+        "koerper": {"vor": 6},
+        "arm_r": {"heben": 30, "seitlich": 10, "beugen": 40},
+        "arm_l": {"heben": 20, "seitlich": 10, "beugen": 30},
+        "bein_r": {"vor": 85, "seitlich": 6, "beugen": 90},
+        "bein_l": {"vor": -5, "seitlich": 6, "beugen": 95},
+    },
+    # Fallen (nach hinten, Arme rudern hoch, Beine strampeln)
+    "fallen": {
+        "kippen": 30,
+        "kippen_seite": -10,
+        "koerper": {"vor": -12},
+        "kopf": {"nicken": -10},
+        "arm_r": {"heben": 150, "seitlich": 55, "beugen": 30},
+        "arm_l": {"heben": 120, "seitlich": 70, "beugen": 40},
+        "bein_r": {"vor": 40, "seitlich": 14, "beugen": 55},
+        "bein_l": {"vor": 5, "seitlich": 18, "beugen": 20},
+    },
+    # Liegen auf dem Rücken (verletzt, erschöpft, schlafend)
+    "liegen": {
+        "kippen": 88,
+        "kopf": {"nicken": 20, "drehen": 20},
+        "arm_r": {"heben": 20, "seitlich": 30, "beugen": 10},
+        "arm_l": {"heben": 10, "seitlich": 20},
+        "bein_r": {"seitlich": 8, "vor": 10, "beugen": 20},
+        "bein_l": {"seitlich": 6},
+    },
+    # Thumbnail-Posen nach Recherche (MoinStudio, 01.10.: „schau dir bei anderen an … Posen“): nie symmetrisch, Kopf geneigt,
+    # Oberkörper gegen die Hüfte verdreht
+    # Hände in die Hüften (selbstsicher): Ellbogen nach außen, Fäuste an der Hüfte
+    "haende_hueften": {
+        "koerper": {"drehen": 8},
+        "kopf": {"neigen": 6, "nicken": -4},
+        "arm_r": {"heben": 0, "seitlich": 40, "rollen": 85, "beugen": 100},
+        "arm_l": {"heben": 0, "seitlich": 40, "rollen": 85, "beugen": 100},
+        "bein_r": {"seitlich": 7},
+        "bein_l": {"seitlich": 5, "vor": 6},
+    },
+    # Facepalm: eine Hand vor dem Gesicht, Kopf nach unten (Fail, Peinlich)
+    "facepalm": {
+        "koerper": {"vor": 6, "drehen": 6},
+        "kopf": {"nicken": 16, "neigen": -6},
+        "arm_l": {"heben": 105, "seitlich": -12, "drehen": -20, "beugen": 125},
+        "arm_r": {"heben": 12, "seitlich": 10, "beugen": 15},
+    },
+    # Ausschau halten: Hand flach über den Augen, Blick in die Ferne
+    "ausschau": {
+        "koerper": {"drehen": 12},
+        "kopf": {"drehen": 18, "nicken": -6},
+        "arm_l": {"heben": 125, "seitlich": 8, "drehen": -30, "beugen": 115},
+        "arm_r": {"heben": 14, "seitlich": 12, "beugen": 20},
+        "bein_r": {"vor": -6},
+        "bein_l": {"vor": 10, "beugen": 6},
+    },
+    # Gegenstand zur Kamera hochhalten (Item zeigen): Arm nach vorn, leicht gebeugt
+    "hochhalten": {
+        "koerper": {"drehen": 10},
+        "kopf": {"neigen": 8, "drehen": 6},
+        "arm_l": {"heben": 95, "seitlich": 10, "drehen": 15, "beugen": 25},
+        "arm_r": {"heben": 20, "seitlich": 14, "beugen": 30},
+        "bein_r": {"seitlich": 5},
+        "bein_l": {"vor": 8},
+    },
+    # Ängstlich zurücklehnen: Oberkörper zurück, beide Hände abwehrend vorn, ein Bein vor
+    "abwehr": {
+        "kippen": 8,
+        "koerper": {"vor": -14, "drehen": -8},
+        "kopf": {"nicken": -6, "drehen": -10},
+        "arm_r": {"heben": 75, "seitlich": 6, "drehen": 10, "beugen": 60},
+        "arm_l": {"heben": 68, "seitlich": 10, "drehen": -6, "beugen": 55},
+        "bein_r": {"vor": 28, "beugen": 18},
+        "bein_l": {"vor": -6},
+    },
+    # Spitzhacke (oder Schwert) locker über der Schulter: Oberarm hoch, Ellbogen spitz, Werkzeug hinter der Schulter
+    "schulter": {
+        "koerper": {"drehen": 10},
+        "kopf": {"neigen": 5, "drehen": 8},
+        "arm_l": {"heben": 100, "seitlich": 20, "drehen": -10, "beugen": 115},
+        "arm_r": {"heben": 14, "seitlich": 12, "beugen": 15},
+        "bein_r": {"seitlich": 5},
+        "bein_l": {"vor": 8},
+    },
+    # Axt zum Schlag erhoben: Arm hoch über den Kopf, Oberkörper zurückgedreht, Schrittstellung
+    "ausholen": {
+        "koerper": {"drehen": -18, "vor": -6},
+        "kopf": {"drehen": 14, "nicken": -4},
+        "arm_l": {"heben": 135, "seitlich": 18, "drehen": 10, "beugen": 50},
+        "arm_r": {"heben": 40, "seitlich": 20, "beugen": 40},
+        "bein_r": {"vor": -22, "beugen": 10},
+        "bein_l": {"vor": 24, "beugen": 22},
     },
 }

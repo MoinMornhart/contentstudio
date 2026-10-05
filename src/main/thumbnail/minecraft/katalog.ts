@@ -27,7 +27,7 @@ export const WELTEN: Katalog['welten'] = [
   { name: 'meer', hinweis: 'Wasser bis zum Horizont, Figur auf einer Säule' },
   { name: 'end', hinweis: 'Das End: Endstein-Insel mit Obsidiansäulen, dazu himmel end; Enderdrache als Mob ender_dragon (hoehe 6–12), Endkristalle ender_crystal' },
   { name: 'hoehle', hinweis: 'geschlossene Höhle mit Erzen und Lava- oder Wasserbecken auf der Themenseite' },
-  { name: 'nether', hinweis: 'Nether mit Netherrack, Glowstone, Magma und Lavameer' }
+  { name: 'nether', hinweis: 'Nether als riesige Höhle mit Lavameer, Lavafällen, Glowstone und Glut; "biom": oede (Netherrack), karmesin (rote Riesenpilze), wirr (türkis, Wirrpilze), seelensand (Seelensandtal, Knochen, Basaltsäulen), basalt (Basaltdeltas); himmel wird automatisch zur Nether-Stimmung' }
 ]
 
 /** Liest die Namen aus einem Python-Dict-Block: Zeilen der Form `    "name": {` bzw. `    "name": {"schlüssel"`. */
@@ -54,6 +54,10 @@ function schluessel(quelle: string, block: string, muster = /^ {4}"([a-z0-9_]+)"
   return ergebnis
 }
 
+/** Wurfgeschosse und Effekte aus den Entity-Daten sind keine Mobs – im Spiel flache Item-Bilder, als Modell schwarze
+ * Scheiben (aus MoinStudio v0.39.0). In Thumbnails kommen sie als gehaltenes Item vor (egg, snowball, splash_potion …). */
+export const KEINE_MOBS = new Set(['egg', 'snowball', 'ender_pearl', 'eye_of_ender_signal', 'splash_potion', 'lingering_potion', 'llama_spit', 'shulker_bullet', 'breeze_wind_charge_projectile', 'wind_charge_projectile', 'evocation_fang', 'thrown_trident', 'fireball', 'small_fireball', 'dragon_fireball', 'wither_skull', 'wither_skull_dangerous', 'xp_bottle', 'xp_orb', 'arrow', 'fishing_hook', 'lightning_bolt', 'area_effect_cloud', 'fireworks_rocket', 'leash_knot', 'npc'])
+
 /** `mobTabelle`: Pfad zur Mob-Tabelle (Ordner mit mobs.json oder die Datei selbst); `blockModelle`: models/block der Spieldatei */
 export async function ladeKatalog(blenderDir: string, mobTabelle: string, blockModelle?: string): Promise<Katalog> {
   const lies = (f: string): Promise<string> => readFile(join(blenderDir, 'minecraft', f), 'utf8')
@@ -71,7 +75,7 @@ export async function ladeKatalog(blenderDir: string, mobTabelle: string, blockM
     kameraModi: schluessel(kamera, 'MODI').map((e) => e.name),
     himmel: schluessel(himmel, 'VARIANTEN').map((e) => e.name),
     welten: WELTEN,
-    mobs: Object.keys(JSON.parse(mobs) as Record<string, unknown>).filter((k) => !k.startsWith('_')),
+    mobs: Object.keys(JSON.parse(mobs) as Record<string, unknown>).filter((k) => !k.startsWith('_') && !KEINE_MOBS.has(k)),
     bloecke: [...new Set([...schluessel(bloecke, 'ARTEN').map((e) => e.name), ...(blockModelle ? await alleBloecke(blockModelle) : [])])]
   }
 }

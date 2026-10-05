@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { analysiere } from '../bild/analyse'
-import { liesBild } from '../bild/rohbild'
+import { liesBild, schreibePng, verkleinere } from '../bild/rohbild'
 import { ueberlappung, type Box } from '../bild/komposit'
 import type { JobContext } from '../jobs/queue'
 import type { KiSchicht } from '../ki/schicht'
@@ -51,12 +51,16 @@ const KiPruefungZ = z.object({
 export async function kiPruefung(ki: KiSchicht | null, bild: string, o: { beschreibung: string; sprache: string }, ctx?: JobContext<unknown>): Promise<Befund[] | null> {
   if (!ki || !(await ki.verfuegbar(true))) return null
   try {
+    // Zweites Bild: so klein, wie es auf dem Handy in der Liste erscheint (168×94 Punkte, Retina 336×188) – erkennt man
+    // dort in unter einer Sekunde, worum es geht? (aus MoinStudio v0.40.0)
+    const handy = bild.replace(/\.png$/i, '') + '.handy.png'
+    await schreibePng(handy, verkleinere(await liesBild(bild), 336))
     const e = await ki.frage(
       {
         name: 'thumbnail-pruefung',
         system: 'You are a strict thumbnail reviewer. Judge whether the image works as a video thumbnail for the given description: faces visible and not covered, the subject recognisable, text readable and not covering faces, nothing important cut off, not empty, not over- or underexposed. Only report real problems.',
-        prompt: `Beschreibung: „${o.beschreibung}“. Gib eine Note von 1 (unbrauchbar) bis 10 (sehr gut) und liste echte Probleme. ernst = so darf es nicht gezeigt werden: Gesicht verdeckt oder angeschnitten, Thema der Beschreibung ohne den Videotitel nicht erkennbar, Text unlesbar oder über einem Gesicht, Wichtiges abgeschnitten, Bild leer, über- oder unterbelichtet, sichtbare Fehler beim Freistellen. Schreibe die Probleme auf ${o.sprache}.`,
-        bilder: [bild],
+        prompt: `Beschreibung: „${o.beschreibung}“. Bild 1 ist das Thumbnail in voller Größe, Bild 2 so klein, wie es auf dem Handy in der Liste erscheint – erkennt man dort in unter einer Sekunde, worum es geht? Achte auch auf Grafikfehler (schwebende oder im Boden steckende Figuren, fehlende Körperteile, schwarze Flächen, seltsame Farben) und ob die Figur mit dem Hintergrund verschwimmt. Gib eine Note von 1 (unbrauchbar) bis 10 (sehr gut) und liste echte Probleme. ernst = so darf es nicht gezeigt werden: Gesicht verdeckt oder angeschnitten, Thema der Beschreibung ohne den Videotitel nicht erkennbar, Text unlesbar oder über einem Gesicht, Wichtiges abgeschnitten, Bild leer, über- oder unterbelichtet, sichtbare Fehler beim Freistellen. Schreibe die Probleme auf ${o.sprache}.`,
+        bilder: [bild, handy],
         schema: KiPruefungZ,
         brauchtBilder: true,
         stufe: 'schnell',

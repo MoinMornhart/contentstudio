@@ -2,7 +2,7 @@
 
 Beschreibung (alle Längen in Blöcken, Winkel in Grad):
 {
-  "welt": {"art": "wiese" | "klippe" | "meeresklippe" | "schlucht" | "dorf" | "hoehle" | "nether", "kante": 0, "tiefe": 20, "seed": 7,
+  "welt": {"art": "wiese" | "klippe" | "meeresklippe" | "schlucht" | "dorf" | "hoehle" | "nether" (mit "biom": oede | karmesin | wirr | seelensand | basalt), "kante": 0, "tiefe": 20, "seed": 7,
            "grund": "lava" | "water" | null},
   "himmel": "tag" | "abend" | "nacht",
   "figuren": [{"id": "ich", "skin": "<pfad>", "slim": null, "pose": "zeigen", "posen_korrektur": {…},
@@ -78,6 +78,11 @@ def _welt(w, texturen, himmel="tag"):
         if art == "lavameer":
             bloecke.DUNST.update(farbe=(0.9, 0.35, 0.08), halbwert=90.0)
         return mwelt.baue_meerwelt(texturen, "lava" if art == "lavameer" else "water", aend)
+    if art == "nether":
+        # Nether nach den Biom-Daten des Spiels: offene Riesenhöhle, Lavameer, heller Dunst in Biomfarbe
+        b = mwelt.NETHER_BIOME[mwelt.nether_biom(w.get("biom"))]
+        bloecke.DUNST.update(farbe=b["dunst"], halbwert=75.0)
+        return mwelt.baue_nether(texturen, aend, biom=w.get("biom"), seed=seed)
     if art in mwelt.RAUM_ARTEN:
         # geschlossener Raum: dunkler bzw. roter Dunst statt Himmelsblau
         bloecke.DUNST.update({"hoehle": {"farbe": (0.015, 0.02, 0.03), "halbwert": 70.0},
@@ -89,13 +94,23 @@ def _welt(w, texturen, himmel="tag"):
 
 def _objekte(liste, texturen):
     """Frei platzierte Einzelblöcke (fliegendes TNT, herumliegende Blöcke): {"block": "tnt", "position": [x, y, z],
-    "drehung": [rx, ry, rz], "groesse": 1}. Position in Blöcken (Mitte des Blocks), Drehung in Grad."""
+    "drehung": [rx, ry, rz], "groesse": 1, "schwebt": false}. Position in Blöcken (Mitte des Blocks), Drehung in Grad.
+    Ohne „schwebt“ und ohne Drehung liegt der Block auf dem Boden darunter (Test 02.10.: Seelenlaternen hingen in der
+    Luft über dem Kopf)."""
     import math as _m
     tex = bloecke.Texturen(texturen)
+    scene = bpy.context.scene
     for i, o in enumerate(liste or []):
         halb = 0.5 * BLOCK
-        ob = bloecke.baue({(0, 0, 1): o["block"]}, tex, f"objekt{i}", versatz=(-halb, -halb, -halb))
         x, y, z = o.get("position", (3, 3, 2))
+        if not o.get("schwebt") and not any(o.get("drehung") or ()):
+            bpy.context.view_layer.update()
+            treffer, ort, normale, *_ = scene.ray_cast(bpy.context.evaluated_depsgraph_get(), Vector((x * BLOCK, y * BLOCK, z * BLOCK - halb + 0.01)), Vector((0, 0, -1)))
+            boden = ort.z if treffer and normale.z > 0.5 else None
+            if boden is not None and z * BLOCK - halb > boden + 0.05:
+                print("CS_OBJEKT_GEERDET", o["block"], round(z, 2), "->", round(boden / BLOCK + 0.5, 2))
+                z = boden / BLOCK + 0.5
+        ob = bloecke.baue({(0, 0, 1): o["block"]}, tex, f"objekt{i}", versatz=(-halb, -halb, -halb))
         ob.location = (x * BLOCK, y * BLOCK, z * BLOCK)
         ob.rotation_euler = [_m.radians(g) for g in o.get("drehung", (0, 0, 0))]
         s = o.get("groesse", 1.0)
@@ -136,6 +151,47 @@ def _pflanzen_vor_kamera_weg(cam, ziel, abstand=0.8):
     bmesh.ops.delete(bm, geom=weg, context="FACES")
     bm.to_mesh(ob.data)
     bm.free()
+
+
+def _markierungen(scene, liste):
+    """Leuchtende Rahmen auf dem Boden (BastiGHG 05/09: rotes Quadrat um die Challenge-Zone): [{"von": [x, y],
+    "bis": [x, y], "farbe": "rot"}] in Blöcken. Der Rahmen folgt dem Gelände (je Randstück auf der Bodenhöhe)."""
+    farben = {"rot": (1.0, 0.05, 0.05), "gelb": (1.0, 0.8, 0.0), "gruen": (0.1, 1.0, 0.2), "blau": (0.1, 0.4, 1.0), "weiss": (1, 1, 1)}
+    for n, m in enumerate(liste or []):
+        (x0, y0), (x1, y1) = m.get("von", (-3, -3)), m.get("bis", (3, 3))
+        x0, x1 = sorted((float(x0), float(x1)))
+        y0, y1 = sorted((float(y0), float(y1)))
+        mat = bpy.data.materials.new(f"markierung{n}")
+        mat.use_nodes = True
+        bsdf = mat.node_tree.nodes["Principled BSDF"]
+        farbe = farben.get(m.get("farbe", "rot"), farben["rot"])
+        bsdf.inputs["Base Color"].default_value = (*farbe, 1)
+        key = "Emission Color" if "Emission Color" in bsdf.inputs else "Emission"
+        bsdf.inputs[key].default_value = (*farbe, 1)
+        if "Emission Strength" in bsdf.inputs:
+            bsdf.inputs["Emission Strength"].default_value = 2.5
+        breite = 0.28 * BLOCK
+        schritt = 0.5
+        stuecke = []
+        for (ax, ay), (bx, by) in (((x0, y0), (x1, y0)), ((x1, y0), (x1, y1)), ((x1, y1), (x0, y1)), ((x0, y1), (x0, y0))):
+            laenge = max(abs(bx - ax), abs(by - ay))
+            for i in range(max(1, int(laenge / schritt))):
+                t0, t1 = i / max(1, int(laenge / schritt)), (i + 1) / max(1, int(laenge / schritt))
+                px, py = ax + (bx - ax) * (t0 + t1) / 2, ay + (by - ay) * (t0 + t1) / 2
+                z = _boden_hoehe(scene, px * BLOCK, py * BLOCK)
+                stuecke.append(((px * BLOCK, py * BLOCK, z + 0.02 * BLOCK), abs(bx - ax) * (t1 - t0) * BLOCK + breite, abs(by - ay) * (t1 - t0) * BLOCK + breite))
+        import bmesh
+        bm = bmesh.new()
+        for (cx, cy, cz), sx, sy in stuecke:
+            erg = bmesh.ops.create_cube(bm, size=1.0)
+            bmesh.ops.scale(bm, vec=(sx, sy, 0.04 * BLOCK), verts=erg["verts"])
+            bmesh.ops.translate(bm, vec=(cx, cy, cz), verts=erg["verts"])
+        me = bpy.data.meshes.new(f"markierung{n}")
+        bm.to_mesh(me)
+        bm.free()
+        me.materials.append(mat)
+        ob = bpy.data.objects.new(f"markierung{n}", me)
+        scene.collection.objects.link(ob)
 
 
 def _boden_hoehe(scene, x, y, von=60.0, platz=2.0, nah_an=0.0):
@@ -215,6 +271,65 @@ def _mob_auf_die_buehne(scene, haupt, mobs, thema, getragen=frozenset()):
     bpy.context.view_layer.update()
 
 
+def _gegner_auf_die_buehne(scene, haupt, figuren, thema):
+    """Kampf/Duell (MoinStudio, 30.09.: „es soll aufhören, mich immer in den Vordergrund zu packen bei einem Kampf“): Der Gegner
+    steht wie bei GommeHD-Duellen auf gleicher Tiefe neben der Hauptfigur, beide gleich groß im Bild – nicht klein hinten.
+    Steht die Thema-Figur mehr als 1,2 Blöcke weiter hinten oder mehr als 3,6 Blöcke entfernt, rückt sie heran."""
+    for f, fig in figuren:
+        if fig is haupt or f.get("auf") or not (thema == f["id"] or thema in ("gegner", None) and f.get("id") != "ich"):
+            continue
+        weg = fig.wurzel.location - haupt.wurzel.location
+        weg.z = 0
+        if abs(weg.y) <= 1.2 * BLOCK and weg.length <= 3.6 * BLOCK:
+            continue
+        seite = 1 if weg.x >= 0 else -1
+        neu = haupt.wurzel.location + Vector((seite * 2.8 * BLOCK, max(-0.6, min(0.6, weg.y / BLOCK * 0.2)) * BLOCK, 0))
+        for o in _alle_objekte(fig):
+            o.hide_viewport = True
+        boden = _boden_hoehe(scene, neu.x, neu.y, nah_an=fig.wurzel.location.z)
+        for o in _alle_objekte(fig):
+            o.hide_viewport = False
+        fig.wurzel.location = (neu.x, neu.y, boden + (f.get("hoehe") or 0) * BLOCK)
+        print("CS_BUEHNE Gegner", f["id"], "herangeholt von", round(weg.length / BLOCK, 1), "neben der Hauptfigur")
+        break
+    bpy.context.view_layer.update()
+
+
+def _gegner_zur_kamera(fig, haupt, cam):
+    """Die Thema-Figur (Gegner, Freund) nach der Kamerawahl so drehen, dass sie zwischen Hauptfigur und Kamera schaut:
+    Gesicht im Dreiviertelprofil sichtbar, trotzdem der Hauptfigur zugewandt. Die Kamera kann nicht beide Gesichter frei wählen –
+    stand sie vor der Hauptfigur, zeigte sie den Gegner im Profil von der Haarseite (Test 01.10.: „ich gegen meinen Freund“)."""
+    if fig is None or getattr(fig, "auf_etwas", False):
+        return
+    kopf = fig.kopf_mitte()
+    zu_cam = cam.matrix_world.translation - kopf
+    zu_haupt = haupt.kopf_mitte() - kopf
+    zu_cam.z = zu_haupt.z = 0
+    if zu_cam.length < 1e-3 or zu_haupt.length < 1e-3:
+        return
+    zu_cam.normalize()
+    zu_haupt.normalize()
+    jetzt = fig.gesicht_richtung()
+    jetzt.z = 0
+    if jetzt.length < 1e-3 or jetzt.normalized().dot(zu_cam) >= 0.55:
+        return
+    jetzt.normalize()
+    wunsch = (zu_cam * 0.6 + zu_haupt * 0.4).normalized()
+    delta = math.atan2(jetzt.x * wunsch.y - jetzt.y * wunsch.x, jetzt.dot(wunsch))
+    fig.wurzel.rotation_euler.z += delta
+    bpy.context.view_layer.update()
+    print("CS_BUEHNE Gegner zur Kamera gedreht um", round(math.degrees(delta)), "Grad")
+
+
+def _alle_objekte(fig):
+    raus, offen = [], [fig.wurzel]
+    while offen:
+        o = offen.pop()
+        raus.append(o)
+        offen.extend(o.children)
+    return raus
+
+
 def _riesen_zurueck(haupt, mobs, thema, getragen=frozenset()):
     """Riesige Mobs (Ghast, 10-fache Mobs) passen nur ins Bild, wenn sie weit genug hinten stehen – wie die
     Riesenspinne bei Paluten. Ist ein Mob das Kamera-Thema und höher als 60 % seines Abstands zur Hauptfigur, wird er
@@ -251,15 +366,75 @@ def _bildpunkt(scene, cam, p):
     return [round(v.x, 3), round(1 - v.y, 3)]  # Bildkoordinaten: 0,0 oben links
 
 
+def _arm_blockiert(arm):
+    """Arm an Kopf oder Brust: Hand am Kopf (Kopfkratzen, Panik) oder verschränkt (Held, genervt, nachdenken). Ein
+    Werkzeug in dieser Hand steckt im Kopf oder quer vor der Brust."""
+    arm = arm or {}
+    am_kopf = arm.get("heben", 0) >= 100 and arm.get("beugen", 0) >= 90
+    verschraenkt = arm.get("seitlich", 0) <= -15 and arm.get("heben", 0) + arm.get("beugen", 0) >= 80
+    return am_kopf or verschraenkt
+
+
+def _werkzeughand(p, item):
+    """Werkzeug nie in einer Hand, die die Pose an Kopf oder Brust legt (Test 01.10.: Schaufel hinter dem Kopf beim
+    Kopfkratzen, Axt am Gesicht in der Heldenpose). Ist die andere Hand frei, wandert das Werkzeug dorthin, sonst hält
+    der Werkzeugarm es locker vor dem Körper."""
+    seite = item.get("hand", "l")
+    arm, anderer = f"arm_{seite}", "arm_" + ("r" if seite == "l" else "l")
+    if not _arm_blockiert(p.get(arm)):
+        return p
+    if not _arm_blockiert(p.get(anderer)):
+        item["hand"] = "r" if seite == "l" else "l"
+        return p
+    p = dict(p)
+    p[arm] = {"heben": 35, "seitlich": 12, "drehen": 0, "beugen": 45}
+    return p
+
+
 def _items_anhaengen(figuren, texturen, cam, k):
     gehalten = {}
     for f, fig in figuren:
         it = f.get("item")
         if it:
             # Kampf: Waffen nah an der Kamera übergroß wie bei GommeHD (1,3–1,6-fach)
-            groesse = it.get("groesse", 1.4 if k.get("modus") == "kampf" else 1.0)
-            ob = mitems.baue_item(it["name"], texturen, pixel=mitems.ITEM_PIXEL * groesse)
-            mitems.in_die_hand(ob, fig, it.get("hand", "l"), cam, it.get("winkel", 40))
+            # bei weiten Einstellungen wirkt ein maßstabsgetreues Werkzeug winzig (Test 30.09.: Goldaxt ein paar Pixel) –
+            # die Vorbilder übertreiben es dann wie im Kampf
+            # Haltung und Größe wie im Spiel (display.thirdperson aus der Modellkette), nur bei weiten Einstellungen etwas
+            # übertrieben wie bei den Vorbildern (sonst ist das Werkzeug dort ein paar Pixel groß)
+            # Werkzeuggrößen wie in v0.39 (nah und halbnah wie im Spiel, weite Einstellungen größer);
+            # flache Items (Fackel, Brot: im Spiel 0,55) wären sonst kaum zu sehen und bekommen noch 1,3 dazu
+            groesse = it.get("groesse", {"kampf": 1.25, "ganz": 1.4, "tiefe": 1.4, "abgrund": 1.4, "klippe_wand": 1.3, "mob": 1.15}.get(k.get("modus"), 1.0))
+            seite = it.get("hand", "l")
+            name = it["name"]
+            # Bogen beim Zielen: gespannt (Spieltextur bow_pulling_2), aufrecht mit der Fläche zur Kamera und in der Mitte
+            # gegriffen wie bei den Vorbildern – in Spielhaltung sah man ihn nur von der Kante (Nether-Test 02.10.)
+            zielt = name == "bow" and "bogen" in str(f.get("pose", ""))
+            if zielt:
+                try:
+                    ob = mitems.baue_item("bow_pulling_2", texturen, pixel=mfigur.PX)
+                except Exception:
+                    ob = mitems.baue_item(name, texturen, pixel=mfigur.PX)
+            else:
+                ob = mitems.baue_item(name, texturen, pixel=mfigur.PX)
+            anzeige = mitems.haltung(name, texturen, seite)
+            flach = anzeige["scale"][0] < 0.7  # „generated“: Fackel, Brot, Blumen …
+            if "groesse" not in it and flach:
+                groesse *= 1.3
+            mitems.mc_halten(ob, fig, seite, ob["pixel"], anzeige, groesse)
+            if cam is not None and zielt:
+                mitems.aufrichten(ob, fig, seite, cam, griff=0.5)
+                # vors Gesicht geschoben? zur Seite der Hand hin vom Kopf weg, bis das Gesicht frei ist (Test: 60 %)
+                rechts = cam.matrix_world.to_3x3() @ Vector((1, 0, 0))
+                weg = rechts if (fig.hand(seite) - fig.kopf_mitte()).dot(rechts) >= 0 else -rechts
+                for _ in range(8):
+                    if _gesicht_sichtbar(bpy.context.scene, cam, fig) >= 0.8:
+                        break
+                    ob.matrix_world = mathutils_Matrix.Translation(weg * 1.5 * mfigur.PX) @ ob.matrix_world
+                    bpy.context.view_layer.update()
+            elif cam is not None and flach:
+                mitems.aufrichten(ob, fig, seite, cam)
+            elif cam is not None:
+                mitems.handgelenk_drehen(ob, fig, seite, cam)
             gehalten[f["id"]] = ob
     bpy.context.view_layer.update()
     return gehalten
@@ -366,7 +541,7 @@ def _messen(scene, cam, szene, figuren, mobs, gehalten, fehler):
     # Warnungen für die Selbstprüfung: Wichtiges muss im Bild sein
     warnungen = []
     for fid, f in info["figuren"].items():
-        if fid == szene["figuren"][0]["id"] and (_im_bild(f["kopf_box"]) < 0.999 or min(f["kopf_box"][0], f["kopf_box"][1]) < 0.01 or max(f["kopf_box"][2], f["kopf_box"][3]) > 0.99):
+        if fid == szene["figuren"][0]["id"] and (_im_bild(f["kopf_box"]) < 0.999 or min(f["kopf_box"][0], f["kopf_box"][1]) < 0.02 or max(f["kopf_box"][2], f["kopf_box"][3]) > 0.98):
             warnungen.append(f"Kopf von {fid} am Bildrand angeschnitten")
         elif _im_bild(f["kopf_box"]) < 0.6:
             warnungen.append(f"Kopf von {fid} kaum sichtbar")
@@ -374,6 +549,17 @@ def _messen(scene, cam, szene, figuren, mobs, gehalten, fehler):
               and f["kopf_box"][3] - f["kopf_box"][1] < 0.14):
             # Recherche: der Gegner füllt 45–70 % der Bildhöhe, sein Kopf also mindestens etwa 14 %
             warnungen.append(f"Gegner {fid} zu klein im Bild")
+    # Hauptfigur groß und nicht in die Ecke gequetscht (Test 02.10.: Hauptfigur winzig unten links, Vorbilder füllen mit
+    # ihm ein Drittel bis die Hälfte des Bildes); weite Einstellungen (ganz, tiefe, abgrund, klippe) dürfen kleiner sein
+    haupt_id = szene["figuren"][0]["id"]
+    hk = info["figuren"].get(haupt_id, {}).get("kopf_box")
+    weit = szene.get("kamera", {}).get("modus") in ("ganz", "tiefe", "abgrund", "klippe", "klippe_wand")
+    if hk and _im_bild(hk) >= 0.6:
+        mitte_x = (hk[0] + hk[2]) / 2
+        if not weit and hk[3] - hk[1] < 0.10:
+            warnungen.append(f"Kopf von {haupt_id} zu klein im Bild ({int((hk[3] - hk[1]) * 100)} % der Bildhöhe) – Kamera näher, Hauptfigur groß wie bei den Vorbildern")
+        if mitte_x < 0.13 or mitte_x > 0.87:
+            warnungen.append(f"Kopf von {haupt_id} klebt am Bildrand ({int(mitte_x * 100)} % von links) – Hauptfigur aufs linke oder rechte Drittel")
     for fid, it in info["items"].items():
         if _im_bild(it["box"]) < 0.9:
             warnungen.append(f"Item von {fid} kaum sichtbar ({int(_im_bild(it['box']) * 100)} % im Bild)")
@@ -429,8 +615,26 @@ def _messen(scene, cam, szene, figuren, mobs, gehalten, fehler):
     return info
 
 
+def _nether_himmel(szene):
+    """Im Nether gibt es keinen Himmel: Tag/Nacht/Blutrot werden durch die Stimmung des Bioms ersetzt."""
+    w = szene.get("welt", {})
+    if w.get("art") != "nether":
+        return
+    name = mwelt.nether_biom(w.get("biom"))
+    b = mwelt.NETHER_BIOME[name]
+    schluessel = f"nether_{name}"
+    mhimmel.VARIANTEN[schluessel] = {"oben": tuple(c * 0.25 for c in b["dunst"]), "horizont": b["dunst"], "wolken": b["dunst"],
+                                     "staerke": 0.6, "sonne": 0.0, "sonne_farbe": (1, 1, 1), "sonne_hoehe": 60,
+                                     # Mob von vorn neutral hell, Gegenlicht in Biomfarbe nur halb so stark: sonst wurde
+                                     # der weiße Ghast ganz orange (Nether-Test 02.10.)
+                                     "rand": b["rand"], "gesicht": 34.0, "mob_licht": True, "mob_licht_faktor": 0.3, "mob_rand_faktor": 0.4,
+                                     "dunst": b["dunst"], "ohne_wolken": True}
+    szene["himmel"] = schluessel
+
+
 def baue(szene, texturen, ausgabe=None, bericht=None):
     bpy.ops.wm.read_factory_settings(use_empty=True)
+    _nether_himmel(szene)
     scene = bpy.context.scene
     r = szene.get("render", {})
     scene.render.resolution_x = r.get("breite", 1280)
@@ -438,6 +642,7 @@ def baue(szene, texturen, ausgabe=None, bericht=None):
 
     _welt(szene.get("welt", {}), texturen, szene.get("himmel", "tag"))
     _objekte(szene.get("objekte"), texturen)
+    _markierungen(scene, szene.get("markierungen"))
     mhimmel.baue(scene, szene.get("himmel", "tag"))
 
     figuren = []
@@ -453,6 +658,8 @@ def baue(szene, texturen, ausgabe=None, bericht=None):
         if f.get("spiegeln", isinstance(blick, (int, float)) and blick < -30):
             p = _spiegeln(p)
         p["blick"] = 0 if blick == "auto" else blick
+        if f.get("item"):
+            p = _werkzeughand(p, f["item"])
         mfigur.pose(fig, p)
         if f.get("mimik"):
             mmimik.setze_mimik(fig, f["mimik"])
@@ -494,6 +701,8 @@ def baue(szene, texturen, ausgabe=None, bericht=None):
     # Mobs, auf denen jemand steht, sitzt oder reitet, bleiben unter der Figur
     getragen = {f.get("auf") for f, _ in figuren if isinstance(f.get("auf"), str)}
     _mob_auf_die_buehne(scene, haupt, mobs, k.get("thema"), getragen)
+    if k.get("modus") in ("kampf", "mob"):
+        _gegner_auf_die_buehne(scene, haupt, figuren, k.get("thema"))
     _riesen_zurueck(haupt, mobs, k.get("thema"), getragen)
     cam_data = bpy.data.cameras.new("kamera")
     cam = bpy.data.objects.new("kamera", cam_data)
@@ -525,11 +734,47 @@ def baue(szene, texturen, ausgabe=None, bericht=None):
         links = haupt.kopf_mitte().x - 0.3  # nicht weit links: sonst verschwindet der Gegner hinter dem Helden
         erlaubt = lambda pos: pos.y < vorn and pos.x > links
 
+    # Hält die Hauptfigur etwas, muss die Hand mit ins Bild (Test 30.09.: Spitzhacke in der Nahaufnahme unsichtbar,
+    # weil die Hand unter dem Bildrand lag) – sie zählt wie die Kopf-Ecken, dazu ein Punkt eine Werkzeuglänge weiter
+    haupt_item = (szene["figuren"][0].get("item") or {})
+
+    probe_item = {}
+
+    def wichtige_punkte():
+        punkte = list(haupt.kopf_ecken())
+        if haupt_item.get("name"):
+            # Probe-Gegenstand in Spiel-Haltung (hängt nur am Arm, nicht an der Kamera): seine Ecken müssen ins Bild –
+            # sonst ragte z. B. das Schwert beim Hieb oben hinaus (Test 30.09.)
+            seite = haupt_item.get("hand", "l")
+            try:
+                if "ob" not in probe_item:
+                    probe_item["ob"] = mitems.baue_item(haupt_item["name"], texturen, pixel=mfigur.PX)
+                    probe_item["anzeige"] = mitems.haltung(haupt_item["name"], texturen, seite)
+                ob = probe_item["ob"]
+                mitems.mc_halten(ob, haupt, seite, ob["pixel"], probe_item["anzeige"])
+                punkte += [ob.matrix_world @ Vector(c) for c in ob.bound_box]
+            except Exception as fehler:  # unbekanntes Item: dann wenigstens die Hand
+                print("CS_WARNUNG Probe-Item", fehler)
+                punkte.append(haupt.hand(seite))
+        # Objekte, um die es geht („wichtig“ oder Kamera-Thema), gehören ins Bild – die Kamera kannte sie bisher nicht,
+        # die Prüfung meldete sie nur hinterher als angeschnitten (Test „Welt wird größer“, 01.10.). Die Kanten zählen
+        # zu 70 %, damit ein großer Block knapp am Rand nicht die ganze Einstellung verschiebt.
+        for i, o in enumerate(szene.get("objekte") or []):
+            ob = bpy.data.objects.get(f"objekt{i}")
+            if ob and (o.get("wichtig") or k.get("thema") == f"objekt:{i}"):
+                ecken = [ob.matrix_world @ Vector(c) for c in ob.bound_box]
+                mitte_o = sum(ecken, Vector()) / 8
+                punkte += [mitte_o + (e - mitte_o) * 0.7 for e in ecken]
+        return punkte
+
+    thema_figur = next((fig for f, fig in figuren if fig is not haupt and f.get("id") == k.get("thema")), None)
+
     def rahmen(still=False):
         o, u = haupt.kopf_punkte()
         return mkamera.rahme(scene, cam, o, u, thema, k.get("modus", "nah"), seite=k.get("seite", "links"),
-                             gesicht=haupt.gesicht_richtung(), erlaubt=erlaubt, kopf_ecken=haupt.kopf_ecken(), still=still,
-                             anpassung={n: k[n] for n in ("hoehe", "linse", "kopf_anteil") if n in k})
+                             gesicht=haupt.gesicht_richtung(), erlaubt=erlaubt, kopf_ecken=wichtige_punkte(), still=still,
+                             thema_gesicht=thema_figur.gesicht_richtung() if thema_figur else None,
+                             anpassung={n: tuple(k[n]) if n.endswith("_uv") else k[n] for n in ("hoehe", "linse", "kopf_anteil", "kopf_uv", "thema_uv") if n in k})
 
     if szene["figuren"][0].get("blick") == "auto":
         # Wie ein Thumbnail-Künstler: die Figur so drehen, dass Gesicht (Dreiviertelprofil) und Thema zusammen passen
@@ -559,6 +804,9 @@ def baue(szene, texturen, ausgabe=None, bericht=None):
             cam_data.lens = linse
             cam.matrix_world = matrix
             print("CS_KAMERA_WAHL azimut", az, "warnungen", len(w), "von", len(bewertet), "Vorschlägen")
+    if "ob" in probe_item:
+        bpy.data.objects.remove(probe_item["ob"], do_unlink=True)
+    _gegner_zur_kamera(thema_figur, haupt, cam)
     oben, unten = haupt.kopf_punkte()
     cam_data.dof.aperture_fstop = r.get("blende", 2.0)
     _pflanzen_vor_kamera_weg(cam, (oben + unten) / 2)
@@ -579,15 +827,27 @@ def baue(szene, texturen, ausgabe=None, bericht=None):
     # Dunkle Himmel: das Thema-Mob (Drache, Enderman, Warden …) bekommt Fülllicht und eine helle Randkante,
     # sonst verschwindet es vor dem Hintergrund
     t_mob = k.get("thema")
-    if (variante.get("gesicht") or variante.get("mob_licht")) and isinstance(t_mob, str) and (t_mob.startswith("mob:") or any(m["art"] == t_mob for m, _ in mobs)):
-        mob = mobs[int(t_mob[4:])][1] if t_mob.startswith("mob:") else next(mb for m, mb in mobs if m["art"] == t_mob)
+    licht_mob = None
+    if isinstance(t_mob, str) and (t_mob.startswith("mob:") or any(m["art"] == t_mob for m, _ in mobs)):
+        licht_mob = mobs[int(t_mob[4:])][1] if t_mob.startswith("mob:") else next(mb for m, mb in mobs if m["art"] == t_mob)
+    elif isinstance(t_mob, (list, tuple)) and mobs:
+        # Thema als Punkt (z. B. zwischen drei Ghasts): der Mob, der ihm am nächsten ist, bekommt das Licht – sonst blieb
+        # der weiße Ghast im Nether-Licht lachsfarben (Test 02.10.)
+        ziel = Vector([c * BLOCK for c in t_mob])
+
+        def mitte_von(mb):
+            pts = [o.matrix_world @ Vector(c) for o in mb.teile.values() for c in o.bound_box]
+            return sum(pts, Vector()) / max(1, len(pts))
+        licht_mob = min((mb for _, mb in mobs), key=lambda mb: (mitte_von(mb) - ziel).length)
+    if (variante.get("gesicht") or variante.get("mob_licht")) and licht_mob is not None:
+        mob = licht_mob
         punkte = [o.matrix_world @ Vector(c) for o in mob.teile.values() for c in o.bound_box]
         mitte = sum(punkte, Vector()) / len(punkte)
         groesse = max((p - mitte).length for p in punkte)
         for nr, (richtung, energie, farbe) in enumerate(((cam.matrix_world.translation - mitte, 600, (1.0, 1.0, 1.0)), (mitte - cam.matrix_world.translation, 3000, variante.get("rand", (1, 1, 1))))):
             l = bpy.data.lights.new(f"mob_licht{nr}", "AREA")
             # gleiche Beleuchtungsstärke für jede Mob-Größe: Abstand wächst mit der Größe, Energie mit dem Abstand²
-            l.energy = energie * (max(0.5, groesse) / 3) ** 2 * variante.get("mob_licht_faktor", 1.0)
+            l.energy = energie * (max(0.5, groesse) / 3) ** 2 * variante.get("mob_licht_faktor", 1.0) * (variante.get("mob_rand_faktor", 1.0) if nr == 1 else 1.0)
             l.size = max(2.0, groesse)
             l.color = farbe
             lo = bpy.data.objects.new(l.name, l)
@@ -603,6 +863,12 @@ def baue(szene, texturen, ausgabe=None, bericht=None):
             mlook.gesichtslicht(scene, cam, fig.kopf_mitte(), staerke * 0.6)
 
     gehalten = _items_anhaengen(figuren, texturen, cam, k)
+    # Das Werkzeug der Hauptfigur bekommt ein eigenes weiches Licht von vorn: das Gesichtslicht zielt auf den Kopf,
+    # Bogen und Waffen in der Hand lagen sonst im Schatten (Nether-Test 02.10.: Bogen fast schwarz)
+    if haupt_item.get("name") and szene["figuren"][0]["id"] in gehalten:
+        ob = gehalten[szene["figuren"][0]["id"]]
+        ecken = [ob.matrix_world @ Vector(c) for c in ob.bound_box]
+        mlook.gesichtslicht(scene, cam, sum(ecken, Vector()) / 8, staerke * 0.5)
     _verbindungen_bauen(szene, figuren, mobs, gehalten, texturen)
 
     scene.render.engine = "CYCLES"
@@ -628,8 +894,9 @@ def baue(szene, texturen, ausgabe=None, bericht=None):
         scene.view_settings.look = "Medium High Contrast"
     except TypeError:
         pass
-    scene.view_settings.exposure = r.get("belichtung", -0.3)
-    mlook.farbkorrektur(scene, r.get("saettigung", 1.08), r.get("kontrast", 1.06), r.get("vignette", 0.45))
+    # heller, sauberer Look wie bei BastiGHG (Vergleich 30.09.: unsere Bilder zu dunkel und dunstig)
+    scene.view_settings.exposure = r.get("belichtung", 0.0)
+    mlook.farbkorrektur(scene, r.get("saettigung", 1.14), r.get("kontrast", 1.08), r.get("vignette", 0.22))
 
     info = _messen(scene, cam, szene, figuren, mobs, gehalten, fehler)
     if ausgabe:
@@ -693,6 +960,9 @@ VERBINDUNGEN = {
     "strahl": {"breite": 0.12, "durchhang": 0.0, "textur": ("entity", "guardian", "guardian_beam.png"), "leuchten": 4.0, "tönung": (0.85, 0.73, 0.30)},
     "angelschnur": {"breite": 0.012, "durchhang": 0.12, "farbe": (0.05, 0.05, 0.05)},
     "leine": {"breite": 0.035, "durchhang": 0.08, "farbe": (0.36, 0.24, 0.12)},
+    "seil": {"breite": 0.05, "durchhang": 0.1, "farbe": (0.55, 0.42, 0.26)},
+    # Kette wie der Kettenblock im Spiel: zwei gekreuzte Flächen, 3 Pixel breit, Glieder abwechselnd (template_chain)
+    "kette": {"breite": 1.5 / 16, "durchhang": 0.1, "textur": ("block", "iron_chain.png"), "kreuz": ((0, 3 / 16), (3 / 16, 6 / 16))},
 }
 
 
@@ -741,7 +1011,23 @@ def _verbindung(a, b, art, texturen, name):
     w = v["breite"] * BLOCK
     verts, faces, uvs = [], [], []
     gelaufen = 0.0
-    for i in range(stuecke):
+    for i in range(stuecke if v.get("kreuz") else 0):
+        # Kette: je Stück zwei gekreuzte Flächen mit den beiden Gliederspalten der Textur (u 0–3 bzw. 3–6 Pixel)
+        p0, p1 = punkte[i], punkte[i + 1]
+        achse = (p1 - p0).normalized()
+        quer = achse.cross(Vector((0, 0, 1)))
+        if quer.length < 1e-4:
+            quer = Vector((1, 0, 0))
+        quer.normalize()
+        hoch = quer.cross(achse).normalized()
+        schritt = (p1 - p0).length / BLOCK
+        for richtung, (u0, u1) in zip((quer, hoch), v["kreuz"]):
+            n = len(verts)
+            verts += [p0 - richtung * w, p0 + richtung * w, p1 + richtung * w, p1 - richtung * w]
+            faces.append((n, n + 1, n + 2, n + 3))
+            uvs += [(u0, gelaufen), (u1, gelaufen), (u1, gelaufen + schritt), (u0, gelaufen + schritt)]
+        gelaufen += schritt
+    for i in range(0 if v.get("kreuz") else stuecke):
         p0, p1 = punkte[i], punkte[i + 1]
         achse = (p1 - p0).normalized()
         quer = achse.cross(Vector((0, 0, 1)))
@@ -773,6 +1059,11 @@ def _verbindung(a, b, art, texturen, name):
         tex.image = bpy.data.images.load(pfad, check_existing=True)
         tex.interpolation = "Closest"
         nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+        if v.get("kreuz"):
+            nt.links.new(tex.outputs["Alpha"], bsdf.inputs["Alpha"])
+            bsdf.inputs["Metallic"].default_value = 0.6
+            if hasattr(mat, "blend_method"):
+                mat.blend_method = "CLIP"
         if v.get("leuchten"):
             # wie im Spiel additiv: Schwarz ist durchsichtig, helle Linien leuchten in der Farbe des geladenen Strahls
             # (GuardianRenderer: Farbe wandert beim Aufladen von Lila zu Gold-Weiß; hier 80 % geladen)
@@ -896,3 +1187,39 @@ def _maske(scene, vorne, pfad):
         scene.camera.data.dof.use_dof = False
     scene.render.filepath = pfad
     bpy.ops.render.render(write_still=True)
+    try:
+        _maske_durchsichtig(scene, wichtig, pfad)
+    except Exception as fehler:  # ohne zweiten Durchgang bleibt die einfache Maske
+        print("CS_WARNUNG Maske ohne Durchsichtigkeit", fehler)
+
+
+def _maske_durchsichtig(scene, wichtig, pfad):
+    """Zweiter Durchgang (M5b, 02.10.): Die Objektfarbe kennt keine durchsichtigen Texturstellen – der leere Kasten um
+    die Ohren des Wardens oder die zweite Skin-Ebene zählten als Vordergrund, beim Veredeln entstand ein Rechteck.
+    Nur der Vordergrund mit Texturen (Workbench beachtet deren Alpha), daraus die Deckkraft; mal der ersten Maske, die
+    weiter weiß, was davor liegt."""
+    import numpy as np
+
+    versteckt = []
+    for ob in bpy.data.objects:
+        if ob.type == "MESH" and ob not in wichtig and not ob.hide_render:
+            ob.hide_render = True
+            versteckt.append(ob)
+    scene.display.shading.color_type = "TEXTURE"
+    alpha_pfad = os.path.splitext(pfad)[0] + ".alpha.png"
+    scene.render.filepath = alpha_pfad
+    bpy.ops.render.render(write_still=True)
+    for ob in versteckt:
+        ob.hide_render = False
+    erst = bpy.data.images.load(pfad)
+    zweit = bpy.data.images.load(alpha_pfad)
+    a = np.empty(len(erst.pixels), dtype=np.float32)
+    b = np.empty(len(zweit.pixels), dtype=np.float32)
+    erst.pixels.foreach_get(a)
+    zweit.pixels.foreach_get(b)
+    a[3::4] *= b[3::4]
+    erst.pixels.foreach_set(a)
+    erst.filepath_raw = pfad
+    erst.file_format = "PNG"
+    erst.save()
+    os.remove(alpha_pfad)

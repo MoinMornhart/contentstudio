@@ -18,6 +18,8 @@ export interface Bericht {
   items?: Record<string, { box?: Box }>
   mobs?: { art: string; box?: Box }[]
   warnungen?: string[]
+  /** Kästen der Grafik-Ebene (Hotbar, Lupe, Etiketten …): Text und Logo weichen ihnen aus */
+  grafik_boxen?: Box[]
   fehler?: string
   [k: string]: unknown
 }
@@ -48,6 +50,7 @@ export function sperrFlaechen(b: Bericht, mitKoerper = true): Box[] {
   }
   for (const i of Object.values(b.items ?? {})) if (i.box) out.push(i.box)
   for (const m of b.mobs ?? []) if (m.box) out.push(m.box)
+  for (const g of b.grafik_boxen ?? []) out.push(g)
   return out
 }
 
@@ -191,13 +194,14 @@ export async function setzeTextUndLogo(
 }
 
 /** Ebenen der Minecraft-Szene: Hintergrund (ganzes Bild) und Figuren (über die Maske des Szenen-Bauers) */
-export async function minecraftEbenen(roh: string, basis: string): Promise<void> {
+/** `maske`: Figuren-Maske, wenn das Bild nicht mehr das Roh-Render ist (veredelt, mit Grafik) */
+export async function minecraftEbenen(roh: string, basis: string, maskePfad = roh.replace(/\.png$/, '.maske.png')): Promise<void> {
   const ebenen = `${basis}.ebenen`
   await mkdir(ebenen, { recursive: true })
   const bild = await liesBild(roh)
   await schreibePng(join(ebenen, 'hintergrund.png'), bild)
-  const maske = await readFile(roh.replace(/\.png$/, '.maske.png')).then(
-    () => liesBild(roh.replace(/\.png$/, '.maske.png')),
+  const maske = await readFile(maskePfad).then(
+    () => liesBild(maskePfad),
     () => null
   )
   if (maske) await schreibePng(join(ebenen, 'person-figuren.png'), maskiere(bild, maske))

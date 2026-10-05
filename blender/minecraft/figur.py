@@ -29,7 +29,7 @@ TEILE = {
 
 # Glieder mit Gelenk in der Mitte (Ellbogen, Knie); das Mesh eines Glieds hat seinen Ursprung genau dort
 GLIEDER = ("arm_r", "arm_l", "bein_r", "bein_l")
-UEBERGANG = 2.0  # halbe Breite des weichen Übergangs am Gelenk in Pixeln
+UEBERGANG = 0.6  # halbe Breite des Übergangs am Gelenk in Pixeln – mit 2 px bogen sich Beine wie Gummi und liefen ineinander (MoinStudio, 01.10.)
 
 
 def _beuge_matrix(glied, grad, anteil=1.0):
@@ -37,7 +37,9 @@ def _beuge_matrix(glied, grad, anteil=1.0):
     nach hinten (+Y), wie echte Ellbogen und Knie. Drehachse ist die Innenkante (Armbeuge vorn, Kniekehle hinten):
     so staucht und faltet sich innen nichts, außen dehnt sich das Glied nur leicht."""
     richtung = -1 if glied.startswith("arm") else 1
-    innen = Vector((0, 2 * PX * richtung, 0))
+    # Beine: Drehachse zwischen Mitte und Kniekehle – um die Kante gedreht dehnt sich die Knievorderseite bei starkem
+    # Beugen (Sitzen, Knien, Klettern) zum Klotz, das Bein wirkt zu groß (MoinStudio, 30.09.)
+    innen = Vector((0, (2 if glied.startswith("arm") else 1) * PX * richtung, 0))
     dreh = Matrix.Rotation(math.radians(grad * anteil * richtung), 4, "X")
     return Matrix.Translation(innen) @ dreh @ Matrix.Translation(-innen)
 
@@ -109,6 +111,22 @@ def _material(name, image, overlay):
             bsdf.inputs[key].default_value = 0.35
             break
     return mat
+
+
+def _abgedunkelt(mat, faktor=0.38):
+    """Kopie des Skin-Materials mit abgedunkelter Farbe (für Flächen, die im Schatten liegen)."""
+    neu = mat.copy()
+    neu.name = f"{mat.name}.schatten"
+    nt = neu.node_tree
+    tex = next(n for n in nt.nodes if n.type == "TEX_IMAGE")
+    bsdf = nt.nodes["Principled BSDF"]
+    mal = nt.nodes.new("ShaderNodeMixRGB")
+    mal.blend_type = "MULTIPLY"
+    mal.inputs[0].default_value = 1.0
+    mal.inputs[2].default_value = (faktor, faktor, faktor, 1.0)
+    nt.links.new(tex.outputs["Color"], mal.inputs[1])
+    nt.links.new(mal.outputs[0], bsdf.inputs["Base Color"])
+    return neu
 
 
 def _mesh(name, rects, dims, tex_w, tex_h, inflate, mat, teilung=1):
@@ -200,6 +218,7 @@ def baue_figur(name, skin_path, slim=None, fase=True, collection=None):
     arm_w = 3 if slim else 4
     mat = _material(f"{name}.skin", image, False)
     mat2 = _material(f"{name}.skin2", image, True)
+    schatten = {m.name: _abgedunkelt(m) for m in (mat, mat2)}
 
     def empty(n, loc, parent=None):
         e = bpy.data.objects.new(f"{name}.{n}", None)
@@ -241,6 +260,24 @@ def baue_figur(name, skin_path, slim=None, fase=True, collection=None):
                 continue
             rects = _box_rects(uv[0], uv[1], *dims)
             me = _mesh(f"{name}.{teil}.{ebene}", rects, dims, tex_w, tex_h, blow, m, teilung=dims[1] * 2 if teil in GLIEDER else 1)
+            if teil.startswith("bein"):
+                # Beide Beine berühren sich an x = 0: ihre Innenseiten lagen exakt aufeinander und Blender zeigte dort
+                # abwechselnd Teile von beiden – ein grauer Streifen, die Beine flossen ineinander (MoinStudio, 01.10.).
+                # Innenseite jedes Beins einen Hauch nach innen, die Hosen-Ebene innen hinter die Beinfläche.
+                innen = 1 if teil == "bein_r" else -1  # rechtes Bein liegt bei −X, seine Innenseite bei +x
+                if alt and teil == "bein_l":
+                    innen = -innen  # gespiegeltes Bein (scale.x = −1)
+                grenze = (dims[0] / 2 - (0.04 if ebene == 0 else 0.12)) * PX
+                for v in me.vertices:
+                    if v.co.x * innen > grenze:
+                        v.co.x = grenze * innen
+                # Innenseite beschattet wie zwischen echten Beinen: voll beleuchtet sah sie bei leicht gespreizten Beinen
+                # wie ein hellgrauer Keil aus, der die Beine verschmelzen ließ (MoinStudio, 01.10.)
+                me.materials.append(schatten[m.name])
+                for poly in me.polygons:
+                    if poly.normal.x * innen > 0.9:
+                        poly.material_index = 1
+                me.update()
             ob = bpy.data.objects.new(me.name, me)
             col.objects.link(ob)
             ob.parent = gelenke[teil]
@@ -266,15 +303,17 @@ def baue_figur(name, skin_path, slim=None, fase=True, collection=None):
     return Figur(name, wurzel, gelenke, teile, slim)
 
 
-def _arm_matrix(seite, heben, seitlich, drehen):
+def _arm_matrix(seite, heben, seitlich, drehen, rollen=0):
     """Stilbuch-Winkel → Rotation: `heben` 0 = hängt, 90 = nach vorn, 180 = nach oben; `seitlich` = vom Körper weg
-    (positiv) bzw. zur Körpermitte (negativ); `drehen` = Drehung um die Hochachse, positiv = nach +X (zum Thema)."""
+    (positiv) bzw. zur Körpermitte (negativ); `drehen` = Drehung um die Hochachse, positiv = nach +X (zum Thema);
+    `rollen` = Drehung um die eigene Längsachse (positiv = Ellbogenbeuge zur Körpermitte), z. B. Hände in die Hüften."""
     s = -1 if seite == "r" else 1  # rechte Seite liegt bei −X
     # Reihenfolge: erst seitlich abspreizen, dann nach vorn/oben heben – so bleibt „seitlich“ bei jeder Armhöhe
     # „vom Körper weg“ (umgekehrt kippt ein hoch erhobener, abgespreizter Arm zur Körpermitte)
     return (Matrix.Rotation(math.radians(drehen), 4, "Z")
             @ Matrix.Rotation(math.radians(-heben), 4, "X")
-            @ Matrix.Rotation(math.radians(seitlich * s * -1), 4, "Y"))
+            @ Matrix.Rotation(math.radians(seitlich * s * -1), 4, "Y")
+            @ Matrix.Rotation(math.radians(-rollen * s), 4, "Z"))
 
 
 def pose(figur, p):
@@ -282,7 +321,8 @@ def pose(figur, p):
     Drehrichtung überall: positiv = nach +X, also zum Thema, das rechts im Bild steht (steht die Figur rechts, spiegelt die Szene).
     kopf: {drehen, nicken, neigen}  – nicken positiv = nach unten, neigen positiv = Kopf zur +X-Schulter
     koerper: {drehen, vor, neigen}   – vor = nach vorn beugen
-    arm_r/arm_l: {heben, seitlich, drehen, beugen}  – beugen = Ellbogen, 0 = gestreckt, 90 = rechter Winkel nach vorn
+    arm_r/arm_l: {heben, seitlich, drehen, rollen, beugen}  – beugen = Ellbogen, 0 = gestreckt, 90 = rechter Winkel
+                 nach vorn; rollen dreht die Beuge zur Körpermitte (positiv) bzw. nach außen
     bein_r/bein_l: {vor, seitlich, beugen}  – vor positiv = Bein nach vorn; beugen = Knie (Unterschenkel nach hinten)
     blick: Grad, um den sich die ganze Figur um die Hochachse dreht (0 = schaut nach −Y, −90 = nach −X, 90 = nach +X)
     kippen: ganze Figur um die Füße nach hinten kippen (Taumeln, Sturz)
@@ -297,12 +337,17 @@ def pose(figur, p):
     g["kopf"].rotation_euler = Euler((math.radians(-h.get("nicken", 0)), math.radians(h.get("neigen", 0)), math.radians(h.get("drehen", 0))), "ZXY")
     for seite in ("r", "l"):
         a = p.get(f"arm_{seite}", {})
-        m = _arm_matrix(seite, a.get("heben", 0), a.get("seitlich", 0), a.get("drehen", 0))
+        m = _arm_matrix(seite, a.get("heben", 0), a.get("seitlich", 0), a.get("drehen", 0), a.get("rollen", 0))
         g[f"arm_{seite}"].rotation_mode = "QUATERNION"
         g[f"arm_{seite}"].rotation_quaternion = m.to_quaternion()
         b = p.get(f"bein_{seite}", {})
         s = -1 if seite == "r" else 1
-        g[f"bein_{seite}"].rotation_euler = Euler((math.radians(-b.get("vor", 0)), math.radians(-b.get("seitlich", 0) * s * -1), 0), "XYZ")
+        # erst abspreizen, dann nach vorn (wie ein Hüftgelenk): in der Reihenfolge XYZ drehte „seitlich“ ein waagerecht
+        # nach vorn gestrecktes Bein nur um seine Längsachse – beim Sitzen liefen die Beine ineinander (01.10.)
+        g[f"bein_{seite}"].rotation_mode = "YXZ"
+        # „seitlich“ positiv = vom Körper weg (wie bei den Armen); mit dem alten Vorzeichen kreuzten die Beine und
+        # schoben sich zu den Füßen hin übereinander – der „ineinanderfließende“ Keil (MoinStudio, 01.10.)
+        g[f"bein_{seite}"].rotation_euler = Euler((math.radians(-b.get("vor", 0)), math.radians(b.get("seitlich", 0) * s * -1), 0), "YXZ")
         _beuge(figur, f"arm_{seite}", a.get("beugen", 0))
         _beuge(figur, f"bein_{seite}", b.get("beugen", 0))
     bpy.context.view_layer.update()

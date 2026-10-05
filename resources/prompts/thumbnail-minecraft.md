@@ -52,6 +52,11 @@ Rezept auf diese Geschichte. Kopiere nie Texte, Logos oder Figuren der Vorbilder
    Tropfsteinhöhle = dripstone_block, pointed_dripstone · Bastion = blackstone, polished_blackstone_bricks, gold_block.
    Ein Ort, der im Bild nicht zu erkennen ist, ist ein Fehler. Genannte Mobs kommen genau so ins Bild (Creaking,
    Mooshroom, Frosch, Schreiter …, siehe Mob-Liste) – nie durch einen anderen Mob ersetzen.
+   **Aufgeräumter Vordergrund** (Vergleich mit großen Kanälen): Ortsblöcke gehören in den Hintergrund und an die Ränder,
+   nie zwischen Kamera und Figuren. Keine Leuchtblöcke (sea_lantern, froglight, glowstone) als „Lampe“ vor die Figuren –
+   das Licht setzt ContentStudio selbst. Blöcke mit eigener Form (Laterne, Lagerfeuer, Sculk-Sensor, Kette, Fackel) werden
+   so gebaut wie im Spiel. Ein Objekt in `objekte` ohne Drehung steht auf dem Boden darunter; nur was wirklich fliegt
+   (explodierendes TNT, geworfene Blöcke), bekommt eine `drehung` oder `"schwebt": true`.
 7. **Himmel für die Stimmung:** tag oder abend für Abenteuer, nacht für Grusel, blutrot für harte Kämpfe, gewitter für
    dramatische Duelle.
 8. **Text sparsam** (Stilbuch: die meisten Vorbilder haben keinen). Wenn Text wirklich hilft, dann höchstens ein Eintrag
@@ -59,11 +64,44 @@ Rezept auf diese Geschichte. Kopiere nie Texte, Logos oder Figuren der Vorbilder
    sie ans Bild an (nur wenn es wirklich zählt, feste Farbe: weiss, gelb, gold, gruen, tuerkis, rot). Lage und leichte
    Schräglage wählt ContentStudio automatisch und zufällig an einer freien Stelle, nie über etwas Wichtigem. Sonst
    `"text": []`.
+8b. **Grafik-Ebene wie bei großen Minecraft-Kanälen** (`grafik` der Variante, höchstens 3 Elemente, oft 1–2; bei reinen Kampf- oder
+   Stimmungsbildern leer). Große Kanäle nutzen in rund 40 % der Bilder Minecraft-Oberfläche als Grafik – immer dann, wenn die Idee
+   eine Regel, ein Level, ein Fund, ein Vergleich oder ein Inventar ist. ContentStudio zeichnet alles pixelgenau aus den
+   echten Texturen und setzt es an freie Stellen (nie über Gesichter):
+   - `{"art": "level", "zahl": 19}` – „Level 19“ in XP-Grün mit XP-Leiste, oben. Für Level-, Stufen-, Tag-Challenges.
+   - `{"art": "hud", "items": ["diamond_pickaxe", "torch", "bread"], "auswahl": 0, "herzen": 3, "hunger": 10, "level": 30}`
+     – Hotbar unten wie im Spiel mit Herzen, Hunger und XP. Für Survival, „nur X Herzen“, besondere Inventare
+     (Item-IDs wie im Spiel, Blöcke erscheinen als Würfel).
+   - `{"art": "etikett", "text": "100% STRONGHOLDS", "platz": "oben"}` – Text auf einem Minecraft-Knopf, oben oder
+     unten. Für Titelzeilen, Preise („1000€“), Zähler.
+   - `{"art": "lupe", "ziel": "mob:0"}` – rote Lupe mit weißem Rand, vergrößert das Ziel („ich“, „mob:0“, „objekt:0“ für einen Block/ein Modell aus `objekte`, „item:ich“ für das Werkzeug in der Hand oder [u, v]),
+     mit rotem Pfeil. Für versteckte oder kleine Dinge, die man sonst übersieht.
+   - `{"art": "abzeichen", "typ": "haken" | "kreuz" | "zahl", "zahl": 1, "ueber": "mob:0"}` – runder Knopf über einem
+     Kopf: grüner Haken / rotes Kreuz (richtig/falsch, echt/fake) oder farbige Zahl (Platz 1–4).
+   - `{"art": "grosstext", "zeilen": ["KEIN ANGREIFEN", "KEIN ABBAUEN"], "farbe": "rot"}` – großer gestapelter Text
+     neben der Hauptfigur für Regeln/Verbote (2–4 kurze Zeilen). Dann `text` leer lassen.
+   Grafik ersetzt normalen Text: nutzt du `level`, `etikett` oder `grosstext`, bleibt `text` leer.
+   Dazu gehört in der Szene selbst (Feld `markierungen` der `szene`): ein leuchtender Rahmen auf dem Boden um die
+   Challenge-Zone (die Hauptfigur steht in einem roten Quadrat), z. B.
+   `"markierungen": [{"von": [-3, -3], "bis": [3, 3], "farbe": "rot"}]` (Blöcke, die Hauptfigur steht bei [0, 0]; Farben rot,
+   gelb, gruen, blau, weiss). Gut mit `level` oder `grosstext` und einer Kamera von schräg oben (`hoehe` 20–35).
+8c. **Geteiltes Bild** (`split` der Variante) für Vergleiche und Steigerungen – bei großen Kanälen in rund jedem fünften Bild:
+   Preise („10€ / 100€ / 1000€“), Vorher/Nachher, Tag 1 / Tag 100, Noob / Pro, echt / fake. 2–3 Teile, jeder mit eigener
+   vollständiger `szene` (gleiche Figur, andere Welt, andere Pose oder anderes Ding – der Unterschied muss sofort
+   ins Auge springen) und kurzem `etikett` (1–2 Wörter oder ein Betrag). Die Hauptsache jedes Teils steht in der
+   Bildmitte (ContentStudio rahmt selbst); wähle eine Kamera, bei der die Figur ganz zu sehen ist (`brust` oder `ganz`).
+   `szene` der Variante = die Szene des ersten Teils. Höchstens eine Variante pro Plan als Split, und nur wenn die
+   Beschreibung wirklich einen Vergleich oder eine Steigerung enthält.
+   `{"split": {"teile": [{"szene": {…}, "etikett": "10€"}, {"szene": {…}, "etikett": "100€"}, {"szene": {…}, "etikett": "1000€"}]}}`
 9. **Kamera:** `kampf` bei zwei Kämpfern, `nah` bei Held plus Thema (Reaktionen, Gesichter), `ganz` wenn ein
    besonderer Ort oder eine Körperhaltung die Aussage ist (Yoga, Handstand, Klettern, Surfen, Reiten, Schlafen, Tanzen,
    Balancieren – die ganze Figur und der Ort müssen zu sehen sein), `gefahr` oder `tiefe` für Abgründe und Gruben (mit
    `hoehe` 20–40 für die Aufsicht), `held` für Heldenposen von unten. Die Kamera schaut nie auf eine leere helle Fläche:
-   hinter die Hauptfigur steht immer erkennbare Umgebung.
+   hinter der Hauptfigur steht immer erkennbare Umgebung.
+   **Fällt jemand fast runter** (Klippe, Abgrund, Turm, Brücke): Der Abgrund ist die Aussage und muss im Bild sein –
+   dann `klippe` (oder `abgrund`) mit `"ueber_abgrund": true` statt `kampf`. Wer fällt, steht direkt an der `kante`, mit
+   `taumeln`, `fallen` oder `haengen`, Blick weg vom Abgrund; der andere kämpft daneben auf festem Boden (Test 02.10.:
+   Kampf auf der Klippe ohne sichtbare Klippe).
    **Gesten mit den Armen** (jubeln mit Armen oben, Schultern zucken, Hände vors Gesicht, zeigen, winken) brauchen
    `brust` oder `ganz`: Bei `nah` sind die Arme nicht im Bild und die Geste geht verloren.
 10. **Freie Posen:** Passt keine Katalog-Pose genau, nimm die ähnlichste und forme sie mit `posen_korrektur` (je Figur) zur
@@ -119,7 +157,7 @@ Antworte nur mit JSON nach dem vorgegebenen Schema. Jede `szene` hat dieses Form
     {"id": "gegner", "pose": "getroffen", "position": [2.8, 3], "blick": -60, "hoehe": 0.5}
   ],
   "mobs": [{"art": "zombie", "position": [4, 5], "blick": "ich", "groesse": 1}],
-  "objekte": [{"block": "tnt", "position": [4, 4, 4], "drehung": [20, 30, 0]}],
+  "objekte": [{"block": "tnt", "position": [4, 4, 4], "drehung": [20, 30, 0], "schwebt": true}],
   "kamera": {"modus": "kampf", "seite": "links", "thema": "gegner"}
 }
 ```
@@ -132,7 +170,8 @@ Beschreibung geht, bekommen `"wichtig": true` – dann prüft ContentStudio, das
 Große Mobs (`groesse` 3–10) brauchen Abstand: stelle sie 8–20 Blöcke nach hinten, sonst passen sie nicht ins Bild.
 Schwebende Mobs (Ghast, Phantom, Blaze) bekommen `hoehe` 3–8.
 Verbindungen (`"verbindungen": [{"von": …, "zu": …, "art": …}]` auf oberster Ebene der Szene) zeichnen etwas zwischen zwei
-Punkten: `"angelschnur"` (dünne Schnur, hängt leicht durch), `"leine"` (Minecraft-Leine), `"strahl"` (Wächter-Laser mit
+Punkten: `"angelschnur"` (dünne Schnur, hängt leicht durch), `"leine"` (Minecraft-Leine), `"seil"`, `"kette"` (echte
+Minecraft-Kette, z. B. zwei aneinandergekettete Spieler), `"strahl"` (Wächter-Laser mit
 echter Textur, leuchtet). Punkte: `"mob:0"` (Mitte des Mobs), eine Figuren-`id` (Hals), `"<id>:hand"` (Spitze des
 gehaltenen Gegenstands, z. B. der Angel) oder `[x, y, z]`. Beispiel Angeln: die Hauptfigur hält `fishing_rod`, Verbindung
 `{"von": "ich:hand", "zu": "mob:0", "art": "angelschnur"}`. Kurzform für Laser: Ein Wächter oder Älterer Wächter

@@ -531,6 +531,232 @@ def baue_meerwelt(texturen_ordner, grund="lava", aenderungen=None, **kw):
     return bloecke.baue(raster, tex, "meerwelt")
 
 
+# Nether nach den Biom-Daten des Spiels (data/minecraft/worldgen/biome/*.json, MoinStudio, 30.09.: „das ist nicht der
+# Nether“). Nebelfarbe = fog_color des Bioms, für Thumbnails aufgehellt (Castcrafter 22: heller Dunst in der Tiefe).
+NETHER_BIOME = {
+    # Nether-Ödland: Netherrack, Lavameer, Glowstone, Magma, Seelensand-Flecken, Erze (fog #330808)
+    "oede": {"boden": "netherrack", "unter": "netherrack",
+             "flecken": (("magma_block", 0.03), ("soul_sand", 0.05), ("gravel", 0.03), ("nether_quartz_ore", 0.03),
+                         ("nether_gold_ore", 0.015), ("blackstone", 0.02)),
+             "pflanzen": (("brown_mushroom", 0.012), ("red_mushroom", 0.01)),
+             "dunst": (0.60, 0.17, 0.09), "rand": (1.0, 0.5, 0.22), "funken": (1.0, 0.42, 0.08), "licht": (1.0, 0.45, 0.15)},
+    # Karmesinwald: Karmesin-Nyzel, Riesenpilze aus crimson_stem mit nether_wart_block und Pilzlicht (fog #330303)
+    "karmesin": {"boden": "crimson_nylium", "unter": "netherrack", "flecken": (("nether_wart_block", 0.02),),
+                 "pflanzen": (("crimson_roots", 0.10), ("crimson_fungus", 0.02)),
+                 "baum": ("crimson_stem", "nether_wart_block"), "baeume": 16,
+                 "dunst": (0.50, 0.12, 0.09), "rand": (1.0, 0.45, 0.35), "funken": (1.0, 0.18, 0.12), "licht": (1.0, 0.35, 0.2)},
+    # Wirrwald: türkises Nyzel, Riesenpilze aus warped_stem mit warped_wart_block, lila Dunst (fog #1a051a)
+    "wirr": {"boden": "warped_nylium", "unter": "netherrack", "flecken": (("warped_wart_block", 0.02),),
+             "pflanzen": (("warped_roots", 0.10), ("nether_sprouts", 0.06), ("warped_fungus", 0.02)),
+             "baum": ("warped_stem", "warped_wart_block"), "baeume": 16,
+             "dunst": (0.30, 0.08, 0.34), "rand": (0.35, 0.95, 0.9), "funken": (0.55, 0.85, 1.0), "licht": (0.6, 0.4, 1.0)},
+    # Seelensandtal: Seelensand und -erde, Basaltsäulen, Knochen-Fossilien, blaues Seelenfeuer, türkiser Dunst (#1b4745)
+    "seelensand": {"boden": "soul_sand", "unter": "soul_soil", "flecken": (("soul_soil", 0.35), ("basalt", 0.02)),
+                   "pflanzen": (), "saeulen": "basalt", "fossilien": True,
+                   "dunst": (0.10, 0.36, 0.34), "rand": (0.4, 0.9, 1.0), "funken": (0.85, 0.88, 0.9), "licht": (0.3, 0.8, 1.0)},
+    # Basaltdeltas: Basalt und Schwarzstein, viele Säulen, kleine Lavatümpel, grau-violetter Dunst mit Asche (#685f70)
+    "basalt": {"boden": "basalt", "unter": "blackstone", "flecken": (("blackstone", 0.3), ("magma_block", 0.05)),
+               "pflanzen": (), "saeulen": "basalt", "saeulen_viele": True,
+               "dunst": (0.42, 0.37, 0.48), "rand": (1.0, 0.7, 0.5), "funken": (0.95, 0.95, 0.95), "licht": (1.0, 0.5, 0.2)},
+}
+NETHER_NAMEN = {"nether_wastes": "oede", "crimson_forest": "karmesin", "crimson": "karmesin", "warped_forest": "wirr",
+                "warped": "wirr", "soul_sand_valley": "seelensand", "basalt_deltas": "basalt"}
+
+
+def nether_biom(name):
+    name = NETHER_NAMEN.get(name or "oede", name or "oede")
+    return name if name in NETHER_BIOME else "oede"
+
+
+def nether(biom="oede", seed=7, breite=(-46, 70), laenge=(-18, 96)):
+    """Der Nether als riesige offene Höhle: Boden um die Figur, dahinter Hügel und ein Lavameer, weit hinten Klippen,
+    hoch oben die Decke mit Glowstone-Trauben, Lavafälle von den Wänden. Dazu die Merkmale des Bioms."""
+    b = NETHER_BIOME[nether_biom(biom)]
+    rnd = random.Random(seed)
+    hoehe_r = _rauschen(seed, 9.0)
+    see_r = _rauschen(seed + 3, 14.0)
+    decke_r = _rauschen(seed + 5, 7.0)
+    welt = {}
+
+    def boden_block():
+        for name, p in b["flecken"]:
+            if rnd.random() < p:
+                return name
+        return b["boden"]
+
+    decken = {}
+    for x in range(breite[0], breite[1]):
+        for y in range(laenge[0], laenge[1]):
+            nah = abs(x) < 7 and -14 < y < 7  # Standfläche der Figur und Platz für die Kamera
+            rand = min(x - breite[0], breite[1] - x, laenge[1] - y)
+            if rand < 6 or y < -12:
+                # Klippen am Rand: steigen bis unter die Decke (unregelmäßig, mit Überhängen im Nebel)
+                oben = 26 + int(decke_r(x, y) * 14)
+                for z in range(-4, oben):
+                    welt[(x, y, z)] = b["unter"] if rnd.random() > 0.04 else boden_block()
+                continue
+            if nah:
+                h = 0
+            else:
+                # Hügel, zum Lavameer hin abfallend; das Meer liegt vor allem hinten und auf der Themenseite
+                abstand = math.hypot(x * 0.8, max(0, y) * 1.0)
+                see = see_r(x, y) + min(0.45, abstand / 70)
+                h = int(round((hoehe_r(x, y) - 0.5) * 6))
+                if see > 0.80:
+                    h = -3
+                elif see > 0.72:
+                    h = min(h, -1)
+            for z in range(h - 2, h):
+                welt[(x, y, z)] = b["unter"]
+            welt[(x, y, h)] = boden_block() if h > -3 else b["unter"]
+            if h <= -2:
+                for z in range(h + 1, 0):
+                    welt[(x, y, z)] = "lava"
+            elif not nah and b["pflanzen"] and (x, y, h + 1) not in welt:
+                for name, p in b["pflanzen"]:
+                    if rnd.random() < p:
+                        welt[(x, y, h + 1)] = name
+                        break
+            # Decke hoch oben (auf Bildern meist nur als Dunkel mit Glowstone im Nebel sichtbar)
+            d = 30 + int(decke_r(x, y) * 10)
+            decken[(x, y)] = d
+            for z in range(d, d + 3):
+                welt[(x, y, z)] = "netherrack"
+
+    # Glowstone-Trauben und Netherrack-Zapfen unter der Decke (glowstone / glowstone_extra)
+    for _ in range(46):
+        x, y = rnd.randint(breite[0] + 8, breite[1] - 8), rnd.randint(4, laenge[1] - 8)
+        d = decken.get((x, y))
+        if d is None:
+            continue
+        glow = rnd.random() < 0.75
+        for _ in range(rnd.randint(6, 18)):
+            dx, dy, dz = rnd.randint(-2, 2), rnd.randint(-2, 2), rnd.randint(1, 5)
+            welt[(x + dx, y + dy, d - dz)] = "glowstone" if glow else "netherrack"
+
+    # Lavafälle (spring_open): von der Decke bzw. Wand bis ins Meer
+    for _ in range(rnd.randint(3, 5)):
+        x, y = rnd.choice((rnd.randint(breite[0] + 6, -10), rnd.randint(12, breite[1] - 8))), rnd.randint(28, laenge[1] - 10)
+        d = decken.get((x, y), 30)
+        for z in range(-2, d):
+            if (x, y, z) not in welt or welt[(x, y, z)] in ("lava",) or z > 0:
+                welt[(x, y, z)] = "lava"
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):  # kleiner Lavasee unten
+            welt[(x + dx, y + dy, -1)] = "lava"
+
+    # Riesenpilze (Karmesin- und Wirrwald): Stamm, breiter Hut, Pilzlicht darunter
+    if b.get("baum"):
+        stamm, hut = b["baum"]
+        for _ in range(b.get("baeume", 12)):
+            x, y = rnd.randint(breite[0] + 8, breite[1] - 8), rnd.randint(6, laenge[1] - 12)
+            if abs(x) < 9 and y < 10:
+                continue
+            boden = max((z for z in range(-3, 4) if welt.get((x, y, z)) not in (None, "lava")), default=None)
+            if boden is None or welt.get((x, y, boden)) == "lava":
+                continue
+            h = rnd.randint(6, 13)
+            for z in range(boden + 1, boden + 1 + h):
+                welt[(x, y, z)] = stamm
+            r = rnd.randint(2, 4)
+            for dx in range(-r, r + 1):
+                for dy in range(-r, r + 1):
+                    if abs(dx) + abs(dy) > r + 1:
+                        continue
+                    welt[(x + dx, y + dy, boden + h)] = hut
+                    if abs(dx) == r or abs(dy) == r:  # herabhängender Rand
+                        for dz in range(1, rnd.randint(2, 4)):
+                            welt[(x + dx, y + dy, boden + h - dz)] = hut if rnd.random() > 0.15 else "shroomlight"
+                    elif rnd.random() < 0.12:
+                        welt[(x + dx, y + dy, boden + h - 1)] = "shroomlight"
+            welt[(x, y, boden + h + 1)] = hut
+
+    # Basaltsäulen (Seelensandtal, Basaltdeltas)
+    if b.get("saeulen"):
+        for _ in range(28 if b.get("saeulen_viele") else 10):
+            x, y = rnd.randint(breite[0] + 8, breite[1] - 8), rnd.randint(8, laenge[1] - 10)
+            if abs(x) < 9 and y < 12:
+                continue
+            bis = decken.get((x, y), 30) if rnd.random() < 0.35 else rnd.randint(2, 12)
+            r = rnd.choice((0, 0, 1))
+            for dx in range(-r, r + 1):
+                for dy in range(-r, r + 1):
+                    for z in range(-3, bis):
+                        welt[(x + dx, y + dy, z)] = b["saeulen"]
+
+    # Knochen-Fossilien im Seelensandtal: Rippenbögen aus bone_block
+    if b.get("fossilien"):
+        for _ in range(3):
+            x, y = rnd.randint(-30, 40), rnd.randint(18, 60)
+            if abs(x) < 10:
+                continue
+            for i in range(0, 9, 2):
+                for z in range(0, 6):
+                    welt[(x - 3, y + i, z)] = "bone_block"
+                    welt[(x + 3, y + i, z)] = "bone_block"
+                for dx in range(-3, 4):
+                    welt[(x + dx, y + i, 6)] = "bone_block"
+    return welt
+
+
+def funken(farbe, seed=7, anzahl=220, collection=None):
+    """Glut- und Aschepartikel in der Luft (Stilbuch: Castcrafter 22, GommeHD 21 „Funken“): kleine leuchtende Würfel
+    zwischen Kamera und Hintergrund."""
+    import bmesh
+    col = collection or bpy.context.scene.collection
+    rnd = random.Random(seed + 11)
+    bm = bmesh.new()
+    for _ in range(anzahl):
+        s = rnd.uniform(0.04, 0.12) * BLOCK
+        m = bmesh.ops.create_cube(bm, size=s)
+        x, y, z = rnd.uniform(-14, 26), rnd.uniform(-2, 45), rnd.uniform(0.3, 14)
+        bmesh.ops.translate(bm, verts=m["verts"], vec=(x * BLOCK, y * BLOCK, z * BLOCK))
+    me = bpy.data.meshes.new("funken")
+    bm.to_mesh(me)
+    bm.free()
+    mat = bpy.data.materials.new("funken")
+    mat.use_nodes = True
+    nt = mat.node_tree
+    nt.nodes.clear()
+    em = nt.nodes.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = (*farbe, 1)
+    em.inputs["Strength"].default_value = 6.0
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    nt.links.new(em.outputs["Emission"], out.inputs["Surface"])
+    me.materials.append(mat)
+    ob = bpy.data.objects.new("funken", me)
+    col.objects.link(ob)
+    return ob
+
+
+def netherlicht(biom, collection=None):
+    """Licht im Nether: Glühen vom Lavameer und den Lavafällen weit hinten, nicht auf der Figur (die bekommt neutrales
+    Gesichtslicht und eine Randkante in Biomfarbe, sonst wird der Skin rot)."""
+    b = NETHER_BIOME[nether_biom(biom)]
+    col = collection or bpy.context.scene.collection
+    for i, (x, y, z, e) in enumerate(((16, 30, 3, 9000), (-18, 44, 4, 7000), (6, 64, 6, 12000), (30, 70, 10, 9000))):
+        l = bpy.data.lights.new(f"nether{i}", "POINT")
+        l.energy = e
+        l.color = b["licht"]
+        l.shadow_soft_size = 6.0
+        ob = bpy.data.objects.new(l.name, l)
+        ob.location = (x * BLOCK, y * BLOCK, z * BLOCK)
+        col.objects.link(ob)
+
+
+def baue_nether(texturen_ordner, aenderungen=None, biom="oede", seed=7, **_):
+    tex = bloecke.Texturen(texturen_ordner)
+    raster = aendern(nether(biom, seed), aenderungen)
+    pflanzen = [(x, y, z, a) for (x, y, z), a in raster.items() if bloecke.art_info(a, tex).get("kreuz")]
+    for x, y, z, _a in pflanzen:
+        del raster[(x, y, z)]
+    ob = bloecke.baue(raster, tex, "nether")
+    if pflanzen:
+        bloecke.baue_pflanzen(pflanzen, tex)
+    netherlicht(biom)
+    funken(NETHER_BIOME[nether_biom(biom)]["funken"], seed)
+    return ob
+
+
 def baue_raum(texturen_ordner, art="hoehle", aenderungen=None, **kw):
     tex = bloecke.Texturen(texturen_ordner)
     raster = aendern(raum(art, **kw), aenderungen)

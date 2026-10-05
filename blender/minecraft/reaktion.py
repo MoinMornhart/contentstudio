@@ -6,7 +6,8 @@ Aufbau in einer Blender-Szene, ein Render:
 - der echte Skin (nie gezeichnet) steht in einer Bildhälfte, auf Brusthöhe angeschnitten, Kopf 55–65 % der
   Bildhöhe, 15–35° zum Inhalt gedreht, mit Mimik und wechselnder Pose (14.1–14.4).
 - Genau ein Wort groß auf der Inhaltsseite (14.5), höchstens ein roter gebogener Pfeil zum Detail (14.6),
-  optional ein Logo in der unteren Ecke gegenüber der Figur (14.7).
+  optional der Spielname in der unteren Ecke gegenüber der Figur (14.7). Ein Logo setzt die App danach in eine freie
+  Ecke (blender/logo_setzen.py); dafür stehen alle belegten Stellen im Bericht unter „boxen“.
 - Weiches Key-Licht von vorn oben, dünne helle Randkante, kein Glow (14.8).
 """
 import math
@@ -133,9 +134,102 @@ def _pfeil(von, nach, dicke, farbe=ROT):
     return ob
 
 
+def _figur_box(fig, bild):
+    """Umriss der Figur im Bild (0–1, oben links = 0,0), auf das Bild beschnitten."""
+    pts = [bild(o.matrix_world @ Vector(c)) for o in fig.teile.values() if o.type == "MESH" for c in o.bound_box]
+    return (max(0.0, min(p[0] for p in pts)), max(0.0, min(p[1] for p in pts)), min(1.0, max(p[0] for p in pts)), min(1.0, max(p[1] for p in pts)))
+
+
+def _verdeckt(box, sperren):
+    """Größter Anteil eines gesperrten Kastens (Logo, Titel, Gesicht), den die Figur überdeckt."""
+    beste = 0.0
+    for b in sperren:
+        flaeche = max(1e-6, (b[2] - b[0]) * (b[3] - b[1]))
+        schnitt = max(0.0, min(box[2], b[2]) - max(box[0], b[0])) * max(0.0, min(box[3], b[3]) - max(box[1], b[1]))
+        beste = max(beste, schnitt / flaeche)
+    return beste
+
+
+def _logos_frei(spec, fig, stelle, pose_name, bild, cam, cam_daten, seite, abstand, kopf, gruppe=False):
+    """Die Figur darf Logo, Titel und Gesichter im Original nicht verdecken (Test 01.10.: „DEAD BY DAYLIGHT“ und
+    „LETHAL COMPANY“ halb unter der Hauptfigur). Schrittweise kleiner und an den Rand, bis höchstens 12 % eines Kastens
+    bedeckt sind; sonst die Größe mit der geringsten Überdeckung."""
+    sperren = [b for b in (spec.get("sperren") or []) if len(b) == 4]
+
+    def box():
+        # mit Freunden zählt die Gruppe: von der Hauptfigur bis zum Bildrand (dort stehen die Freunde)
+        b = _figur_box(fig, bild)
+        return ((0.0, b[1], b[2], b[3]) if seite == "links" else (b[0], b[1], 1.0, b[3])) if gruppe else b
+
+    if not sperren or _verdeckt(box(), sperren) <= 0.12:
+        return kopf, abstand
+    start = spec.get("kopf_anteil", 0.42)
+    versuche = []
+    for anteil in (start, start * 0.87, start * 0.75, start * 0.64, start * 0.55):
+        kopf, abstand = stelle(pose_name, anteil)
+        if gruppe:  # nicht an den Rand: dort brauchen die Freunde Platz
+            wert = _verdeckt(box(), sperren)
+            versuche.append((wert, anteil, cam.location.x))
+            if wert <= 0.12:
+                return kopf, abstand
+            continue
+        # an den Rand schieben, solange der Kopf ganz im Bild bleibt
+        ecken = [bild(c) for c in fig.kopf_ecken()]
+        k0, k1 = min(e[0] for e in ecken), max(e[0] for e in ecken)
+        schub = (k0 - 0.015) if seite == "links" else (0.985 - k1)
+        breite_m = 2 * abstand * math.tan(cam_daten.angle_x / 2)
+        cam.location.x += (schub if seite == "links" else -schub) * breite_m
+        bpy.context.view_layer.update()
+        wert = _verdeckt(box(), sperren)
+        versuche.append((wert, anteil, cam.location.x))
+        if wert <= 0.12:
+            print("CS_LOGO_FREI anteil", round(anteil, 2), "verdeckt", round(wert, 2))
+            return kopf, abstand
+    wert, anteil, x = min(versuche)
+    kopf, abstand = stelle(pose_name, anteil)
+    cam.location.x = x
+    bpy.context.view_layer.update()
+    print("CS_LOGO_FREI bestmoeglich anteil", round(anteil, 2), "verdeckt", round(wert, 2))
+    return kopf, abstand
+
+
+def _kopf_ins_bild(fig, bild, cam, cam_daten, abstand):
+    """Der Kopf ragt nie über den Bildrand (Hogwarts-Wunschpose 01.10.: Kopf rechts angeschnitten)."""
+    ecken = [bild(c) for c in fig.kopf_ecken()]
+    k0, k1 = min(e[0] for e in ecken), max(e[0] for e in ecken)
+    schub = min(0.0, k0 - 0.01) + max(0.0, k1 - 0.99)
+    if schub:
+        cam.location.x += schub * 2 * abstand * math.tan(cam_daten.angle_x / 2)
+        bpy.context.view_layer.update()
+
+
+def _freunde_stellen(spec, freunde, s, richtung, u_haupt, v_haupt, abstand, cam, cam_daten):
+    """Freunde neben der Hauptfigur zur Randseite hin, etwas weiter hinten (kleiner, leicht unscharf)."""
+    for i, fr in enumerate(spec.get("freunde") or []):
+        f = mfigur.baue_figur(f"freund{i}", fr["skin"], slim=fr.get("slim"))
+        roh = fr.get("pose", "neutral")
+        pf = {k: (dict(v) if isinstance(v, dict) else v) for k, v in (roh if isinstance(roh, dict) else POSEN.get(roh, POSEN["neutral"])).items()}
+        if s > 0:
+            pf = mszene._spiegeln(pf)
+        pf["blick"] = -s * 14  # leicht zu der Hauptfigur und zum Inhalt gedreht
+        mfigur.pose(f, pf)
+        tiefe = abstand * (1.12 + 0.1 * i)
+        u_f = u_haupt - richtung * (0.23 + 0.16 * i)  # zur Randseite, damit der Inhalt frei bleibt
+        # Kopf des Freundes nie am Bildrand angeschnitten (Chained Together 01.10.: der Freund halb aus dem Bild) – er
+        # steht dann näher bei der Hauptfigur, aber dahinter
+        u_f = min(0.88, max(0.12, u_f))
+        breite_t = 2 * tiefe * math.tan(cam_daten.angle_x / 2)
+        ziel_kopf = cam.location + Vector(((u_f - 0.5) * breite_t, tiefe, (0.5 - (v_haupt - 0.02)) * breite_t * HOEHE / BREITE))
+        f.wurzel.location = ziel_kopf - f.kopf_mitte()
+        bpy.context.view_layer.update()
+        if spec.get("mimik"):
+            mmimik.setze_mimik(f, spec["mimik"])
+        freunde.append(f)
+
+
 def baue_reaktion(spec, ausgabe, bericht=None):
     """spec: {hintergrund, skin, slim, seite: links|rechts, mimik, pose, wort, wort_farbe, schrift,
-    pfeil_ziel: [u, v] (0..1, oben links = 0,0), logo, samples}"""
+    pfeil_ziel: [u, v] (0..1, oben links = 0,0), samples}"""
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene = bpy.context.scene
     scene.render.resolution_x, scene.render.resolution_y = BREITE, HOEHE
@@ -218,6 +312,9 @@ def baue_reaktion(spec, ausgabe, bericht=None):
             bpy.context.view_layer.update()
             if noetig <= platz:
                 break
+    kopf, abstand = _logos_frei(spec, fig, stelle, pose_name, bild, cam, cam_daten, seite, abstand, kopf, gruppe=bool(spec.get("freunde")))
+    if not spec.get("freunde"):
+        _kopf_ins_bild(fig, bild, cam, cam_daten, abstand)
     if spec.get("mimik"):
         mmimik.setze_mimik(fig, spec["mimik"])
     # Freunde („wenn ich mit einem anderen ein Video aufnehme, muss er mit aufs Thumbnail“):
@@ -226,23 +323,19 @@ def baue_reaktion(spec, ausgabe, bericht=None):
     freunde = []
     richtung = 1 if seite == "links" else -1  # Inhaltsseite im Bild
     u_haupt, v_haupt = bild(kopf)
-    for i, fr in enumerate(spec.get("freunde") or []):
-        f = mfigur.baue_figur(f"freund{i}", fr["skin"], slim=fr.get("slim"))
-        roh = fr.get("pose", "neutral")
-        pf = {k: (dict(v) if isinstance(v, dict) else v) for k, v in (roh if isinstance(roh, dict) else POSEN.get(roh, POSEN["neutral"])).items()}
-        if s > 0:
-            pf = mszene._spiegeln(pf)
-        pf["blick"] = -s * 14  # leicht zu der Hauptfigur und zum Inhalt gedreht
-        mfigur.pose(f, pf)
-        tiefe = abstand * (1.12 + 0.1 * i)
-        u_f = u_haupt - richtung * (0.23 + 0.16 * i)  # zur Randseite, damit der Inhalt frei bleibt
-        breite_t = 2 * tiefe * math.tan(cam_daten.angle_x / 2)
-        ziel_kopf = cam.location + Vector(((u_f - 0.5) * breite_t, tiefe, (0.5 - (v_haupt - 0.02)) * breite_t * HOEHE / BREITE))
-        f.wurzel.location = ziel_kopf - f.kopf_mitte()
-        bpy.context.view_layer.update()
-        if spec.get("mimik"):
-            mmimik.setze_mimik(f, spec["mimik"])
-        freunde.append(f)
+    _freunde_stellen(spec, freunde, s, richtung, u_haupt, v_haupt, abstand, cam, cam_daten)
+    # Verdeckt der Arm der Hauptfigur einen Freund (Chained Together 01.10.: der Freund fast ganz hinter dem erhobenen Arm),
+    # nimmt die Hauptfigur die Pose ohne Hände
+    if freunde and pose_name != "neutral" and not spec.get("pose_fest") and min(mszene._gesicht_sichtbar(scene, cam, f) for f in freunde) < 0.5:
+        for f in freunde:
+            for o in [f.wurzel, *f.wurzel.children_recursive]:
+                bpy.data.objects.remove(o, do_unlink=True)
+        freunde.clear()
+        pose_name = "neutral"
+        kopf, abstand = stelle(pose_name, spec.get("kopf_anteil"))
+        u_haupt, v_haupt = bild(kopf)
+        _freunde_stellen(spec, freunde, s, richtung, u_haupt, v_haupt, abstand, cam, cam_daten)
+        print("CS_FREUND verdeckt – Hauptfigur ohne Hände")
     cam_daten.dof.use_dof = True
     cam_daten.dof.focus_distance = abstand
     cam_daten.dof.aperture_fstop = 4.0 if freunde else 2.8
@@ -277,6 +370,7 @@ def baue_reaktion(spec, ausgabe, bericht=None):
         return cam.location + Vector(((u - 0.5) * b_e, ebene, (0.5 - v) * h_e))
 
     info = {"wort": None, "pfeil": None, "pose": pose_name, "gesicht_sichtbar": round(sicht, 2)}
+    boxen = []  # belegte Stellen (Wort, Pfeil, Spielname, Freunde) – dort darf später kein Logo hin
     rng = mtext.zufall(spec)
     if spec.get("wort"):
         wort = spec["wort"].upper()
@@ -286,7 +380,10 @@ def baue_reaktion(spec, ausgabe, bericht=None):
         f_oben = min(e[1] for e in ecken_k) - 0.03
         ziel = spec.get("pfeil_ziel")
         haende = [bild(g.hand(h)) for g in [fig, *freunde] for h in ("r", "l")]
-        sperren = spec.get("sperren") or []  # Titel, Logos, Gesichter im Original (von Claude)
+        sperren = list(spec.get("sperren") or [])  # Titel, Logos, Gesichter im Original (von Claude)
+        if spec.get("spiel"):  # die Ecke für den Spielnamen (wird danach gesetzt) – sonst lag das Wort darüber (01.10.)
+            mu = 0.84 if seite == "links" else 0.16
+            sperren.append([max(0.0, mu - 0.22), 0.82, min(1.0, mu + 0.22), 0.98])
 
         def frei_fuer(anteil, halb_b, mit_sperren=True):
             def frei(u, v):
@@ -328,6 +425,7 @@ def baue_reaktion(spec, ausgabe, bericht=None):
         kipp = mtext.neigung(rng)
         t.rotation_euler = (math.radians(90), math.radians(kipp), 0)
         info["wort"] = {"platz": [round(u_t, 3), round(v_t, 3)], "neigung": round(kipp, 1), "farbe": farbname}
+        boxen.append([u_t - halb_b - 0.02, v_t - anteil / 2 - 0.04, u_t + halb_b + 0.02, v_t + anteil / 2 + 0.04])  # mit Luft für die Neigung
     else:
         u_t, v_t, halb_b = inhalt_u, 0.16, 0.0
     if spec.get("pfeil_ziel"):
@@ -341,16 +439,24 @@ def baue_reaktion(spec, ausgabe, bericht=None):
         ende = punkt(zu, zv - 0.06 if zv > v_start else zv + 0.06)
         _pfeil(start, ende, h_e * 0.03)
         info["pfeil"] = [zu, zv]
+        (su, sv), (eu, ev) = bild(start), bild(ende)
+        boxen.append([min(su, eu) - 0.04, min(sv, ev) - 0.04, max(su, eu) + 0.04, max(sv, ev) + 0.04])
     if spec.get("spiel"):
         # Spielname als Logo in der unteren Ecke gegenüber der Figur, 12–20 % der Bildbreite (Stilbuch 14.7)
         name = _textobjekt(spec["spiel"].upper(), spec.get("schrift"), h_e * 0.075, (1, 0.85, 0.2))
-        name.location = punkt(0.84 if seite == "links" else 0.16, 0.9)
         name.rotation_euler = (math.radians(90), 0, 0)
+        bpy.context.view_layer.update()
+        # echte Breite messen: lange Namen ragten sonst aus dem Bild („HAINED TOGETHER“, 01.10.) – höchstens 40 % der
+        # Breite, die Mitte so weit vom Rand, dass alles drin ist
+        halb = name.dimensions.x / b_e / 2
+        if halb > 0.2:
+            name.scale = (0.2 / halb,) * 3
+            halb = 0.2
+        mitte_u = 0.84 if seite == "links" else 0.16
+        mitte_u = min(0.98 - halb, max(0.02 + halb, mitte_u))
+        name.location = punkt(mitte_u, 0.9)
         info["spiel"] = spec["spiel"]
-    if spec.get("logo") and os.path.exists(spec["logo"]):
-        logo = _bildflaeche(spec["logo"], cam, ebene, name="logo", helligkeit=1.0)
-        logo.scale = (0.16, 0.16, 0.16)
-        logo.location = punkt(0.86 if seite == "links" else 0.14, 0.86)
+        boxen.append([mitte_u - halb - 0.01, 0.85, mitte_u + halb + 0.01, 0.95])
 
     scene.render.engine = "CYCLES"
     mlook.gpu_einrichten(scene, spec.get("geraet", "CPU"))
@@ -366,6 +472,12 @@ def baue_reaktion(spec, ausgabe, bericht=None):
     bpy.context.view_layer.update()
     ecken = [world_to_camera_view(scene, cam, c) for c in fig.kopf_ecken()]
     info["kopf_box"] = [min(e.x for e in ecken), 1 - max(e.y for e in ecken), max(e.x for e in ecken), 1 - min(e.y for e in ecken)]
+    for f in freunde:  # Kopf und Körper der Freunde (der Körper reicht bis zum unteren Rand)
+        ek = [bild(c) for c in f.kopf_ecken()]
+        k = [min(e[0] for e in ek), min(e[1] for e in ek), max(e[0] for e in ek), max(e[1] for e in ek)]
+        w = k[2] - k[0]
+        boxen += [k, [k[0] - w * 0.75, k[1], k[2] + w * 0.75, 1.0]]
+    info["boxen"] = [[round(v, 4) for v in b] for b in boxen]
     if ausgabe:
         scene.render.filepath = ausgabe
         bpy.ops.render.render(write_still=True)

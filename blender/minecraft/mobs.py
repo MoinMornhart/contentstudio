@@ -30,7 +30,11 @@ def augen_textur(texturen_ordner, textur):
     return None
 
 
-def _material(name, bild, augen=None):
+# Mobs, deren Textur das Spiel erst beim Spielen einfärbt (Tropenfisch: weiße Grundtextur, Farbe je Variante)
+TOENUNG = {"tropicalfish": (0.95, 0.16, 0.01)}
+
+
+def _material(name, bild, augen=None, toenung=None):
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
     nt = mat.node_tree
@@ -38,7 +42,14 @@ def _material(name, bild, augen=None):
     tex = nt.nodes.new("ShaderNodeTexImage")
     tex.image = bild
     tex.interpolation = "Closest"
-    nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    if toenung:
+        mal = nt.nodes.new("ShaderNodeVectorMath")
+        mal.operation = "MULTIPLY"
+        mal.inputs[1].default_value = toenung
+        nt.links.new(tex.outputs["Color"], mal.inputs[0])
+        nt.links.new(mal.outputs[0], bsdf.inputs["Base Color"])
+    else:
+        nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
     nt.links.new(tex.outputs["Alpha"], bsdf.inputs["Alpha"])
     if hasattr(mat, "blend_method"):
         mat.blend_method = "CLIP"
@@ -67,7 +78,10 @@ def _mesh(name, boxes, tex_w, tex_h, pivot_b, mat):
         if box.get("mirror"):
             rects["rechts"], rects["links"] = rects["links"], rects["rechts"]
         mitte = Vector((ox + w / 2, oz + d / 2, oy + h / 2))  # Blender-Achsen (x, z, y)
-        for face, ecken in _faces(w, h, d, inf).items():
+        # Nullstärke-Boxen (Flossen, Flügel): Vorder- und Rückseite lägen exakt aufeinander, das rendert
+        # Cycles schwarz – deshalb hauchdünn auseinanderziehen
+        dick = [max(a, 0.02) for a in (w, h, d)]
+        for face, ecken in _faces(*dick, inf).items():
             rx, ry, rw, rh = rects[face]
             if rw == 0 or rh == 0:
                 continue
@@ -120,7 +134,39 @@ def tabelle(pfad=None):
         return json.load(fh)
 
 
+def _schaf(eintrag, texturen_ordner, groesse, pose, collection, name):
+    """Schaf wie im Java-Spiel aus zwei Schichten: geschorener Körper mit Gesicht (sheep.png) und darüber die Wolle
+    (sheep_wool.png). Die Bedrock-Tabelle kennt nur das Wollmodell mit einer Färbe-Maske ohne Gesicht – das Schaf war
+    ein weißer Klotz (Mob-Prüfbogen 01.10.)."""
+    ordner = os.path.join(texturen_ordner, "entity", "sheep")
+    haut = {"head": ([-3, 16, -14], [6, 6, 8], [0, 0]), "body": (None, [8, 16, 6], [28, 8])}
+    koerper = []
+    for p in eintrag["parts"]:
+        q = dict(p, boxes=[])
+        for bx in p["boxes"]:
+            if p["name"] in haut:
+                o, g, uv = haut[p["name"]]
+                q["boxes"].append(dict(bx, origin=o or bx["origin"], size=g, uv=uv, inflate=0))
+            else:  # Beine: ganze Länge ab dem Boden
+                q["boxes"].append(dict(bx, origin=[bx["origin"][0], 0, bx["origin"][2]], size=[4, 12, 4], uv=[0, 16], inflate=0))
+        koerper.append(q)
+    wolle = [dict(p, boxes=[dict(bx, uv=[bx["uv"][0], bx["uv"][1] - 32]) for bx in p["boxes"]]) for p in eintrag["parts"]]
+    basis = dict(eintrag, texture=os.path.join(ordner, "sheep.png"), tex_size=[64, 32], parts=koerper, _schicht=True)
+    mob = baue_mob("sheep", basis, texturen_ordner, groesse, pose, collection, name)
+    fell = baue_mob("sheep", dict(basis, texture=os.path.join(ordner, "sheep_wool.png"), parts=wolle), texturen_ordner,
+                    1.0, pose, collection, f"{mob.wurzel.name[:-len('.wurzel')]}.wolle")
+    fell.wurzel.parent = mob.wurzel
+    fell.wurzel.location = (0, 0, 0)
+    fell.wurzel.scale = (1, 1, 1)
+    mob.teile.update({f"wolle_{k}": v for k, v in fell.teile.items()})
+    bpy.context.view_layer.update()
+    return mob
+
+
 def baue_mob(art, eintrag, texturen_ordner, groesse=1.0, pose="stand", collection=None, name=None):
+    if art == "sheep" and not eintrag.get("_schicht") and all(
+            os.path.exists(os.path.join(texturen_ordner, "entity", "sheep", d)) for d in ("sheep.png", "sheep_wool.png")):
+        return _schaf(eintrag, texturen_ordner, groesse, pose, collection, name)
     col = collection or bpy.context.scene.collection
     pfad = os.path.join(texturen_ordner, eintrag["texture"])
     bild = bpy.data.images.load(pfad, check_existing=True)
@@ -131,7 +177,7 @@ def baue_mob(art, eintrag, texturen_ordner, groesse=1.0, pose="stand", collectio
     augen = bpy.data.images.load(augen_pfad, check_existing=True) if augen_pfad else None
     if augen:
         augen.alpha_mode = "STRAIGHT"
-    mat = _material(f"mob.{art}", bild, augen)
+    mat = _material(f"mob.{art}", bild, augen, TOENUNG.get(art))
     skala = (eintrag.get("scale") or 1.0) * groesse
     name = name or art
     wurzel = bpy.data.objects.new(f"{name}.wurzel", None)
@@ -147,6 +193,9 @@ def baue_mob(art, eintrag, texturen_ordner, groesse=1.0, pose="stand", collectio
             fertig.add(p["name"])
             offen.remove(p)
     for p in reihe:
+        # Zustandsteile, die das Spiel nur manchmal zeigt (Fuchs „head_sleeping“ – im Prüfbogen ein schwarzer Klotz)
+        if "sleep" in p["name"] or p["name"] == "eggbelly":  # Schildkröte: Bauch nur, wenn sie Eier trägt
+            continue
         pb = Vector((p["pivot"][0], p["pivot"][2], p["pivot"][1]))
         e = bpy.data.objects.new(f"{name}.{p['name']}", None)
         col.objects.link(e)
@@ -164,7 +213,9 @@ def baue_mob(art, eintrag, texturen_ordner, groesse=1.0, pose="stand", collectio
         if pose == "angriff" and p["name"] in ("right_arm", "left_arm") and art not in ARME_VORN:
             rx -= 70
         e.rotation_mode = "XZY"
-        e.rotation_euler = Euler((math.radians(rx), math.radians(-rz), math.radians(ry)), "XZY")
+        # Drehung um die Vorwärtsachse (Bedrock z → Blender y) mit gleichem Vorzeichen: mit umgekehrtem lagen die
+        # Piglin-Ohren im Kopf und die Drachenflügel waren zu einem Strich gefaltet (Mob-Prüfbogen 30.09.)
+        e.rotation_euler = Euler((math.radians(rx), math.radians(rz), math.radians(ry)), "XZY")
         empties[p["name"]] = e
         me = _mesh(f"{name}.{p['name']}.mesh", p["boxes"], tex_w, tex_h, pb, mat)
         if me:

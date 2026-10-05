@@ -81,6 +81,17 @@ export async function sicherePython(u: ThumbUmgebung, ctx: JobContext<unknown>, 
   }
 }
 
+/**
+ * Kleine Python-Umgebung nur mit Pillow und numpy für Veredeln, Grafik-Ebene und geteilte Bilder der Minecraft-Engine
+ * (aus MoinStudio v0.39.0/v0.42.0). Getrennt von den Bildwerkzeugen, damit Minecraft-Thumbnails kein rembg brauchen.
+ */
+export async function sichereGrafikPython(u: ThumbUmgebung, ctx: JobContext<unknown>): Promise<PyUmgebung> {
+  if (!u.uv) throw new Error(t('thumb.fehlt.uv'))
+  const python = await sichereUmgebung(u.uv, join(u.pyDir, '..', 'grafik'), ctx)
+  await sicherePakete(u.uv, python, 'PIL, numpy', ['pillow', 'numpy'], ctx, t('thumb.schritt.grafikWerkzeuge'))
+  return { python, env: { ...process.env, PYTHONIOENCODING: 'utf-8' } }
+}
+
 /** Python-Skript der Bildwerkzeuge ausführen; liefert die Ausgabe (wirft bei Fehler mit den letzten Zeilen). */
 export function py(p: PyUmgebung, skript: string, args: string[], ctx: JobContext<unknown>): Promise<string> {
   return lauf(p.python, [skript, ...args], ctx, p.env)
