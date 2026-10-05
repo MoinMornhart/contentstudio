@@ -10,6 +10,17 @@ Kurzbeschreibung für die README.
 
 ### Added
 
+- Schnitt: Effekt-Bibliothek. Eigene Effekte mit Namen anlegen (z. B. „Abo-Animation“, „Boom“) aus Video mit
+  Transparenz, Greenscreen-Video, Bild und/oder Sound. Per Knopf: Häufigkeit (in jedem Video / nur in manchen – jedes
+  n-te oder X % / nur manuell), Konten, Richtungen, fester Zeitpunkt oder automatisch nach dem ersten Höhepunkt,
+  Position und Größe. Nach dem Rohschnitt setzt ContentStudio sie selbst ein; per Wunsch geht es auch („blend die
+  Abo-Animation bei 2:14 ein“). Die Bibliothek liegt im Datenordner, alle Geräte teilen sie.
+- Greenscreen entfernen ohne Adobe: Die Hintergrundfarbe wird beim Hochladen erkannt, sonst per Pipette gewählt; Regler
+  für Toleranz, Kantenweichheit und Grünstich mit Live-Vorschau über einem Standbild aus dem neuesten Projekt. Videos mit
+  Transparenz (WebM, MOV) behalten ihren Alphakanal.
+- Schnitt: Regeln aus einer Recherche erfolgreicher Creator für jede Richtung (Hook, Rhythmus, Sounds, Text, Abo-Hinweis)
+  und eigene Regeln für Reactions, Gaming und Hochformat; Reactions werden enger geschnitten (Pausen ab 0,5 s).
+
 - Minecraft-Thumbnails: Grafik-Ebene wie bei großen Minecraft-Kanälen – Hotbar mit Herzen, Hunger und XP, „Level 19“,
   Etiketten im Knopf-Stil, rote Lupe mit Pfeil, Haken-/Kreuz-/Zahl-Abzeichen und großer Regel-Text, alles aus den
   echten Texturen und der Schrift der Spieldatei; dazu leuchtende Bodenmarkierungen. Der Text weicht der Grafik aus.

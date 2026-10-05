@@ -47,3 +47,8 @@ Der Neubau beruht auf MoinStudio v0.36.2. Neuere MoinStudio-Versionen werden nac
 | v0.38.0, v0.40.0 `freistellen.py` (Maske je Person, SAM), `vorlage_titel.py` | Vorlage | Python übernommen (rückwärtskompatibel); die zugehörige Vorlagen-Planung folgt mit der Spiele-Vorlage | v0.7.3 |
 | v0.38.0–v0.41.0 Spiele-Vorlage für jede Art von Bild (Planung, Schlussprüfung, Handziele, Verbindungen, Ersatzmodelle) | Vorlage | offen: folgt in einer der nächsten Versionen über die KI-Schicht | – |
 | v0.38.0, v0.40.1 Logo in Reaction/Gaming, Logo-Reiter und -Bibliothek | Thumbnail | offen: ContentStudio setzt das Marken-Logo schon in jedes Thumbnail; Reiter und Bibliothek folgen | – |
+| v0.46.0 Video-Einblendung mit Alphakanal und Ton | Schnitt | übernommen, Dateien kommen aus der Effekt-Bibliothek | v0.7.3 |
+| v0.46.0 Testschalter `--moin-schnitt-export` | Test | übersprungen: ContentStudio testet den Export direkt im Echt-Test (`tests/echt/schnitt.test.ts`) | – |
+| v0.49.0 Kanal und Videotyp per Knopf | Schnitt | schon so: Konto und Richtung je Projekt (aus dem Profil, änderbar); die KI rät nichts | – |
+| v0.49.0 Schnitt-Regeln je Videotyp (Recherche) | Schnitt | übernommen und verallgemeinert: gemeinsame Regeln für jede Richtung, eigene für Reactions, Gaming und Hochformat; Pausen Reaction 0,5 s, Gaming 0,6 s | v0.7.3 |
+| v0.50.0 Effekt-Bibliothek mit Greenscreen-Entfernung | Schnitt | übernommen: Konten und Richtungen statt fester Kanäle und Typen; ergänzt um das automatische Einsetzen nach dem Rohschnitt (Häufigkeit, Platzierung) und um die Bibliothek im Wunsch-Prompt | v0.7.3 |

@@ -16,6 +16,8 @@ import { vorschauJob } from '../../src/main/schnitt/vorschau'
 import { exportJob } from '../../src/main/schnitt/export'
 import { spurJob } from '../../src/main/schnitt/spuren'
 import type { EffektHilfe } from '../../src/main/schnitt/effekt-vorbereitung'
+import { dateiInBibliothek, loescheBibEffekt, speichereBibEffekt } from '../../src/main/schnitt/bibliothek'
+import { keyFarbeErkennen } from '../../src/main/schnitt/chroma'
 import { ctx, dauerVon, FFMPEG, FFPROBE, PY_DIR, ROOT, SKRIPTE, sprachDatei, testVideo, umgebung, UV } from './hilfen'
 import type { Plattform } from '../../src/shared/profil'
 
@@ -137,6 +139,38 @@ describe('Schnitt echt', () => {
     expect(Math.abs(d - r.laenge)).toBeLessThan(0.4)
     expect(existsSync(join(ordner, 'effekte', 'text0.png'))).toBe(true)
     for (const [name, zeit] of [['anfang', 1], ['mitte', d / 2], ['ende', d - 1]] as const) execFileSync(FFMPEG, ['-y', '-v', 'error', '-ss', zeit.toFixed(2), '-i', join(ordner, 'vorschau.mp4'), '-frames:v', '1', join(AUS, `effekte-${name}.jpg`)])
+  }, 900_000)
+
+  it('Effekt-Bibliothek: Greenscreen-Effekt wird nach dem Rohschnitt eingesetzt, das Grün ist im Video weg', async () => {
+    // Greenscreen-Video: grüner Hintergrund mit rotem Kasten, 3 s
+    const gs = join(AUS, 'greenscreen.mp4')
+    execFileSync(FFMPEG, ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'color=c=0x00d040:s=640x360:r=30:d=3', '-vf', 'drawbox=x=220:y=110:w=200:h=140:color=red:t=fill', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', gs])
+    const datei = await dateiInBibliothek(DATEN, 'gs1', 'video', gs)
+    const farbe = await keyFarbeErkennen(FFMPEG, join(DATEN, 'effekte', 'gs1', datei))
+    console.log('erkannte Key-Farbe', farbe)
+    expect(farbe).toMatch(/^#[0-9a-f]{6}$/)
+    await speichereBibEffekt(DATEN, { id: 'gs1', name: 'Test-Greenscreen', video: { datei, greenscreen: true, ton: false }, chroma: { farbe: farbe!, toleranz: 0.3, weichheit: 0.1, spill: 0.5 }, haeufigkeit: { modus: 'immer' }, platzierung: { modus: 'fest', bezug: 'start', sekunden: 2 }, lage: 'voll', groesse: 1 })
+    const ordner = projektOrdner(DATEN, 'de')
+    await writeFile(join(ordner, 'effekte.json'), '[]')
+    await rohschnittJob({ daten: DATEN, projekt: 'de' }, ctx(), { ki: null })
+    const effekte = JSON.parse(await readFile(join(ordner, 'effekte.json'), 'utf8')) as { art: string; bib?: { auto?: boolean } }[]
+    expect(effekte.filter((e) => e.art === 'video' && e.bib?.auto)).toHaveLength(1)
+    await aendereProjekt(DATEN, 'de', () => ({ einstellungen: { untertitel: 'aus', zooms: false, format: '16:9' } }))
+    await vorschauJob({ daten: DATEN, projekt: 'de', ffmpeg: FFMPEG, hilfe, umgebung }, ctx())
+    const bild = execFileSync(FFMPEG, ['-v', 'error', '-ss', '3.5', '-i', join(ordner, 'vorschau.mp4'), '-frames:v', '1', '-vf', 'scale=64:36', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'])
+    let gruen = 0
+    let rot = 0
+    for (let i = 0; i + 2 < bild.length; i += 3) {
+      const [r, g, b] = [bild[i]!, bild[i + 1]!, bild[i + 2]!]
+      if (g > 150 && r < 110 && b < 130) gruen++
+      if (r > 150 && g < 90 && b < 90) rot++
+    }
+    console.log(`Bildpunkte grün ${gruen}, rot ${rot}`)
+    execFileSync(FFMPEG, ['-y', '-v', 'error', '-ss', '3.5', '-i', join(ordner, 'vorschau.mp4'), '-frames:v', '1', join(AUS, 'bibliothek-greenscreen.jpg')])
+    expect(rot).toBeGreaterThan(40) // der Kasten ist da
+    expect(gruen).toBeLessThan(20) // der Hintergrund ist weg
+    await writeFile(join(ordner, 'effekte.json'), '[]')
+    await loescheBibEffekt(DATEN, 'gs1')
   }, 900_000)
 
   it('5.5 Hochformat: das wandernde Motiv bleibt im Bild', async () => {
