@@ -91,7 +91,10 @@ Rezept auf diese Geschichte. Kopiere nie Texte, Logos oder Figuren der Vorbilder
    ins Auge springen) und kurzem `etikett` (1–2 Wörter oder ein Betrag). Die Hauptsache jedes Teils steht in der
    Bildmitte (ContentStudio rahmt selbst); wähle eine Kamera, bei der die Figur ganz zu sehen ist (`brust` oder `ganz`).
    `szene` der Variante = die Szene des ersten Teils. Höchstens eine Variante pro Plan als Split, und nur wenn die
-   Beschreibung wirklich einen Vergleich oder eine Steigerung enthält.
+   Beschreibung wirklich einen Vergleich oder eine Steigerung enthält. Nennt die Beschreibung ausdrücklich zwei Seiten
+   oder zwei Welten („links … rechts …“, „Oberwelt und Nether“, „vorher/nachher“), ist ein Split mit zwei Teilen
+   Pflicht für mindestens eine Variante – nie beide Welten in eine Szene bauen (Freiform-Lauf 05.10.: der Nether als
+   riesiger Netherrack-Klotz vor der Kamera).
    `{"split": {"teile": [{"szene": {…}, "etikett": "10€"}, {"szene": {…}, "etikett": "100€"}, {"szene": {…}, "etikett": "1000€"}]}}`
 9. **Kamera:** `kampf` bei zwei Kämpfern, `nah` bei Held plus Thema (Reaktionen, Gesichter), `ganz` wenn ein
    besonderer Ort oder eine Körperhaltung die Aussage ist (Yoga, Handstand, Klettern, Surfen, Reiten, Schlafen, Tanzen,

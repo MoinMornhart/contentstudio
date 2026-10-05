@@ -37,11 +37,13 @@ das Transkript gefunden werden.
 
 | Richtung | Thumbnails gut/mittel/schwach | Wünsche gut/mittel/schwach | Weg |
 |---|---|---|---|
-| Minecraft-Gaming | – | – | – |
-| Vlog | – | – | – |
-| Kochen | – | – | – |
-| Bildung/Tech | – | – | – |
-| Fitness (englisch) | – | – | – |
+| Minecraft-Gaming | 16 / 4 / 0 | – | claude-cli |
+| Vlog | 17 / 3 / 0 | – | claude-cli |
+| Kochen | 17 / 3 / 0 | – | claude-cli |
+| Bildung/Tech | 16 / 4 / 0 | – | claude-cli |
+| Fitness (englisch) | 17 / 3 / 0 | – | claude-cli |
+
+Thumbnails: Einzelbewertung in [freiform-thumbnails.md](freiform-thumbnails.md). Schnittwünsche folgen.
 
 Der Lauf ist vorbereitet und mit dem lokalen Testmodell (llama.cpp, Qwen2.5 0,5B) technisch geprüft. Für eine
 aussagekräftige Bewertung braucht es einen starken KI-Weg (API-Schlüssel oder lokales Modell ab etwa 8B); der fehlt auf

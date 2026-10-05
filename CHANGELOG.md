@@ -8,6 +8,13 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Fixed
+
+- Minecraft: Nennt die Beschreibung zwei Seiten oder Welten („links … rechts …“, Oberwelt und Nether), wird ein geteiltes
+  Bild geplant statt beides in eine Szene zu bauen. Die Bildprüfung sagt genauer, was nicht stimmt („Mob zu nah an der
+  Kamera“, „ragt rechts aus dem Bild“), damit die Korrektur trifft.
+- 3D-Avatar: Die Pose passt zur Stimmung (Schreck bei schlechten Nachrichten, Jubel nur bei Erfolg).
+
 ## [0.7.8] - 2026-10-05
 
 > Bessere Thumbnails: keine harten Kanten bei Porträts, passende Orte, ruhigere Gefahr-Kamera

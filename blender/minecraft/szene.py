@@ -592,8 +592,14 @@ def _messen(scene, cam, szene, figuren, mobs, gehalten, fehler):
         b = m["box"]
         sichtbar = max(0.0, min(1, b[2]) - max(0, b[0])) * max(0.0, min(1, b[3]) - max(0, b[1]))
         # sichtbar = zur Hälfte im Bild, oder (Riesenmob, angeschnitten wie bei den Vorbildern) füllt mindestens 12 % des Bildes
-        if _im_bild(b) < 0.5 and sichtbar < 0.12:
-            warnungen.append(f"Mob {m['art']} kaum sichtbar")
+        # Viel größer als das Bild: der Mob steht direkt vor der Linse (Freiform-Lauf 05.10.: Spinne als unscharfer
+        # brauner Block über dem halben Bild – „kaum sichtbar“ allein half der Korrektur nicht)
+        if (b[2] - b[0]) > 1.0 or (b[3] - b[1]) > 1.15:
+            warnungen.append(f"Mob {m['art']} zu nah an der Kamera ({(b[2] - b[0]):.1f}-mal so breit wie das Bild) – weiter von der Kamera weg und näher zur Hauptfigur stellen oder kleiner machen")
+        elif _im_bild(b) < 0.5 and sichtbar < 0.12:
+            raus = [r for r, ja in (("links", b[0] < 0), ("rechts", b[2] > 1), ("oben", b[1] < 0), ("unten", b[3] > 1)) if ja]
+            wohin = f" – ragt {' und '.join(raus)} aus dem Bild, weiter zur Bildmitte stellen (niedriger bzw. näher an die Hauptfigur)" if raus else ""
+            warnungen.append(f"Mob {m['art']} kaum sichtbar{wohin}")
         elif sichtbar < 0.12 and (b[0] < 0 or b[2] > 1 or b[1] < 0 or b[3] > 1):
             # kleine Mobs gehören ganz ins Bild (Riesenmobs dürfen angeschnitten sein wie bei den Vorbildern)
             warnungen.append(f"Mob {m['art']} am Bildrand angeschnitten – weiter zur Mitte oder näher an der Hauptfigur stellen")

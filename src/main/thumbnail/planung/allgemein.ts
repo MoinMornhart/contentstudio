@@ -81,7 +81,10 @@ const ENGINE_TEXT: Record<AllgemeinEingabe['engine'], string> = {
 
 const MODELL_REGELN = `8. **3D-Modell:** Fülle \`modell\` aus: \`pose\` (${MODELL_POSEN.join(', ')}), \`kopf\` (drehen −45…45 zur Bildmitte,
    neigen −25…25), \`kamera\` (nah = Kopf groß, brust = Oberkörper, ganz = ganze Figur), \`licht\` (studio, dramatisch,
-   weich) und optional \`randlicht\` als Farbe. \`personen\` enthält dann genau die Hauptfigur mit Seite und Größe.`
+   weich) und optional \`randlicht\` als Farbe. \`personen\` enthält dann genau die Hauptfigur mit Seite und Größe.
+   Die Pose trägt die Stimmung, weil das Modell kein Mienenspiel hat: \`schreck\` bei Schock, Lügen, Gefahr und schlechten
+   Nachrichten, \`nachdenken\` bei Fragen und Erklärungen, \`zeigen\` wenn auf ein Ding oder Thema verwiesen wird,
+   \`jubeln\` nur bei Erfolg und Freude (Freiform-Lauf 05.10.: Jubel-Pose bei „die größte Lüge über Handy-Akkus“).`
 
 export function allgemeinPrompt(vorlage: string, o: AllgemeinEingabe): string {
   const figuren = o.figuren.length
