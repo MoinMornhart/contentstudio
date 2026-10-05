@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.7.8] - 2026-10-05
+
+> Bessere Thumbnails: keine harten Kanten bei Porträts, passende Orte, ruhigere Gefahr-Kamera
+
 ### Fixed
 
 - Foto-Thumbnails: Eng zugeschnittene Porträts zeigen keine harten Schnittkanten mehr mitten im Bild – sie sitzen am
