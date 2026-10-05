@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.7.7] - 2026-10-05
+
+> Premiere-Brücke (UXP-Plugin, ungetestet); damit ist MoinStudio bis v0.50.1 übernommen
+
 ### Added
 
 - Premiere-Brücke (ungetestet): UXP-Plugin „ContentStudio Bridge“ für Premiere Pro (`premiere-plugin/`) und die
