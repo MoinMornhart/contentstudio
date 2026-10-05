@@ -1,7 +1,7 @@
 // Gemeinsame Hilfen der echten Tests: Werkzeuge aus CONTENTSTUDIO_TOOLS_DIR, Auftrags-Kontext, Testvideos aus der
 // Windows-Sprachausgabe (Sprechtext mit Pausen, dazu ein wanderndes weißes Quadrat als Bild).
 import { execFileSync } from 'node:child_process'
-import { existsSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { JobContext } from '../../src/main/jobs/queue'
 import type { ThumbUmgebung } from '../../src/main/thumbnail/umgebung'
@@ -15,6 +15,17 @@ export const UV = readdirSync(join(ROOT, 'uv')).map((v) => join(ROOT, 'uv', v, '
 export const PY_DIR = join(ROOT, 'py', 'vorlage')
 export const SKRIPTE = join(__dirname, '..', '..', 'blender')
 export const BLENDER = ['4.5.9', '5.2.2'].map((v) => join(ROOT, 'bl', v, 'blender.exe')).find(existsSync) ?? null
+
+/** Minecraft-Version im Zwischenspeicher (mc/aktuell.json), sonst 26.3 */
+export const MC_VERSION = ((): string => {
+  try {
+    return (JSON.parse(readFileSync(join(ROOT, 'mc', 'aktuell.json'), 'utf8')) as { version?: string }).version ?? '26.3'
+  } catch {
+    return '26.3'
+  }
+})()
+/** Standard-Skin aus der Spieldatei (alex, steve …) */
+export const mcSkin = (name: string): string => join(ROOT, 'mc', MC_VERSION, 'extracted', 'assets', 'minecraft', 'textures', 'entity', 'player', 'wide', `${name}.png`)
 
 export const umgebung: ThumbUmgebung = {
   blender: BLENDER ? { exe: BLENDER, mesa: true, geraet: 'CPU', samples: 16 } : null,

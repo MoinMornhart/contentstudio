@@ -8,6 +8,16 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Added
+
+- Thumbnail-Vorlage für jede Art von Bild: echte Menschen, Spielfiguren, Comic; eine oder mehrere Personen; von vorn,
+  hinten oder der Seite; springend, kletternd, sitzend, fallend. Jede ersetzte Person bekommt ihre eigene Maske, die
+  Figur wird genau in ihren Umriss eingepasst, die Arme zeigen dorthin, wo im Original die Hände waren, und Ketten oder
+  Seile zwischen Personen werden neu gezeichnet. Fehlt bei Poly Haven das genaue Modell, kommt ein ähnliches in die
+  Hand (Gewehr statt Schrotflinte), lange Dinge sind lang. Zum Schluss legt die Bild-KI Original und Ergebnis
+  nebeneinander und korrigiert bis zu zweimal Größe, Haltung, Reste der alten Person und verdeckte Titel (aus
+  MoinStudio v0.38.0–v0.41.0).
+
 ## [0.7.3] - 2026-10-05
 
 > Aus MoinStudio: Minecraft-Engine mit Grafik-Ebene und geteilten Bildern, Effekt-Bibliothek mit Greenscreen, Verlauf, Namensvorschläge

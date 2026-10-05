@@ -15,6 +15,7 @@ import type { ThumbUmgebung } from '../../src/main/thumbnail/umgebung'
 import type { JobContext } from '../../src/main/jobs/queue'
 import { exportiereFormat, exportierePsd } from '../../src/main/thumbnail/export'
 import { fakeKi } from '../ki-fake'
+import { mcSkin } from './hilfen'
 
 const ROOT = process.env['CONTENTSTUDIO_TOOLS_DIR'] ?? join(process.env['LOCALAPPDATA'] ?? '', 'ContentStudio')
 const AUS = join(process.env['LOCALAPPDATA'] ?? '', 'ContentStudio', 'test-echt', 'thumbnail')
@@ -84,7 +85,7 @@ const MINECRAFT: { beschreibung: string; szene: Record<string, unknown>; text?: 
 ]
 
 describe.runIf(!!BLENDER)('Minecraft: 10 Beschreibungen (echter Render)', () => {
-  const skin = join(ROOT, 'mc', '26.3', 'extracted', 'assets', 'minecraft', 'textures', 'entity', 'player', 'wide', 'alex.png')
+  const skin = mcSkin('alex')
   for (const [i, m] of MINECRAFT.entries()) {
     it(`${i + 1}. ${m.beschreibung}`, async () => {
       const { schicht } = fakeKi((a) => (a.prompt.includes('Korrektur nach dem Render') ? { szene: m.szene } : { varianten: [{ titel: m.beschreibung, vorbild: 'frei', warum: 'Test', text: m.text ? [{ text: m.text }] : [], szene: structuredClone(m.szene) }] }), { bilder: false })
@@ -120,7 +121,7 @@ const MINECRAFT_GRAFIK: { beschreibung: string; variante: Record<string, unknown
 ]
 
 describe.runIf(!!BLENDER && !!UV)('Minecraft: Grafik-Ebene und geteilte Bilder (echter Render)', () => {
-  const skin = join(ROOT, 'mc', '26.3', 'extracted', 'assets', 'minecraft', 'textures', 'entity', 'player', 'wide', 'alex.png')
+  const skin = mcSkin('alex')
   for (const [i, m] of MINECRAFT_GRAFIK.entries()) {
     it(`${i + 1}. ${m.beschreibung}`, async () => {
       const { schicht } = fakeKi((a) => (a.prompt.includes('Korrektur nach dem Render') ? { szene: m.variante['szene'] } : { varianten: [{ titel: m.beschreibung, vorbild: 'frei', warum: 'Test', text: [], ...structuredClone(m.variante) }] }), { bilder: false })

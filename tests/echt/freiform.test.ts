@@ -35,7 +35,7 @@ import { wunschJob } from '../../src/main/schnitt/bearbeiten'
 import { vorschauJob } from '../../src/main/schnitt/vorschau'
 import type { EffektHilfe } from '../../src/main/schnitt/effekt-vorbereitung'
 import { ClaudeCliTest, findeClaude } from './claude-cli'
-import { ctx, FFMPEG, PY_DIR, ROOT, SKRIPTE, sprachDatei, TEST_ECHT, testVideo, umgebung, UV } from './hilfen'
+import { ctx, FFMPEG, mcSkin, PY_DIR, ROOT, SKRIPTE, sprachDatei, TEST_ECHT, testVideo, umgebung, UV } from './hilfen'
 
 interface Richtung {
   id: string
@@ -116,7 +116,7 @@ function kiSchicht(): KiSchicht | null {
 
 function figuren(r: Richtung): FigurDaten[] {
   const basis: FigurDaten = { id: 'ich', name: 'Test', rolle: 'ich', skin: null, slim: null, fotos: [], mensch: false, modell: null }
-  if (r.figur.skin) return [{ ...basis, skin: join(ROOT, 'mc', '26.3', 'extracted', 'assets', 'minecraft', 'textures', 'entity', 'player', 'wide', `${r.figur.skin}.png`), slim: true }]
+  if (r.figur.skin) return [{ ...basis, skin: mcSkin(r.figur.skin), slim: true }]
   if (r.figur.foto) return [{ ...basis, fotos: [join(FOTOS, r.figur.foto)], mensch: true }]
   return [{ ...basis, modell: join(TEST_ECHT, 'thumbnail', r.figur.modell ?? 'avatar.glb') }]
 }
