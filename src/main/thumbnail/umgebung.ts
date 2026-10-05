@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { JobContext } from '../jobs/queue'
-import { lauf, sicherePakete, sichereUmgebung } from '../python'
+import { lauf, OPENCV_PRUEFUNG, sicherePakete, sichereUmgebung } from '../python'
 import { t } from '../i18n'
 
 /**
@@ -63,7 +63,7 @@ export interface PyUmgebung {
 export async function sicherePython(u: ThumbUmgebung, ctx: JobContext<unknown>, o: { lama?: boolean } = {}): Promise<PyUmgebung> {
   if (!u.uv) throw new Error(t('thumb.fehlt.uv'))
   const python = await sichereUmgebung(u.uv, u.pyDir, ctx)
-  await sicherePakete(u.uv, python, 'rembg, cv2, PIL, numpy', ['rembg==2.0.*', 'onnxruntime', 'opencv-python-headless', 'pillow', 'numpy'], ctx, t('thumb.schritt.bildwerkzeuge'))
+  await sicherePakete(u.uv, python, OPENCV_PRUEFUNG, ['rembg==2.0.*', 'onnxruntime', 'opencv-python-headless>=4.10,<5', 'pillow', 'numpy'], ctx, t('thumb.schritt.bildwerkzeuge'))
   await lade(YUNET.url, join(u.modelle, YUNET.datei), YUNET.sha256)
   if (o.lama) {
     ctx.progress(null, t('thumb.schritt.lama'))
