@@ -22,9 +22,38 @@ import numpy as np
 HINWEISE = {"de": "Ähm, also, äh, ja, genau.", "en": "Um, so, uh, yeah, like, right.", "es": "Eh, bueno, este, o sea.", "fr": "Euh, bon, alors, voilà."}
 
 
-def main(video, ziel, modell, geraet, genauigkeit, ffmpeg, dauer, modelle=None, sprache="de", begriffe=""):
+def lade_modell(modell, geraet, genauigkeit, modelle):
+    """Whisper-Modell laden – erst ohne Internet aus dem Ordner, nur wenn es fehlt herunterladen, mit Wiederholungen.
+    Sonst fragt faster-whisper bei jedem Transkript den Download-Server; bricht die Verbindung kurz ab, scheitert das
+    ganze Transkript („httpx.RemoteProtocolError: Server disconnected“, aus MoinStudio v0.48.1)."""
     from faster_whisper import WhisperModel
 
+    def cuda_fehler(fehler):
+        text = str(fehler).lower()
+        return "cuda" in text or "cublas" in text or "cudnn" in text
+
+    try:
+        return WhisperModel(modell, device=geraet, compute_type=genauigkeit, download_root=modelle, local_files_only=True)
+    except Exception as lokal:
+        if cuda_fehler(lokal):
+            raise
+    os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "60")
+    os.environ.setdefault("HF_HUB_ETAG_TIMEOUT", "30")
+    letzter = None
+    for versuch in range(5):
+        try:
+            print("CS_MODELL_LADEN", modell, versuch + 1, flush=True)
+            return WhisperModel(modell, device=geraet, compute_type=genauigkeit, download_root=modelle)
+        except Exception as fehler:
+            if cuda_fehler(fehler):
+                raise
+            letzter = fehler
+            print("CS_MODELL_WIEDERHOLUNG", type(fehler).__name__, str(fehler)[:120], flush=True)
+            time.sleep(min(30, 3 * 2 ** versuch))
+    raise RuntimeError(f"Sprachmodell konnte nicht geladen werden (Internet?): {letzter}")
+
+
+def main(video, ziel, modell, geraet, genauigkeit, ffmpeg, dauer, modelle=None, sprache="de", begriffe=""):
     start = 0.0
     if os.path.exists(ziel):
         with open(ziel, encoding="utf-8") as fh:
@@ -33,12 +62,12 @@ def main(video, ziel, modell, geraet, genauigkeit, ffmpeg, dauer, modelle=None, 
             start = zeilen[-1]["ende"]
     beginn = time.time()
     try:
-        m = WhisperModel(modell, device=geraet, compute_type=genauigkeit, download_root=modelle)
+        m = lade_modell(modell, geraet, genauigkeit, modelle)
     except Exception as fehler:  # z. B. CUDA-Bibliotheken fehlen: auf der CPU weiter
         if geraet == "cpu":
             raise
         print("CS_RUECKFALL", fehler, flush=True)
-        m = WhisperModel(modell, device="cpu", compute_type="int8", download_root=modelle)
+        m = lade_modell(modell, "cpu", "int8", modelle)
     # Ton in 10-Minuten-Stücken über FFmpeg lesen (16 kHz mono): wenig Speicher auch bei Stunden-Streams, jedes Stück
     # ist ein Fortsetzpunkt. Gestartet wird am Ende des letzten gespeicherten Abschnitts.
     stueck = 600.0
