@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.7.10] - 2026-10-05
+
+> Freiform-Tests bestanden: Thumbnails und Schnittwünsche in allen 5 Richtungen überwiegend gut
+
 ### Fixed
 
 - Schnitt-Wünsche: Die KI sieht das Transkript jetzt Satz für Satz mit genauen Zeiten, auch wenn die Spracherkennung einen
