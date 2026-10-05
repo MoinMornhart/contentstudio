@@ -39,3 +39,11 @@ Der Neubau beruht auf MoinStudio v0.36.2. Neuere MoinStudio-Versionen werden nac
 | v0.46.1 Zeitlimit für Claude-Aufrufe, faire Auswahl über alle Versuche | KI, Thumbnail | übernommen über die KI-Schicht für alle Anbieter; die Bildprüfung lief in ContentStudio schon bei jedem Versuch | v0.7.2 |
 | v0.38.0 OpenCV 4 statt 5 | Bild | übernommen | v0.7.2 |
 | v0.50.1 Abhängigkeiten (Electron 44.5.1, eslint 10.12, MCP 2.3) | Fundament | übernommen | v0.7.2 |
+| v0.38.0–v0.45.1 `blender/moin/*` (Gesichter, Posen, Werkzeuge, Blockmodelle, Nether-Biome, Mobs, Kamera, Duelle, Reaction-Gruppen) | Minecraft | übernommen per 3-Wege-Merge in `blender/minecraft/`, persönliche Bezüge neutralisiert | v0.7.3 |
+| v0.39.0 Grafik-Ebene (`grafik_setzen.py`), geteilte Bilder (`split_setzen.py`), Bodenmarkierung | Minecraft | übernommen; Python-Umgebung „grafik“ nur mit Pillow und numpy | v0.7.3 |
+| v0.40.0 Bildprüfung groß und in Handygröße | Thumbnail | übernommen über die KI-Schicht für alle Engines und alle Anbieter mit Bildern (Handy-Vorschau in Node statt Python) | v0.7.3 |
+| v0.42.0 Veredeln nach dem Render (`veredeln.py`) | Minecraft | übernommen | v0.7.3 |
+| v0.43.1 Prüfung auf zu kleine Hauptfigur | Minecraft | übernommen; Teil „Übernahme übersteht iCloud-Platzhalter“: schon so (Spieldateien liegen lokal) | v0.7.3 |
+| v0.38.0, v0.40.0 `freistellen.py` (Maske je Person, SAM), `vorlage_titel.py` | Vorlage | Python übernommen (rückwärtskompatibel); die zugehörige Vorlagen-Planung folgt mit der Spiele-Vorlage | v0.7.3 |
+| v0.38.0–v0.41.0 Spiele-Vorlage für jede Art von Bild (Planung, Schlussprüfung, Handziele, Verbindungen, Ersatzmodelle) | Vorlage | offen: folgt in einer der nächsten Versionen über die KI-Schicht | – |
+| v0.38.0, v0.40.1 Logo in Reaction/Gaming, Logo-Reiter und -Bibliothek | Thumbnail | offen: ContentStudio setzt das Marken-Logo schon in jedes Thumbnail; Reiter und Bibliothek folgen | – |

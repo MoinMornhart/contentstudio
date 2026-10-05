@@ -8,6 +8,29 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Added
+
+- Minecraft-Thumbnails: Grafik-Ebene wie bei großen Minecraft-Kanälen – Hotbar mit Herzen, Hunger und XP, „Level 19“,
+  Etiketten im Knopf-Stil, rote Lupe mit Pfeil, Haken-/Kreuz-/Zahl-Abzeichen und großer Regel-Text, alles aus den
+  echten Texturen und der Schrift der Spieldatei; dazu leuchtende Bodenmarkierungen. Der Text weicht der Grafik aus.
+- Minecraft-Thumbnails: geteilte Bilder für Vergleiche und Steigerungen (10€/100€/1000€, Noob/Pro, Vorher/Nachher) –
+  jeder Teil wird im Format seines Streifens gerendert und mit schräger Trennlinie und Etikett zusammengesetzt.
+- Minecraft-Thumbnails werden nach dem Render veredelt wie im Photoshop-Schritt großer Kanäle: Hintergrund weicher und
+  dunkler, Figuren knackiger, Randlicht in der Farbe der Umgebung.
+- Bildprüfung durch die KI (alle Thumbnail-Arten): Die KI sieht das Bild jetzt auch so klein, wie es auf dem Handy in der
+  Liste erscheint, und achtet auf Grafikfehler.
+- Minecraft: ausdrucksstarke Gesichter (Brauen, Glanzpunkte, Lachaugen, Mundformen, Wangen in den Farben des Skins),
+  sieben neue Posen, Knie und Ellbogen knicken wie Blockgelenke; Blöcke mit eigener Form (Laterne, Lagerfeuer, Treppe,
+  Zaun …) aus den Blockmodellen; Nether als riesige Höhle mit fünf Biomen; Klippen-Kamera, wenn jemand fast fällt.
+
+### Fixed
+
+- Minecraft: Werkzeuge und Waffen sitzen in jeder Hand richtig in der Faust, zeigen ihre Fläche statt der Kante, Bogen
+  gespannt, Dreizack als 3D-Modell, flache Items aufrecht; Beine fließen nicht mehr ineinander; Hotbar hinter der
+  Figur; Lava weniger grell; weiße Mobs im Nether bleiben weiß; Piglin-Ohren, Drachenflügel, Fuchs, Schaf, Schildkröte
+  und Fische sehen aus wie im Spiel; Geschosse gelten nicht mehr als Mobs; keine schwebenden Blöcke; zu kleine oder am
+  Rand klebende Hauptfigur wird gemeldet und korrigiert (aus MoinStudio v0.38.0–v0.45.1).
+
 ## [0.7.2] - 2026-10-05
 
 > MoinStudio-Fehlerbehebungen übernommen: lange Videos, Cloud-Ordner, Media offline, KI-Zeitlimit; Orte und Gegenstände im Thumbnail
