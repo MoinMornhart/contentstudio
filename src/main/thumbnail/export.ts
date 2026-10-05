@@ -6,7 +6,7 @@ import { skaliere, zuschnitt, type Box } from '../bild/komposit'
 import { kodiereJpg, kodierePng, liesBild, type RohBild } from '../bild/rohbild'
 import type { JobContext } from '../jobs/queue'
 import { setzeTextUndLogo, type Bericht } from './render'
-import type { VarianteErgebnis } from './typen'
+import type { Marke, VarianteErgebnis } from './typen'
 import type { PyUmgebung, ThumbUmgebung } from './umgebung'
 
 /**
@@ -75,7 +75,7 @@ export async function exportiereFormat(o: {
   arbeit: string
   umgebung: ThumbUmgebung | null
   py: PyUmgebung | null
-  marke: { schrift: string | null; logo: string | null; farben: string[] }
+  marke: Marke
   ctx: JobContext<unknown>
 }): Promise<void> {
   const { v, format } = o
@@ -97,7 +97,7 @@ export async function exportiereFormat(o: {
   let fertig = `${basis}.roh.png`
   const kannText = v.schriftAssets ? !!o.umgebung?.blender : !!o.py
   if ((v.texte.length || o.marke.logo) && o.umgebung && kannText) {
-    const tl = await setzeTextUndLogo(o.umgebung, o.py, fertig, b2, { texte: v.texte, minecraftAssets: v.schriftAssets ?? undefined, schrift: o.marke.schrift, farben: o.marke.farben, logo: o.marke.logo }, basis, o.ctx)
+    const tl = await setzeTextUndLogo(o.umgebung, o.py, fertig, b2, { texte: v.texte, minecraftAssets: v.schriftAssets ?? undefined, schrift: o.marke.schrift, farben: o.marke.farben, logo: o.marke.logo, logoPlatz: o.marke.logoPlatz }, basis, o.ctx)
     fertig = tl.bild
   }
   const b = await liesBild(fertig)

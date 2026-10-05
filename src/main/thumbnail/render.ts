@@ -3,7 +3,9 @@ import { join } from 'node:path'
 import { runBlender } from '../jobs/blender'
 import type { JobContext } from '../jobs/queue'
 import { liesBild, schreibePng } from '../bild/rohbild'
-import { differenzEbene, maskiere, setzeLogo, type Box } from '../bild/komposit'
+import { differenzEbene, maskiere, setzeLogoIn, type Box } from '../bild/komposit'
+import type { LogoGroesse, LogoPosition } from '@shared/logo'
+import { platzHinweise, waehleLogoPlatz } from '../logo/platz'
 import { liesJson, py, type PyUmgebung, type ThumbUmgebung } from './umgebung'
 import { t } from '../i18n'
 
@@ -119,6 +121,8 @@ export interface TextAuftrag {
   schrift?: string | null
   farben?: string[]
   logo?: string | null
+  /** Ecke und Größe aus der Logo-Wahl (Standard: freie Ecke, mittel) */
+  logoPlatz?: { position: LogoPosition; groesse: LogoGroesse }
   zufall?: number
 }
 
@@ -173,13 +177,15 @@ export async function setzeTextUndLogo(
   let logoBox: Box | null = null
   if (auftrag.logo) {
     try {
-      // Keine Ecke ganz frei: erst kleiner versuchen, sonst lieber ohne Logo als über Gesicht, Figur oder Text
+      // Gewünschte Ecke und Größe, sonst die nächste freie Ecke oder kleiner (aus MoinStudio v0.38.0); ist nirgends
+      // frei, lieber ohne Logo als über Gesicht, Figur oder Text
       const grund = await liesBild(bild)
       const logo = await liesBild(auftrag.logo)
-      const sperren = [...sperrFlaechen(bericht), ...textBoxen]
-      const l = [0.16, 0.12, 0.09].map((b) => setzeLogo(grund, logo, sperren, b)).find((x) => x.frei)
+      const platz = waehleLogoPlatz({ sperren: [...sperrFlaechen(bericht), ...textBoxen], logoVerhaeltnis: logo.width / logo.height, bildVerhaeltnis: grund.width / grund.height, position: auftrag.logoPlatz?.position ?? 'auto', groesse: auftrag.logoPlatz?.groesse ?? 'mittel' })
+      const l = platz.frei ? setzeLogoIn(grund, logo, platz.box) : null
       if (!l) warnungen.push(t('thumb.warn.logoVerdeckt'))
       else {
+        warnungen.push(...platzHinweise(platz, auftrag.logoPlatz?.position ?? 'auto'))
         const ziel = `${basis}.fertig.png`
         await schreibePng(ziel, l.bild)
         await schreibePng(join(ebenen, 'logo.png'), l.ebene)

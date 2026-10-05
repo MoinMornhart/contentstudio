@@ -3,6 +3,7 @@
  * Oberflächenprozess. Vorbilder und Stilbuch liegen im Datenordner unter `vorbilder/<konto-id>/`.
  */
 import { z } from 'zod'
+import { ThumbLogoWahlSchema } from './logo'
 import type { JobState } from './jobs'
 
 // --- Vorbilder -----------------------------------------------------------------------------------------------
@@ -151,7 +152,9 @@ export const ThumbStartSchema = z.object({
   hintergrund: z.string().nullable().default(null),
   /** Reaction: Gefühl und Wort (optional) */
   gefuehl: z.string().nullable().default(null),
-  wort: z.string().nullable().default(null)
+  wort: z.string().nullable().default(null),
+  /** Logo aus der Bibliothek: Standard des Kontos, ein bestimmtes oder keins; Ecke und Größe */
+  logo: ThumbLogoWahlSchema.default({ id: 'standard', position: 'auto', groesse: 'mittel' })
 })
 export type ThumbStart = z.infer<typeof ThumbStartSchema>
 

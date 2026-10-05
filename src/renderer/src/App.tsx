@@ -4,6 +4,7 @@ import { TABS, type AppInfo, type TabId } from '@shared/app'
 import { ThumbnailTab } from './tabs/ThumbnailTab'
 import { SchnittTab } from './tabs/SchnittTab'
 import { PlanungTab } from './tabs/PlanungTab'
+import { LogoTab } from './tabs/LogoTab'
 import { EinstellungenTab } from './tabs/EinstellungenTab'
 import { UpdateBanner } from './components/UpdateBanner'
 import { HardwareBanner } from './components/HardwareCard'
@@ -60,6 +61,7 @@ export function App(): React.JSX.Element {
         {tab === 'thumbnail' && <ThumbnailTab />}
         {tab === 'schnitt' && <SchnittTab />}
         {tab === 'planung' && <PlanungTab />}
+        {tab === 'logo' && <LogoTab />}
         {tab === 'einstellungen' && <EinstellungenTab info={info} />}
       </main>
     </div>

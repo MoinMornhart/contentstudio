@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import type { Engine } from '@shared/thumbnail'
 import type { JobContext } from '../jobs/queue'
 import { t } from '../i18n'
+import { logoAusWunsch } from '../logo/platz'
 import { thumbnailJob, type Checkpoint, type ThumbDienste } from './job'
 import { AllgemeinVarianteZ, type AllgemeinPlan } from './planung/allgemein'
 import { McPlanZ, type McPlan } from './planung/minecraft'
@@ -52,6 +53,10 @@ export async function aenderungJob(p: AenderungPayload, ctx: JobContext<Checkpoi
       await ctx.save({ plan: { varianten: [{ ...e.daten, vorbild: (alt as AllgemeinPlan['varianten'][number]).vorbild }] } })
     }
   }
-  const erg = await thumbnailJob({ ...p.basis, start: { ...p.basis.start, anzahl: 1 } }, ctx, d)
+  // Logo-Wünsche („Logo kleiner“, „Logo nach links“, „Logo weg“) gelten ohne KI für den neuen Render
+  const bisher = p.basis.marke.logoPlatz ?? { position: 'auto' as const, groesse: 'mittel' as const }
+  const logo = p.basis.marke.logo ? logoAusWunsch(p.wunsch, bisher) : undefined
+  const marke = logo === undefined ? p.basis.marke : logo === null ? { ...p.basis.marke, logo: null } : { ...p.basis.marke, logoPlatz: logo }
+  const erg = await thumbnailJob({ ...p.basis, marke, start: { ...p.basis.start, anzahl: 1 } }, ctx, d)
   return { varianten: erg.varianten.map((v) => ({ ...v, titel: `${t('thumb.aendern.titel')}: ${p.wunsch}`.slice(0, 90), warum: p.wunsch })) }
 }

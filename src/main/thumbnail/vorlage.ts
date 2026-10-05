@@ -9,7 +9,7 @@ import { t } from '../i18n'
 import { sprachName, type ThumbDienste } from './job'
 import { sichereMcAssets } from './minecraft/assets'
 import { kiPruefung, technischePruefung } from './pruefung'
-import { renderFoto, type Bericht } from './render'
+import { renderFoto, setzeTextUndLogo, type Bericht } from './render'
 import type { ThumbErgebnisDaten, ThumbPayload, VarianteErgebnis } from './typen'
 import { liesJson, py, sicherePython } from './umgebung'
 
@@ -585,7 +585,22 @@ export async function vorlageJob(p: ThumbPayload, ctx: JobContext<{ fertig?: Var
   }
 
   const warnungen = mc && bericht.deckung !== undefined && bericht.deckung < 0.45 ? [t('thumb.vorlage.deckung', { anteil: Math.round(bericht.deckung * 100) })] : []
-  const technisch = bild ? await technischePruefung(bild, bericht, { textBoxen: [], logoBox: null, engineWarnungen: [...(bericht.warnungen ?? []), ...warnungen] }) : []
+  // Logo der Marke zuletzt in eine freie Ecke – nie über Figuren, Titeln oder Gegenständen (aus MoinStudio v0.38.0)
+  let logoBox: Box | null = null
+  if (bild && p.marke.logo) {
+    const kopfBox = (bericht as { kopf_box?: Box }).kopf_box
+    const sperren: Box[] = [
+      ...titel.map((x) => x.box),
+      ...[a?.box, ...(a?.weitere ?? []).map((w) => w.box), a?.gegenstand?.box].filter((b): b is number[] => b?.length === 4).map((b) => b as Box),
+      ...(person.personen ?? [person]).flatMap((x) => (x.box ? [x.box] : [])),
+      ...(kopfBox ? [kopfBox] : [])
+    ]
+    const tl = await setzeTextUndLogo(u, null, bild, { ...bericht, grafik_boxen: [...(bericht.grafik_boxen ?? []), ...sperren] }, { texte: [], logo: p.marke.logo, logoPlatz: p.marke.logoPlatz }, join(p.ausgabe, 'logo'), c)
+    bild = tl.bild
+    logoBox = tl.logoBox
+    warnungen.push(...tl.warnungen)
+  }
+  const technisch = bild ? await technischePruefung(bild, bericht, { textBoxen: [], logoBox, engineWarnungen: [...(bericht.warnungen ?? []), ...warnungen] }) : []
   // Hat die Schlussprüfung schon geurteilt, stehen ihre offenen Punkte als Befund der Bild-KI da
   const kiB = bild && !geprueft ? await kiPruefung(d.ki, bild, { beschreibung: a?.inhalt ?? p.start.beschreibung, sprache: sprachName(p.sprache) }, c) : null
   ctx.progress(100, t('jobs.schritt.fertig'))

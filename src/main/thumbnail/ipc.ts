@@ -53,10 +53,10 @@ function stillerKontext(): JobContext<unknown> {
   }
 }
 
-const imOrdner = (dir: string, pfad: string): boolean => resolve(pfad).startsWith(resolve(dir) + sep)
+export const imOrdner = (dir: string, pfad: string): boolean => resolve(pfad).startsWith(resolve(dir) + sep)
 
 /** Bild als data:-URL; Sync-Dienste sperren frisch geschriebene Dateien kurz – deshalb mehrere Versuche */
-async function alsDataUrl(pfad: string): Promise<string | null> {
+export async function alsDataUrl(pfad: string): Promise<string | null> {
   const typ = extname(pfad).toLowerCase() === '.jpg' ? 'image/jpeg' : 'image/png'
   for (let versuch = 0; versuch < 6; versuch++) {
     try {
@@ -76,7 +76,7 @@ export function registerThumbnailIpc(o: {
   tools: ToolManager
   ki: KiSchicht
   fenster: () => BrowserWindow | undefined
-}): { starte: (roh: unknown) => Promise<string>; starteVideo: (video: string, kontoId: string, titel?: string) => Promise<string>; vorbilder: VorbildStore } {
+}): { starte: (roh: unknown) => Promise<string>; starteVideo: (video: string, kontoId: string, titel?: string) => Promise<string>; vorbilder: VorbildStore; umgebung: (brauchtBlender: boolean) => Promise<ThumbUmgebung> } {
   const { queue, profil, tools } = o
   const vorbilder = new VorbildStore(profil)
   const d = { ki: o.ki }
@@ -304,5 +304,5 @@ export function registerThumbnailIpc(o: {
     return { ...res, momente: await Promise.all(res.momente.map(async (m) => ({ ...m, pfad: m.bild, bild: m.bild ? await alsDataUrl(m.bild) : null }))) }
   })
 
-  return { starte, starteVideo, vorbilder }
+  return { starte, starteVideo, vorbilder, umgebung }
 }

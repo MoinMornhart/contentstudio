@@ -6,6 +6,7 @@ import type { Konto, Plattform, Profil, Programm } from './profil'
 import type { KiWegStand, McpZiel } from './ki'
 import type { ExportFormat, Stilbuch, ThumbAuftragInfo, ThumbStart, VarianteInfo, VideoErgebnis, Vorbild } from './thumbnail'
 import type { ProgrammeStand, ProgrammId, SchnittZiel } from './programme'
+import type { LogoAuftragInfo, LogoEintrag, LogoExport, LogoStart, LogoVarianteInfo } from './logo'
 import type { PlanungAenderung, PlanungKarte, PlanungKiArt, PlanungKiStand, PlanungThumbStand, Spalte } from './planung'
 import type { SchnittAbschnitt, SchnittEffekt, SchnittExport, SchnittHighlight, SchnittListe, SchnittProjekt, SpurArt } from './schnitt'
 
@@ -14,6 +15,7 @@ export const TABS = [
   { id: 'thumbnail', label: 'tab.thumbnail', icon: '🎨' },
   { id: 'schnitt', label: 'tab.schnitt', icon: '✂️' },
   { id: 'planung', label: 'tab.planung', icon: '🗂️' },
+  { id: 'logo', label: 'tab.logo', icon: '🏷️' },
   { id: 'einstellungen', label: 'tab.einstellungen', icon: '⚙️' }
 ] as const satisfies readonly { id: string; label: Schluessel; icon: string }[]
 
@@ -79,6 +81,17 @@ export const IPC = {
   thumbKiStand: 'thumb:ki-stand',
   thumbVideo: 'thumb:video',
   thumbVideoErgebnis: 'thumb:video-ergebnis',
+  logoStart: 'logo:start',
+  logoAendern: 'logo:aendern',
+  logoAuftraege: 'logo:auftraege',
+  logoErgebnis: 'logo:ergebnis',
+  logoLoeschen: 'logo:loeschen',
+  logoListe: 'logo:liste',
+  logoBild: 'logo:bild',
+  logoEintrag: 'logo:eintrag',
+  logoHochladen: 'logo:hochladen',
+  logoMerken: 'logo:merken',
+  logoExport: 'logo:export',
   vorbildListe: 'vorbild:liste',
   vorbildHinzu: 'vorbild:hinzu',
   vorbildAendern: 'vorbild:aendern',
@@ -329,6 +342,19 @@ export interface CsApi {
   thumbKiStand(): Promise<{ ki: boolean; bildKi: boolean }>
   thumbVideo(video: string, kontoId: string, titel?: string): Promise<string>
   thumbVideoErgebnis(jobId: string): Promise<(Omit<VideoErgebnis, 'momente'> & { momente: (VideoErgebnis['momente'][number] & { pfad: string | null })[] }) | null>
+  /** Logos (aus MoinStudio v0.38.0): Aufträge mit Verlauf, Bibliothek der Marke, Export */
+  logoStart(start: LogoStart): Promise<string>
+  logoAendern(jobId: string, index: number, wunsch: string): Promise<string>
+  logoAuftraege(): Promise<LogoAuftragInfo[]>
+  logoErgebnis(jobId: string): Promise<LogoVarianteInfo[] | null>
+  logoLoeschen(jobId: string): Promise<void>
+  logoListe(): Promise<LogoEintrag[]>
+  logoBild(id: string): Promise<string | null>
+  logoEintrag(id: string, patch: { name?: string; standard?: { konto: string; an: boolean }; entfernen?: boolean }): Promise<LogoEintrag[]>
+  /** PNG als data:-URL (die Oberfläche wandelt SVG, JPG und WebP vorher um) */
+  logoHochladen(name: string, png: string): Promise<LogoEintrag[]>
+  logoMerken(jobId: string, index: number, name: string): Promise<LogoEintrag[]>
+  logoExport(quelle: { logo: string } | { job: string; variante: number }, groesse: LogoExport): Promise<string | null>
   /** Vorbilder und Stilbuch je Kanal (ROADMAP 4.1) */
   vorbildListe(kontoId: string): Promise<Vorbild[]>
   vorbildHinzu(kontoId: string, quelle: { art: 'datei' } | { art: 'zwischenablage' } | { art: 'link'; url: string } | { art: 'ablegen'; pfade: string[] }): Promise<Vorbild[]>

@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import type { Profil } from '@shared/profil'
 import { ENGINES, THUMB_ARTEN, UEBERNEHMEN, type AuftragsVorbild, type Engine, type ThumbArt } from '@shared/thumbnail'
+import type { ThumbLogoWahl } from '@shared/logo'
 import { Chips, Feld } from '../profil/Bausteine'
+import { LogoWahl } from '../logo/LogoWahl'
 import { fehlerText, useT } from '../i18n'
 
 const dateiName = (p: string): string => p.split(/[\\/]/).pop() ?? p
@@ -46,6 +48,7 @@ export function AuftragsKarte({
   const [fehler, setFehler] = useState<string | null>(null)
   const [laeuft, setLaeuft] = useState(false)
   const [letzterVorschlag, setLetzterVorschlag] = useState<AuftragsVorschlag | null>(null)
+  const [logo, setLogo] = useState<ThumbLogoWahl>({ id: 'standard', position: 'auto', groesse: 'mittel' })
 
   // Vorschlag aus „Aus dem Video“ übernehmen (Idee oder Standbild als Hintergrund)
   if (vorschlag && vorschlag !== letzterVorschlag) {
@@ -78,7 +81,8 @@ export function AuftragsKarte({
             quelle,
             hintergrund,
             gefuehl: gefuehl || null,
-            wort: wort || null
+            wort: wort || null,
+            logo
           })
     lauf
       .then(gestartet)
@@ -213,6 +217,7 @@ export function AuftragsKarte({
           </Feld>
         </>
       )}
+      {art !== 'video' && <LogoWahl kontoId={kontoId} wahl={logo} setze={setLogo} />}
       {fehler && <p className="warn small">{fehler}</p>}
       <button type="button" className="btn primary" disabled={!bereit || laeuft || vorbilder.some((v) => !v.uebernehmen.length)} onClick={starten}>
         {art === 'video' ? t('thumb.neu.videoStarten') : t('thumb.neu.starten')}

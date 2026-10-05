@@ -8,6 +8,20 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Added
+
+- Neuer Reiter „Logo“: Logos aus einer Beschreibung erstellen (Kanal-, Serien- oder Server-Logo). Bei Minecraft-Konten
+  baut ContentStudio sie aus echten Minecraft-Dateien – Minecraft-Schrift, Blocktexturen, Items, Mob-Köpfe oder dein
+  eigener Kopf, flach oder als echter 3D-Blocktext –, für alle anderen in der Schrift deiner Marke mit Farbverlauf,
+  Kontur, Schatten und einem 3D-Sticker als Symbol. Immer mit transparentem Hintergrund; Änderungen in Worten stehen
+  als Verlauf darunter (aus MoinStudio v0.38.0).
+- Logo-Bibliothek: die Logos deiner Marke hochladen (PNG, JPG, SVG; ohne Transparenz wird der Hintergrund entfernt),
+  umbenennen, löschen, als Standard für ein Konto festlegen und als PNG in 512, 1024 oder 2048 px oder als
+  YouTube-Wasserzeichen (150 × 150) speichern.
+- Thumbnail: Logo, Ecke (oder automatisch) und Größe wählbar, in jeder Art inklusive Vorlage. Es steht nie über
+  Gesichtern, Figuren, Titeln oder der Videolänge unten rechts; „Logo kleiner“, „Logo nach links“ oder „Logo weg“ gehen
+  als Änderung in Worten.
+
 ## [0.7.4] - 2026-10-05
 
 > Thumbnail-Vorlage für jede Art von Bild: eigene Maske je Person, Hände, Ketten, Schlussprüfung mit Korrektur

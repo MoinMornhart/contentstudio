@@ -8,6 +8,7 @@ import { liesBild } from '../bild/rohbild'
 import type { ProfilStore } from '../profil/store'
 import { skinAusName } from '../profil/skinname'
 import { t } from '../i18n'
+import { logoFuerAuftrag } from '../logo/bibliothek'
 import { beispielFuer, type VorbildStore } from './vorbilder'
 import { stilKontext, type AuftragsVorbildDaten } from './kontext'
 import type { BeispielStilbuch } from '@shared/thumbnail'
@@ -129,7 +130,8 @@ export async function baueAuftrag(start: ThumbStart, k: AuftragsKontext): Promis
   const vorbilder = await k.vorbilder.liste(konto.id)
   const beispiel = beispielFuer(konto, k.beispiele)
   const stilbuch = (await k.vorbilder.stilbuch(konto.id)) ?? (await k.vorbilder.erstelleStilbuch(konto.id, { ki: null, beispiel }))
-  const logo = profil.marke.logos[0] ? await abs(profil.marke.logos[0]) : null
+  // Logo aus der Bibliothek: gewähltes, Standard-Logo des Kontos oder das erste der Marke (aus MoinStudio v0.38.0)
+  const logoWahl = await logoFuerAuftrag(k.store, start.logo, konto.id).catch(() => null)
   const schrift = schriftPfad(profil.marke.schrift?.name ?? null, profil.marke.schrift?.datei ? await abs(profil.marke.schrift.datei) : null)
 
   return {
@@ -138,7 +140,7 @@ export async function baueAuftrag(start: ThumbStart, k: AuftragsKontext): Promis
     kanal: { id: konto.id, name: konto.name || t('konten.unbenannt'), plattform: t(`plattform.${konto.plattform}`), richtungen: konto.richtungen, sprache: konto.sprache },
     figuren,
     stil: stilKontext({ vorbilder, stilbuch, beispiel, auftrag, farben: profil.marke.farben }),
-    marke: { schrift, logo, farben: profil.marke.farben },
+    marke: { schrift, logo: logoWahl?.datei ?? null, farben: profil.marke.farben, ...(logoWahl ? { logoPlatz: { position: logoWahl.position, groesse: logoWahl.groesse } } : {}) },
     hintergrund: start.hintergrund ? await abs(start.hintergrund) : null,
     umgebung: { ...k.umgebung, mojangErlaubt: profil.einstellungen.minecraftBesitz },
     ausgabe: k.ausgabe,

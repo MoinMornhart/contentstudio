@@ -177,7 +177,7 @@ export async function reaktionJob(p: ThumbPayload, ctx: JobContext<{ fertig?: Va
       if (r.roh) {
         // Sperren aus dem Original (Titel, Gesichter) zusätzlich als Figuren, damit der Text sie meidet
         const mitSperren: Bericht = { ...bericht, figuren: { ...(bericht.figuren ?? {}), ...Object.fromEntries((a?.sperren ?? []).map((b, k) => [`original-${k}`, { kopf_box: b as [number, number, number, number] }])) } }
-        const tl = await setzeTextUndLogo(u, pyU, r.roh, mitSperren, { texte: wort ? [{ text: wort }] : [], schrift: p.marke.schrift, farben: p.marke.farben, logo: p.marke.logo, zufall: i }, basis, c)
+        const tl = await setzeTextUndLogo(u, pyU, r.roh, mitSperren, { texte: wort ? [{ text: wort }] : [], schrift: p.marke.schrift, farben: p.marke.farben, logo: p.marke.logo, logoPlatz: p.marke.logoPlatz, zufall: i }, basis, c)
         bild = tl.bild
         textBoxen = tl.textBoxen
       }

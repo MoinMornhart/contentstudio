@@ -186,7 +186,7 @@ async function minecraftLauf(p: ThumbPayload, ctx: JobContext<Checkpoint>, d: Th
           }
         }
       }
-      const tl = await setzeTextUndLogo(u, null, roh, bericht, { texte: teile ? [] : (v.text ?? []), minecraftAssets: mc.assets, logo: teile ? null : p.marke.logo }, basis, c)
+      const tl = await setzeTextUndLogo(u, null, roh, bericht, { texte: teile ? [] : (v.text ?? []), minecraftAssets: mc.assets, logo: teile ? null : p.marke.logo, logoPlatz: p.marke.logoPlatz }, basis, c)
       tl.warnungen.push(...grafikWarnungen)
       const befunde = await technischePruefung(tl.bild, r.bericht, {
         textBoxen: tl.textBoxen,
@@ -227,7 +227,7 @@ async function minecraftLauf(p: ThumbPayload, ctx: JobContext<Checkpoint>, d: Th
         if (aus !== null) {
           // Etiketten sind belegt: das Logo weicht ihnen aus
           const etiketten = (JSON.parse(/CS_SPLIT (.*)/.exec(aus)?.[1] ?? '{}') as { boxen?: Box[] }).boxen ?? []
-          const tl = await setzeTextUndLogo(u, null, ziel, { grafik_boxen: etiketten }, { texte: [], minecraftAssets: mc.assets, logo: p.marke.logo }, `${basis}.split`, c)
+          const tl = await setzeTextUndLogo(u, null, ziel, { grafik_boxen: etiketten }, { texte: [], minecraftAssets: mc.assets, logo: p.marke.logo, logoPlatz: p.marke.logoPlatz }, `${basis}.split`, c)
           bestes.ergebnis = { ...bestes.ergebnis, bild: tl.bild, roh: ziel }
         } else bestes.ergebnis.pruefung.technisch.push(t('thumb.warn.splitFehlt'))
       }
@@ -339,7 +339,7 @@ async function allgemeinLauf(p: ThumbPayload, ctx: JobContext<Checkpoint>, d: Th
       }
       let roh = r.roh
       if (await wendeVorbilderAn(roh, stil.auftrag, `${basis}.vorbild.png`)) roh = `${basis}.vorbild.png`
-      const tl = await setzeTextUndLogo(u, pyU, roh, r.bericht, { texte: v.text ?? [], schrift: p.marke.schrift, farben: p.marke.farben, logo: p.marke.logo, zufall: i * 31 + versuch }, basis, c)
+      const tl = await setzeTextUndLogo(u, pyU, roh, r.bericht, { texte: v.text ?? [], schrift: p.marke.schrift, farben: p.marke.farben, logo: p.marke.logo, logoPlatz: p.marke.logoPlatz, zufall: i * 31 + versuch }, basis, c)
       const befunde = await technischePruefung(tl.bild, r.bericht, { textBoxen: tl.textBoxen, logoBox: tl.logoBox, engineWarnungen: [...(r.bericht.warnungen ?? []), ...tl.warnungen, ...elemente.hinweise] })
       const ki = await kiPruefung(d.ki, tl.bild, { beschreibung: p.start.beschreibung, sprache: sprachName(p.sprache) }, c)
       const alle = [...befunde, ...(ki ?? [])]

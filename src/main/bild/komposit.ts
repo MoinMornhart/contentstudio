@@ -144,6 +144,21 @@ export function ueberlappung(a: Box, b: Box): number {
   return w * h
 }
 
+/** Logo genau in eine Box setzen (Bildanteile 0–1), Seitenverhältnis bleibt; liefert Bild und Logo-Ebene. */
+export function setzeLogoIn(bild: RohBild, logo: RohBild, box: Box): { bild: RohBild; ebene: RohBild; box: Box } {
+  const bw = (box[2] - box[0]) * bild.width
+  const bh = (box[3] - box[1]) * bild.height
+  const f = Math.min(bw / logo.width, bh / logo.height)
+  const lw = Math.max(1, Math.round(logo.width * f))
+  const lh = Math.max(1, Math.round(logo.height * f))
+  const klein = skaliere(logo, lw, lh)
+  const x = box[0] * bild.width + (bw - lw) / 2
+  const y = box[1] * bild.height + (bh - lh) / 2
+  const ebene = legeAuf(leer(bild.width, bild.height), klein, x, y)
+  const neu = legeAuf({ width: bild.width, height: bild.height, data: new Uint8Array(bild.data) }, klein, x, y)
+  return { bild: neu, ebene, box }
+}
+
 /**
  * Logo in eine freie Ecke (unten bevorzugt). `breite` = Anteil der Bildbreite (Stilbuch: 12–20 %). Liefert das Bild mit
  * Logo, die Logo-Ebene und die gewählte Box – oder null, wenn jede Ecke Wichtiges überdeckt.

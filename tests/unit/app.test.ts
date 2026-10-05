@@ -3,8 +3,8 @@ import { TABS, isTabId } from '@shared/app'
 import { parseScreenshotArg } from '../../src/main/screenshot'
 
 describe('Reiter', () => {
-  it('enthält die drei Hauptreiter in der richtigen Reihenfolge plus Einstellungen', () => {
-    expect(TABS.map((t) => t.id)).toEqual(['thumbnail', 'schnitt', 'planung', 'einstellungen'])
+  it('enthält die Hauptreiter in der richtigen Reihenfolge, dazu Logo und Einstellungen', () => {
+    expect(TABS.map((t) => t.id)).toEqual(['thumbnail', 'schnitt', 'planung', 'logo', 'einstellungen'])
   })
 
   it('erkennt gültige und ungültige Reiter-IDs', () => {

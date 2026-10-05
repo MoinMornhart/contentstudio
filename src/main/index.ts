@@ -22,6 +22,7 @@ import { brauchtDreiD } from '@shared/profil'
 import { kiZentrale } from './ki/zentrale'
 import { registerMcpIpc } from './mcp/ipc'
 import { registerThumbnailIpc } from './thumbnail/ipc'
+import { registerLogoIpc } from './logo/ipc'
 import { registerSchnittIpc } from './schnitt/ipc'
 import { medienBedienen, medienSchemaAnmelden } from './schnitt/medien'
 import { registerPlanungIpc } from './planung/ipc'
@@ -57,6 +58,7 @@ hardware.register()
 registerSetupIpc(settings, !!screenshotDir && !process.argv.includes(SETUP_FLAG))
 const { queue: jobs, enqueueProbe } = setupJobs(localRoot(), tools, hardware, mainWindow)
 const thumbnail = registerThumbnailIpc({ queue: jobs, settings, profil, hardware, tools, ki: ki.schicht, fenster: mainWindow })
+registerLogoIpc({ queue: jobs, profil, ki: ki.schicht, umgebung: thumbnail.umgebung, fenster: mainWindow })
 const schnitt = registerSchnittIpc({ queue: jobs, profil, tools, hardware, ki: ki.schicht, fenster: mainWindow, starteVideo: thumbnail.starteVideo })
 registerProgrammeIpc({ queue: jobs, profil, tools, fenster: mainWindow, userData: app.getPath('userData') })
 const planung = registerPlanungIpc({ queue: jobs, profil, ki: ki.schicht, fenster: mainWindow, userData: app.getPath('userData'), starteThumbnail: thumbnail.starte, starteImport: schnitt.starteImport })

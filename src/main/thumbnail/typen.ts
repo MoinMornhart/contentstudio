@@ -1,4 +1,5 @@
 import type { Sprache } from '@shared/i18n'
+import type { LogoGroesse, LogoPosition } from '@shared/logo'
 import type { Engine, Pruefung, ThumbStart } from '@shared/thumbnail'
 import type { StilKontext } from './kontext'
 import type { ThumbUmgebung } from './umgebung'
@@ -19,13 +20,21 @@ export interface FigurDaten {
   modell: string | null
 }
 
+/** Marke eines Auftrags: Schrift und Logo (absolut), Farben; logoPlatz = Ecke und Größe aus der Logo-Wahl */
+export interface Marke {
+  schrift: string | null
+  logo: string | null
+  farben: string[]
+  logoPlatz?: { position: LogoPosition; groesse: LogoGroesse }
+}
+
 export interface ThumbPayload {
   start: ThumbStart
   engine: Engine
   kanal: { id: string; name: string; plattform: string; richtungen: string[]; sprache: string }
   figuren: FigurDaten[]
   stil: StilKontext
-  marke: { schrift: string | null; logo: string | null; farben: string[] }
+  marke: Marke
   /** Eigenes Hintergrundbild oder Standbild (absolut) */
   hintergrund: string | null
   umgebung: ThumbUmgebung
