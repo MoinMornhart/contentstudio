@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-10-05
+
+> Aus MoinStudio: Minecraft-Engine mit Grafik-Ebene und geteilten Bildern, Effekt-Bibliothek mit Greenscreen, Verlauf, Namensvorschläge
+
 ### Added
 
 - Thumbnail: Änderungen erscheinen als Verlauf wie in einem Chat unter ihrem Thumbnail – oben der Auftrag, darunter jede
