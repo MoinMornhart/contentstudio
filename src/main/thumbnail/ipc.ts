@@ -1,4 +1,5 @@
 import { clipboard, dialog, ipcMain, shell, type BrowserWindow } from 'electron'
+import { thumbDateiname } from './dateiname'
 import { randomUUID } from 'node:crypto'
 import { readFile, rm } from 'node:fs/promises'
 import { basename, dirname, extname, join, resolve, sep } from 'node:path'
@@ -220,7 +221,7 @@ export function registerThumbnailIpc(o: {
     const psd = typ === 'psd'
     const endung = psd ? 'psd' : typ === 'jpg' ? 'jpg' : 'png'
     const fmt = (['16:9', '9:16', '1:1'] as ExportFormat[]).includes(format as ExportFormat) ? (format as ExportFormat) : '16:9'
-    const name = `${v.titel.replace(/[\\/:*?"<>|]/g, '').slice(0, 60) || 'thumbnail'}${psd ? '' : `-${fmt.replace(':', 'x')}`}.${endung}`
+    const name = await thumbDateiname(queue, dir, String(jobId), Number(index), endung, psd ? '16:9' : fmt)
     const win = fenster()
     const opts: Electron.SaveDialogOptions = { title: t('thumb.export.speichern'), defaultPath: name, filters: [{ name: endung.toUpperCase(), extensions: [endung] }] }
     const ziel = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)

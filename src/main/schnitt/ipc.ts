@@ -1,4 +1,5 @@
 // Herkunft: MoinStudio src/main/schnitt/ipc.ts (MIT), verallgemeinert auf Konten, KI-Schicht, Spuren und Plattformen.
+import { videoDateiname, videoName } from '../dateinamen'
 import { registerBibliothek } from './bibliothek-ipc'
 import { dialog, ipcMain, shell, type BrowserWindow } from 'electron'
 import { randomUUID } from 'node:crypto'
@@ -322,10 +323,13 @@ export function registerSchnittIpc(o: {
     if (!p?.export || !info) return null
     const endung = extname(info.datei).slice(1)
     const win = o.fenster()
-    const opts: Electron.SaveDialogOptions = { title: t('schnitt.dialog.speichern'), defaultPath: `${p.name}.${endung}`, filters: [{ name: endung.toUpperCase(), extensions: [endung] }] }
+    const opts: Electron.SaveDialogOptions = { title: t('schnitt.dialog.speichern'), defaultPath: videoDateiname(videoName({ name: p.name, quelle: p.quelle?.pfad }), endung), filters: [{ name: endung.toUpperCase(), extensions: [endung] }] }
     const wahl = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
     if (wahl.canceled || !wahl.filePath) return null
     await copyFile(info.datei, wahl.filePath)
+    // Titel, Beschreibung und Kapitel gleich benannt daneben (Video.mp4 → Video.txt), fertig zum Einfügen (aus MoinStudio v0.38.0)
+    const text = [info.titel[0] ?? p.name, '', info.beschreibung, ...(info.kapitel.length ? ['', kapitelText(info.kapitel)] : [])].join('\r\n')
+    await writeFile(wahl.filePath.replace(/\.[^.\\/]+$/, '') + '.txt', text, 'utf8')
     shell.showItemInFolder(wahl.filePath)
     return wahl.filePath
   })

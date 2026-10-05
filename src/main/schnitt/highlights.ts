@@ -1,4 +1,5 @@
 // Herkunft: MoinStudio src/main/schnitt/highlights.ts (MIT), auf die KI-Schicht und die Bildausschnitt-Verfolgung umgestellt.
+import { clipDateiname, videoName } from '../dateinamen'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
@@ -183,7 +184,7 @@ export async function clipsJob(p: ClipsPayload, ctx: JobContext<unknown>): Promi
       untertitel = `clips/${name}.ass`
       await writeFile(join(ordner, untertitel), untertitelAss(abschnitte, kurz, { breite, hoehe, karaoke: true, woerter: 3, unten: 0.28 }))
     }
-    const o: RenderOptionen = { quelle: pr.quelle.pfad, liste: kurz, zooms: [], untertitel, breite, hoehe, fps, audio: pr.quelle.audio, encoder: encoderArgs(p.encoder, hoehe, fps), ausgabe: `clips/${name}.mp4`, ...(hoch ? { hoch: { cam: cam ?? null, verfolgung } } : {}) }
+    const o: RenderOptionen = { quelle: pr.quelle.pfad, liste: kurz, zooms: [], untertitel, breite, hoehe, fps, audio: pr.quelle.audio, encoder: encoderArgs(p.encoder, hoehe, fps), ausgabe: `clips/${clipDateiname(videoName({ name: pr.name, quelle: pr.quelle.pfad }), hoch ? 'short' : 'clip', a.index + 1)}`, ...(hoch ? { hoch: { cam: cam ?? null, verfolgung } } : {}) }
     await writeFile(join(ordner, 'clips', `${name}.filter.txt`), filterGraph(o))
     const { laenge } = zeitAbbildung(kurz.behalten)
     await ffmpegMitFortschritt(p.ffmpeg, renderArgs(o, `clips/${name}.filter.txt`), ctx, laenge, (x) => ctx.progress(5 + ((n + x) / p.auswahl.length) * 94, t(hoch ? 'schnitt.schritt.short' : 'schnitt.schritt.clip', { nr: n + 1, von: p.auswahl.length, titel: h.titel })), ordner)
