@@ -153,11 +153,11 @@ zwölf Schritten durch Profil, Kanäle, Darstellung, Marke und KI. Updates komme
 ## Neueste Änderungen
 
 <!-- CHANGELOG:START -->
+- **0.7.5** (2026-10-05): Neuer Reiter Logo: Logos erstellen und verwalten, Logo mit Ecke und Größe in jedem Thumbnail
 - **0.7.4** (2026-10-05): Thumbnail-Vorlage für jede Art von Bild: eigene Maske je Person, Hände, Ketten, Schlussprüfung mit Korrektur
 - **0.7.3** (2026-10-05): Aus MoinStudio: Minecraft-Engine mit Grafik-Ebene und geteilten Bildern, Effekt-Bibliothek mit Greenscreen, Verlauf, Namensvorschläge
 - **0.7.2** (2026-10-05): MoinStudio-Fehlerbehebungen übernommen: lange Videos, Cloud-Ordner, Media offline, KI-Zeitlimit; Orte und Gegenstände im Thumbnail
 - **0.7.1** (2026-09-30): Fix: Foto-Thumbnails brachen zufällig ab; Leistungsbericht; Qualitätsrunde vorbereitet
-- **0.7.0** (2026-09-30): Export: Premiere, After Effects, DaVinci Resolve, CapCut, Photoshop, Selbsttests
 <!-- CHANGELOG:END -->
 
 ## Entwicklung
