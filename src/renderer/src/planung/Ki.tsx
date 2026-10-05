@@ -10,7 +10,7 @@ function useKiAuftrag<A extends PlanungKiArt>(art: A): {
   ergebnis: Extract<PlanungKiErgebnis, { art: A }> | null
   laeuft: boolean
   fehler: string | null
-  starte: (o?: { kontoId?: string; wunsch?: string; karte?: string }) => void
+  starte: (o?: { kontoId?: string; wunsch?: string; karte?: string; projekt?: string }) => void
 } {
   const [auftrag, setAuftrag] = useState<string | null>(null)
   const [stand, setStand] = useState<PlanungKiStand | null>(null)
@@ -97,6 +97,52 @@ export function TitelVorschlaege({ karte, setze }: { karte: PlanungKarte; setze:
       {a.fehler && <p className="warn small">{a.fehler}</p>}
       {a.ergebnis?.titel.map((x) => (
         <button key={x.titel} className={`titel-vorschlag${x.titel === karte.titel ? ' on' : ''}`} title={x.warum} onClick={() => setze(x.titel)}>
+          <span>{x.titel}</span>
+          <span className="muted small">{x.warum}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** Namen fürs Video im Schnitt (aus MoinStudio v0.38.0): die KI liest das ganze Transkript und schlägt 5 Titel vor */
+export function NamenVorschlaege({ projekt, name, ki, gewaehlt }: { projekt: string; name: string; ki: boolean; gewaehlt: () => void }): React.JSX.Element {
+  const t = useT()
+  const a = useKiAuftrag('titel')
+  const [eingabe, setEingabe] = useState<string | null>(null)
+  const [fehler, setFehler] = useState<string | null>(null)
+  const wert = eingabe ?? name
+  const umbenennen = (neu: string, titel: boolean): void => {
+    setFehler(null)
+    window.cs.schnittUmbenennen(projekt, neu, titel).then(
+      () => {
+        setEingabe(null)
+        gewaehlt()
+      },
+      (e: unknown) => setFehler(fehlerText(e))
+    )
+  }
+  return (
+    <div className="details-block">
+      <div className="row wrap" style={{ marginTop: 0, alignItems: 'center' }}>
+        <label className="row" style={{ alignItems: 'center', marginTop: 0 }}>
+          {t('schnitt.namen.label')}
+          <input className="input" style={{ width: 320 }} maxLength={120} value={wert} onChange={(e) => setEingabe(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && wert.trim() && wert !== name && umbenennen(wert, false)} />
+        </label>
+        <button className="btn small" disabled={!wert.trim() || wert === name} onClick={() => umbenennen(wert, false)}>
+          {t('schnitt.namen.umbenennen')}
+        </button>
+        {ki && (
+          <button className="btn small" disabled={a.laeuft} onClick={() => a.starte({ projekt })}>
+            {a.ergebnis ? t('schnitt.namen.neu') : t('schnitt.namen.los')}
+          </button>
+        )}
+      </div>
+      {a.laeuft && <Fortschritt stand={a.stand} text={t('planung.schritt.titel')} />}
+      {(a.fehler || fehler) && <p className="warn small">{a.fehler || fehler}</p>}
+      {a.ergebnis && <p className="muted small">{t('schnitt.namen.hinweis')}</p>}
+      {a.ergebnis?.titel.map((x) => (
+        <button key={x.titel} className={`titel-vorschlag${x.titel === name ? ' on' : ''}`} title={x.warum} onClick={() => umbenennen(x.titel, true)}>
           <span>{x.titel}</span>
           <span className="muted small">{x.warum}</span>
         </button>

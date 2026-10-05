@@ -1,5 +1,6 @@
 // Herkunft: MoinStudio src/main/planung/ideen.ts (MIT), verallgemeinert: KI-Schicht statt Claude-Abo, Konto aus dem
 // Creator-Profil statt fest beschriebener Kanäle, Titel nach den Regeln jeder Plattform.
+import { ladeProjekt } from '../schnitt/projekt'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
@@ -27,6 +28,8 @@ export interface PlanungKiPayload {
   wunsch?: string
   /** Karte (nur titel) */
   karte?: string
+  /** Schnitt-Projekt (nur titel): Namensvorschläge fürs fertige Video statt für eine Karte */
+  projekt?: string
   /** Heute als „2026-09-29“ (für Tests fest vorgebbar) */
   heute?: string
 }
@@ -122,16 +125,34 @@ ${o.andere.length ? `\nGeplant auf anderen Konten des Creators (nicht doppeln):\
 Antworte nur mit JSON nach dem Schema.`
 }
 
-export function titelPrompt(o: { konto: Konto; karte: Karte; transkript: string; andere: string[] }): string {
+export function titelPrompt(o: { konto: Konto; karte: Pick<Karte, 'titel' | 'notizen'>; transkript: string; andere: string[]; ganz?: boolean }): string {
   return `Schlage 5 Titel für ein Video vor. ${kontoBeschreibung(o.konto)}
 
-Arbeitstitel: ${o.karte.titel}
+Arbeitstitel: ${o.karte.titel}${o.ganz ? ' (oft nur der Dateiname der Aufnahme – dann ignorieren)' : ''}
 Notizen: ${o.karte.notizen.trim() || '(keine)'}
-${o.transkript ? `Anfang des Transkripts:\n${o.transkript}\n` : ''}
+${o.transkript ? `${o.ganz ? 'Transkript des fertigen Videos (Ausschnitte über die ganze Länge)' : 'Anfang des Transkripts'}:\n${o.transkript}\n` : ''}
 Regeln: in der Sprache ${sprachName(o.konto.sprache)}; ${titelRegel(o.konto)}; unterschiedliche Ansätze (Frage, Zahl, Gegensatz, Ich-Perspektive, Spannung); nur was im Video wirklich passiert. Nicht wie diese Titel des Kontos klingen: ${o.andere.slice(0, 15).join(' | ') || '(keine)'}
 „warum“: ein kurzer Satz.
 
 Antworte nur mit JSON nach dem Schema.`
+}
+
+/** Sätze gleichmäßig über das ganze Video verteilt, zusammen höchstens `max` Zeichen (Stunden-Streams passen sonst nicht) – aus MoinStudio v0.38.0 */
+export function transkriptProbe(saetze: string[], max: number): string {
+  const alle = saetze.filter(Boolean)
+  const ganz = alle.join(' ')
+  if (ganz.length <= max) return ganz
+  const schnitt = ganz.length / alle.length
+  // mit Trennzeichen („ … “) rechnen, sonst reicht der Platz nicht bis zum Ende des Videos
+  const schritt = Math.ceil(alle.length / Math.max(1, Math.floor(max / (schnitt + 5))))
+  const probe: string[] = []
+  let laenge = 0
+  for (let i = 0; i < alle.length; i += schritt) {
+    if (laenge + alle[i]!.length + 5 > max) break
+    probe.push(alle[i]!)
+    laenge += alle[i]!.length + 5
+  }
+  return probe.join(' … ')
 }
 
 export function wochenPrompt(o: { konten: Konto[]; karten: Karte[]; frei: { kanal: string; tag: string; zeit: string }[]; heute: string }): string {
@@ -198,6 +219,20 @@ export async function planungKiJob(p: PlanungKiPayload, ctx: JobContext<unknown>
     const a = await d.ki.frage({ name: 'planung-ideen', system: 'You are a creative partner for video creators. You follow the rules exactly.', prompt, schema: IdeenZ, stufe: 'stark', maxAusgabe: 4000 }, ctx)
     ctx.progress(100, t('jobs.schritt.fertig'))
     return { art: 'ideen', ideen: ideenFertig(a.daten.ideen, k, [...eigene.map((x) => x.titel), ...(k.metadaten?.videos.map((v) => v.titel) ?? [])]) }
+  }
+  if (p.art === 'titel' && p.projekt) {
+    // Namensvorschläge im Schnitt: Inhalt aus dem ganzen Transkript, eine verknüpfte Karte liefert die Notizen
+    const pr = await ladeProjekt(p.daten, p.projekt)
+    if (!pr) throw new Error(t('schnitt.fehler.projekt'))
+    const k = konto(pr.kontoId)
+    ctx.progress(10, t('planung.schritt.titel'))
+    const karte = karten.find((x) => x.schnitt === pr.id)
+    const texte = liesAbschnitte(await readFile(join(p.daten, 'schnitt', pr.id, 'transkript.jsonl'), 'utf8').catch(() => '')).map((a) => a.text.trim())
+    const prompt = titelPrompt({ konto: k, karte: { titel: pr.name, notizen: karte?.notizen ?? '' }, transkript: transkriptProbe(texte, 5000), andere: karten.filter((x) => x.kontoId === k.id && x.id !== karte?.id).map((x) => x.titel), ganz: true })
+    const a = await d.ki.frage({ name: 'planung-titel', system: 'You write honest, catchy video titles that follow the platform rules exactly.', prompt, schema: TitelZ, stufe: 'schnell', maxAusgabe: 1500 }, ctx)
+    ctx.progress(100, t('jobs.schritt.fertig'))
+    const titel: TitelVorschlag[] = a.daten.titel.filter((x) => x.titel.trim()).map((x) => ({ titel: titelFuer(x.titel, k.plattform), warum: x.warum.trim() }))
+    return { art: 'titel', titel: titel.filter((x, i) => titel.findIndex((y) => y.titel === x.titel) === i).slice(0, 5) }
   }
   if (p.art === 'titel') {
     const karte = karten.find((x) => x.id === p.karte)

@@ -111,7 +111,7 @@ export async function startAppRpc(deps: AppRpcDeps): Promise<RpcServer> {
   )
   // Schnitt aus einer MCP-App: video_edit
   rpc.handle('schnitt', async (p) => {
-    const { aktion, projekt, pfad, konto, wunsch, auswahl, index, aus, loeschen } = (p ?? {}) as { aktion?: string; projekt?: string; pfad?: string; konto?: string; wunsch?: string; auswahl?: unknown; index?: number; aus?: boolean; loeschen?: boolean }
+    const { aktion, projekt, pfad, konto, wunsch, auswahl, index, aus, loeschen, name, titel } = (p ?? {}) as { aktion?: string; projekt?: string; pfad?: string; konto?: string; wunsch?: string; auswahl?: unknown; index?: number; aus?: boolean; loeschen?: boolean; name?: string; titel?: boolean }
     const a = deps.schnitt.aufruf
     const effektListe = (l: SchnittEffekt[]): { index: number; art: string; von?: number; bis?: number; bei?: number; aus: boolean; daten: SchnittEffekt }[] =>
       l.map((e, i) => ({ index: i, art: e.art, von: e.von, bis: e.bis, bei: e.bei, aus: e.aus === true, daten: e }))
@@ -157,6 +157,11 @@ export async function startAppRpc(deps: AppRpcDeps): Promise<RpcServer> {
         return a(IPC.schnittHighlights, projekt)
       case 'clips':
         return { auftrag: await a(IPC.schnittClips, projekt, auswahl) }
+      case 'umbenennen':
+        await a(IPC.schnittUmbenennen, projekt, name, titel === true)
+        return { ok: true }
+      case 'bibliothek':
+        return { effekte: ((await a(IPC.schnittBib)) as { id: string; name: string; haeufigkeit: unknown }[]).map((e) => ({ id: e.id, name: e.name, haeufigkeit: e.haeufigkeit })) }
       default:
         throw new Error(`Unknown action: ${String(aktion)}`)
     }

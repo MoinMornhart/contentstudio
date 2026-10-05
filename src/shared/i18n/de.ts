@@ -1157,7 +1157,14 @@ export const de = {
   'planung.chip.bild': 'Thumbnail',
   'planung.chip.bildInfo': 'Thumbnail ausgewählt',
   'planung.chip.text': 'Text fertig',
-  'planung.chip.textInfo': 'Titel, Text und Kapitel aus dem Export'
+  'planung.chip.textInfo': 'Titel, Text und Kapitel aus dem Export',
+
+  'schnitt.fehler.nameLeer': 'Bitte einen Namen eingeben.',
+  'schnitt.namen.label': 'Name des Videos',
+  'schnitt.namen.los': 'Namen vorschlagen',
+  'schnitt.namen.neu': 'Neue Vorschläge',
+  'schnitt.namen.umbenennen': 'Umbenennen',
+  'schnitt.namen.hinweis': 'Ein Klick übernimmt den Vorschlag als Namen und als Titel (im Export und auf der Planungskarte).'
 } as const
 
 export type Schluessel = keyof typeof de

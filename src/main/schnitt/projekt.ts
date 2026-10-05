@@ -64,6 +64,8 @@ export interface Projekt {
   fehler?: string | null
   /** Effekt-Bibliothek: ist dieses Projekt für „nur in manchen Videos“ dran? (je Effekt-ID, einmal entschieden) */
   bibEntscheid?: Record<string, boolean>
+  /** Vom Creator gewählter Titel (Namensvorschlag): steht im Export und auf der Planungskarte vorn */
+  titelGewaehlt?: string
 }
 
 export const projektOrdner = (daten: string, id: string): string => join(daten, 'schnitt', id)

@@ -1,4 +1,5 @@
 // Herkunft: MoinStudio src/renderer/src/tabs/SchnittTab.tsx (MIT), verallgemeinert auf Konten, Richtungen, Formate, Spuren und Plattformen.
+import { NamenVorschlaege } from '../planung/Ki'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SchnittAbschnitt, SchnittExport, SchnittHighlight, SchnittListe, SchnittProjekt, SpurArt } from '@shared/schnitt'
 import { PLATTFORMEN, RICHTUNGEN } from '@shared/profil'
@@ -451,6 +452,7 @@ function ProjektAnsicht({ p, ki, zurueck, loeschen, neuLaden }: { p: SchnittProj
         </datalist>
         <span className="muted small">{t('schnitt.richtungHinweis')}</span>
       </div>
+      {p.transkript && <NamenVorschlaege projekt={p.id} name={p.name} ki={ki} gewaehlt={neuLaden} />}
       {liste && <WunschFeld p={p} ki={ki} neuLaden={neuLaden} />}
       {liste && <Rohschnitt id={p.id} liste={liste} setListe={setListe} springe={springe} />}
       {liste && (

@@ -97,6 +97,7 @@ export const IPC = {
   schnittBereich: 'schnitt:bereich',
   schnittWunsch: 'schnitt:wunsch',
   schnittEinstellungen: 'schnitt:einstellungen',
+  schnittUmbenennen: 'schnitt:umbenennen',
   schnittBib: 'schnitt:bib',
   schnittBibSpeichern: 'schnitt:bib-speichern',
   schnittBibLoeschen: 'schnitt:bib-loeschen',
@@ -352,6 +353,8 @@ export interface CsApi {
   schnittWunsch(id: string, wunsch: string): Promise<string>
   /** Untertitel, Zooms, Format (16:9/9:16) und Stil-Richtung einstellen */
   schnittEinstellungen(id: string, patch: { untertitel?: 'aus' | 'an' | 'karaoke'; zooms?: boolean; format?: '16:9' | '9:16'; richtung?: string; plattform?: Plattform }): Promise<void>
+  /** Projekt umbenennen; `titel` = als Titel übernehmen (Export und verknüpfte Planungskarte) */
+  schnittUmbenennen(id: string, name: string, titel?: boolean): Promise<void>
   /** Effekt-Bibliothek (eigene Effekte mit Video, Greenscreen, Bild, Sound) */
   schnittBib(): Promise<BibEffektDaten[]>
   schnittBibSpeichern(e: Partial<BibEffektDaten>): Promise<BibEffektDaten>
@@ -387,7 +390,7 @@ export interface CsApi {
   planungThumbVarianten(id: string): Promise<PlanungThumbStand>
   planungThumbWaehlen(id: string, pfad: string): Promise<PlanungKarte>
   /** Ideen, Titel oder Wochenplan mit der KI → Auftrags-ID */
-  planungKi(art: PlanungKiArt, o?: { kontoId?: string; wunsch?: string; karte?: string }): Promise<string>
+  planungKi(art: PlanungKiArt, o?: { kontoId?: string; wunsch?: string; karte?: string; projekt?: string }): Promise<string>
   planungKiStand(auftrag: string): Promise<PlanungKiStand | null>
   planungCrossPlan(id: string): Promise<PlanungKarte>
   /** Upload-Paket in einen Ordner der Wahl (null bei Abbruch) */

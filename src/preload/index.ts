@@ -95,6 +95,7 @@ const api = {
   schnittBereich: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittBereich, ...a),
   schnittWunsch: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittWunsch, ...a),
   schnittEinstellungen: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittEinstellungen, ...a),
+  schnittUmbenennen: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittUmbenennen, ...a),
   schnittBib: () => ipcRenderer.invoke(IPC.schnittBib),
   schnittBibSpeichern: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittBibSpeichern, ...a),
   schnittBibLoeschen: (...a: unknown[]) => ipcRenderer.invoke(IPC.schnittBibLoeschen, ...a),

@@ -6,7 +6,9 @@ import { KontoSchema, leeresProfil, type Konto, type Profil } from '../../src/sh
 import { PLATTFORMEN } from '../../src/shared/profil'
 import { pruefeTitel, TEXT_REGELN, titelFuer, hashtagsFuer } from '../../src/shared/planung'
 import type { JobContext } from '../../src/main/jobs/queue'
-import { aehnlichkeit, ideenPrompt, kontoBeschreibung, ohneWiederholung, planungKiJob, pruefeWoche, titelPrompt, wochenPrompt } from '../../src/main/planung/ideen'
+import { aehnlichkeit, ideenPrompt, kontoBeschreibung, ohneWiederholung, planungKiJob, pruefeWoche, titelPrompt, transkriptProbe, wochenPrompt } from '../../src/main/planung/ideen'
+import { speichereProjekt, type Projekt } from '../../src/main/schnitt/projekt'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { neueKarte, type Karte } from '../../src/main/planung/karten'
 import { fakeKi } from '../ki-fake'
 
@@ -177,6 +179,23 @@ describe('Planung mit der KI (ROADMAP 6.3)', () => {
     const woche = await planungKiJob({ art: 'woche', daten, heute: '2026-09-29' }, ctx(), { ki: ki.schicht, profil: async () => profil })
     if (woche.art !== 'woche') throw new Error('art')
     expect(woche.woche.plan).toEqual([{ karte: k.id, termin: '2026-09-30T18:00', grund: 'frei' }])
+  })
+
+  it('Namen fürs Video im Schnitt: Transkript über die ganze Länge (aus MoinStudio v0.38.0)', async () => {
+    const daten = await mkdtemp(join(tmpdir(), 'cs-namen-'))
+    const profil: Profil = { ...leeresProfil(), konten: KONTEN }
+    await speichereProjekt(daten, { id: 'p1', name: '2026-10-01 19-00-01', kontoId: 'tech', kanal: 'Tech', plattform: 'youtube', sprache: 'de', richtung: 'tech', erstellt: '2026-10-01', quelle: null, spuren: [], proxy: false, wellenform: false, leiste: false } as unknown as Projekt)
+    await mkdir(join(daten, 'schnitt', 'p1'), { recursive: true })
+    const zeilen = Array.from({ length: 400 }, (_, i) => JSON.stringify({ start: i, ende: i + 1, text: 'Satz ' + i + ' über das Handy.', woerter: [] }))
+    await writeFile(join(daten, 'schnitt', 'p1', 'transkript.jsonl'), zeilen.join('\n'))
+    const ki = fakeKi(() => ({ titel: [{ titel: 'Überlebt dieses Handy den Sturz?', warum: 'Frage' }] }))
+    const e = await planungKiJob({ art: 'titel', daten, projekt: 'p1' }, ctx(), { ki: ki.schicht, profil: async () => profil })
+    if (e.art !== 'titel') throw new Error('art')
+    expect(e.titel[0]!.titel).toBe('Überlebt dieses Handy den Sturz?')
+    expect(ki.anfragen[0]!.prompt).toContain('Ausschnitte über die ganze Länge')
+    expect(ki.anfragen[0]!.prompt).toMatch(/Satz 3[5-9]\d/)
+    expect(transkriptProbe(['a', 'b'], 100)).toBe('a b')
+    expect(transkriptProbe(Array.from({ length: 100 }, (_, i) => 'Satz ' + i), 60).length).toBeLessThanOrEqual(60)
   })
 })
 

@@ -160,10 +160,10 @@ export function registerPlanungIpc(v: PlanungVerbindung): { aufruf: (kanal: stri
   // Planung mit der KI (ROADMAP 6.3): Ideen, Titel, Wochenplan als Auftrag
   queue.register('planung-ki', (p: PlanungKiPayload, ctx) => planungKiJob(p, ctx, { ki: v.ki, profil: () => profil.laden() }))
   const ART_TITEL: Record<PlanungKiArt, string> = { ideen: 'planung.titel.ideen', titel: 'planung.titel.titel', woche: 'planung.titel.woche' }
-  const starteKi = async (art: PlanungKiArt, o: { kontoId?: string; wunsch?: string; karte?: string } = {}): Promise<string> => {
+  const starteKi = async (art: PlanungKiArt, o: { kontoId?: string; wunsch?: string; karte?: string; projekt?: string } = {}): Promise<string> => {
     if (!(art in ART_TITEL)) throw new Error(t('planung.fehler.aktion', { aktion: String(art) }))
     if (!(await v.ki.kandidaten()).length) throw new Error(t('planung.fehler.ohneKi'))
-    const payload: PlanungKiPayload = { art, daten: await daten(), kontoId: art === 'ideen' ? await kontoPruefen(o.kontoId) : undefined, wunsch: o.wunsch, karte: o.karte }
+    const payload: PlanungKiPayload = { art, daten: await daten(), kontoId: art === 'ideen' ? await kontoPruefen(o.kontoId) : undefined, wunsch: o.wunsch, karte: o.karte, projekt: typeof o.projekt === 'string' ? o.projekt : undefined }
     const konto = (await profil.laden()).konten.find((k) => k.id === payload.kontoId)
     return queue.enqueue('planung-ki', t(ART_TITEL[art] as 'planung.titel.ideen', { konto: konto?.name ?? '' }), payload)
   }

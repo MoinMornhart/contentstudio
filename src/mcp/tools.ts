@@ -195,13 +195,15 @@ export function createServer(version: string): McpServer {
     {
       title: 'Edit videos',
       description:
-        'Video editing in ContentStudio (raw video in, finished video out). Actions: projekte (all editing projects), importieren (pfad, konto – starts import, transcript and rough cut on its own), schnitt (projekt – rough cut with transcript and removed parts), aendern (projekt, wunsch – cuts and effects in plain words, e.g. "make an exciting intro", "slow motion at the funniest moment", "fade to black at the end"; the preview renders afterwards), effekte (projekt – all effects with number and time), effekt_aendern (projekt, index, aus: true/false or loeschen: true), vorschau, export (export for the platform of the project, with title, text, chapters and checks), export_info, highlights (find highlights in long videos and streams), highlights_liste, clips (projekt, auswahl: [{index, art: clip|short}]). Tasks run in the background – poll job_get.',
+        'Video editing in ContentStudio (raw video in, finished video out). Actions: projekte (all editing projects), importieren (pfad, konto – starts import, transcript and rough cut on its own), schnitt (projekt – rough cut with transcript and removed parts), aendern (projekt, wunsch – cuts and effects in plain words, e.g. "make an exciting intro", "slow motion at the funniest moment", "fade to black at the end"; the preview renders afterwards), effekte (projekt – all effects with number and time), effekt_aendern (projekt, index, aus: true/false or loeschen: true), vorschau, export (export for the platform of the project, with title, text, chapters and checks), export_info, highlights (find highlights in long videos and streams), highlights_liste, clips (projekt, auswahl: [{index, art: clip|short}]), umbenennen (projekt, name, titel: true = also use it as the video title in export and planning), bibliothek (own effects of the creator, usable by name in aendern). Tasks run in the background – poll job_get.',
       inputSchema: z.object({
-        aktion: z.enum(['projekte', 'importieren', 'schnitt', 'aendern', 'effekte', 'effekt_aendern', 'vorschau', 'export', 'export_info', 'highlights', 'highlights_liste', 'clips']),
+        aktion: z.enum(['projekte', 'importieren', 'schnitt', 'aendern', 'effekte', 'effekt_aendern', 'vorschau', 'export', 'export_info', 'highlights', 'highlights_liste', 'clips', 'umbenennen', 'bibliothek']),
         projekt: z.string().optional().describe('Project id (from projekte)'),
         pfad: z.string().optional().describe('Raw video path (only importieren)'),
         konto: z.string().optional().describe('Channel id from channels_list (only importieren; default: first channel)'),
         wunsch: z.string().optional().describe('Change in plain words (only aendern)'),
+        name: z.string().optional().describe('New name (only umbenennen)'),
+        titel: z.boolean().optional().describe('Also use the name as video title (only umbenennen)'),
         index: z.number().int().optional().describe('Effect number from effekte (only effekt_aendern)'),
         aus: z.boolean().optional().describe('Switch the effect off (true) or on (false) (only effekt_aendern)'),
         loeschen: z.boolean().optional().describe('Delete the effect (only effekt_aendern)'),

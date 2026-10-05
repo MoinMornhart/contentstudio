@@ -1156,5 +1156,12 @@ export const en: Record<Schluessel, string> = {
   'planung.chip.bild': 'Thumbnail',
   'planung.chip.bildInfo': 'Thumbnail chosen',
   'planung.chip.text': 'Text ready',
-  'planung.chip.textInfo': 'Title, text and chapters from the export'
+  'planung.chip.textInfo': 'Title, text and chapters from the export',
+
+  'schnitt.fehler.nameLeer': 'Please enter a name.',
+  'schnitt.namen.label': 'Video name',
+  'schnitt.namen.los': 'Suggest names',
+  'schnitt.namen.neu': 'New suggestions',
+  'schnitt.namen.umbenennen': 'Rename',
+  'schnitt.namen.hinweis': 'One click takes the suggestion as name and title (in the export and on the planning card).'
 }

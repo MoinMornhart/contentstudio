@@ -261,6 +261,8 @@ export async function exportJob(p: ExportPayload, ctx: JobContext<unknown>, d: {
       text = { titel: titel.length ? titel : text.titel, beschreibung: erg.beschreibung.slice(0, vorgabe.beschreibungMax), kapitel: vorgabe.kapitel ? repariereKapitel(erg.kapitel, laenge) : [] }
     }
   }
+  // Den Titel, den der Creator selbst gewählt hat, nicht durch Vorschläge der KI verdrängen (aus MoinStudio v0.38.0)
+  if (pr.titelGewaehlt) text.titel = [pr.titelGewaehlt, ...text.titel.filter((x) => x !== pr.titelGewaehlt)]
 
   await ctx.yield()
   const endung = audio ? 'm4a' : 'mp4'

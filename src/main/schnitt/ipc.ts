@@ -1,6 +1,7 @@
 // Herkunft: MoinStudio src/main/schnitt/ipc.ts (MIT), verallgemeinert auf Konten, KI-Schicht, Spuren und Plattformen.
 import { videoDateiname, videoName } from '../dateinamen'
 import { registerBibliothek } from './bibliothek-ipc'
+import { aendereKarte, ladeKarten } from '../planung/karten'
 import { dialog, ipcMain, shell, type BrowserWindow } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
@@ -92,6 +93,21 @@ export function registerSchnittIpc(o: {
     return r.canceled ? null : (r.filePaths[0] ?? null)
   }
   registerBibliothek({ biete, daten, ffmpeg, oeffnen })
+  // Umbenennen: der Name gilt für Export, Shorts und Schnittprogramme; ein gewählter Namensvorschlag wird zusätzlich
+  // Titel – im letzten Export und auf der verknüpften Planungskarte (aus MoinStudio v0.38.0)
+  biete(IPC.schnittUmbenennen, async (id: unknown, name: unknown, titel: unknown): Promise<void> => {
+    const neu = typeof name === 'string' ? name.replace(/\s+/g, ' ').trim().slice(0, 120) : ''
+    if (!neu) throw new Error(t('schnitt.fehler.nameLeer'))
+    const ordnerDaten = await daten()
+    const p = await aendereProjekt(ordnerDaten, String(id), () => ({ name: neu, ...(titel === true ? { titelGewaehlt: neu } : {}) }))
+    if (!p) throw new Error(t('schnitt.fehler.projekt'))
+    if (titel !== true) return
+    const datei = join(projektOrdner(ordnerDaten, p.id), 'export.json')
+    const e = JSON.parse(await readFile(datei, 'utf8').catch(() => 'null')) as ExportErgebnis | null
+    if (e) await writeFile(datei, JSON.stringify({ ...e, titel: [neu, ...e.titel.filter((x) => x !== neu)] }, null, 1))
+    const karte = (await ladeKarten(ordnerDaten)).find((k) => k.schnitt === p.id)
+    if (karte) await aendereKarte(ordnerDaten, karte.id, { titel: neu, ...(karte.texte ? { texte: { ...karte.texte, titel: neu } } : {}) })
+  })
   const umgebung = async (): Promise<ThumbUmgebung> => {
     const root = werkzeugRoot()
     return { blender: null, uv: await tools.exePath(UV), pyDir: join(root, 'py', 'vorlage'), modelle: join(root, 'py', 'modelle'), skripte: resourceDir('blender'), prompts: resourceDir('prompts'), werkzeugRoot: root, mojangErlaubt: false }
