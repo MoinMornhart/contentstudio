@@ -137,8 +137,39 @@ def _farbe_fuer(a, box, rng):
     return rng.choice(wertung[:2])[1]
 
 
+def _weich(m, r):
+    """Kastenunschärfe (zweimal, Ränder fortgesetzt) – reicht für einen weichen Schein."""
+    for _ in range(2):
+        for achse in (0, 1):
+            pad = [(0, 0), (0, 0)]
+            pad[achse] = (r + 1, r)
+            c = np.cumsum(np.pad(m, pad, mode="edge"), axis=achse)
+            n = m.shape[achse]
+            m = (np.take(c, np.arange(2 * r + 1, 2 * r + 1 + n), axis=achse) - np.take(c, np.arange(0, n), axis=achse)) / (2 * r + 1)
+    return m
+
+
+def _schein(a, alpha, farbe, x0, y0, radius, staerke=0.55):
+    """Farbiger Schein hinter dem Text wie bei großen Kanälen („50.000.000“ grün leuchtend, Vergleich 8.2): die Textform
+    weichgezeichnet in der Textfarbe, nur aufhellend über das Bild gelegt."""
+    H, W = a.shape[:2]
+    rand = radius * 2
+    m = np.pad(alpha.astype(np.float32), rand)
+    m = np.clip(_weich(m, radius) * 1.6, 0, 1) * staerke
+    ox, oy = x0 - rand, y0 - rand
+    sx0, sy0 = max(0, -ox), max(0, -oy)
+    dx0, dy0 = max(0, ox), max(0, oy)
+    w = min(m.shape[1] - sx0, W - dx0)
+    h = min(m.shape[0] - sy0, H - dy0)
+    if w <= 0 or h <= 0:
+        return
+    teil = m[sy0:sy0 + h, sx0:sx0 + w, None]
+    ziel = a[dy0:dy0 + h, dx0:dx0 + w, :3]
+    a[dy0:dy0 + h, dx0:dx0 + w, :3] = 1 - (1 - ziel) * (1 - np.asarray(farbe)[None, None, :] * teil)
+
+
 def setze_text(bild_pfad, bericht, texte, assets, ausgabe):
-    """`texte`: Liste von {"text": "ICH GEGEN SIMPELL", "farbe": "auto"|"weiss"|…, "platz": "auto"}. Schreibt das Bild
+    """`texte`: Liste von {"text": "ICH GEGEN MEINEN FREUND", "farbe": "auto"|"weiss"|…, "platz": "auto"}. Schreibt das Bild
     mit Text und gibt die gewählten Boxen und Warnungen zurück.
 
     Lebendig statt steif: Der Platz wird zufällig unter den freien Stellen gewählt (oben bevorzugt),
@@ -218,6 +249,8 @@ def setze_text(bild_pfad, bericht, texte, assets, ausgabe):
         schicht = _drehe(schicht, grad)
         mx, my = (box[0] + box[2]) / 2 * W, (box[1] + box[3]) / 2 * H
         x0, y0 = int(mx - schicht.shape[1] / 2), int(my - schicht.shape[0] / 2)
+        if t.get("leuchten", True):
+            _schein(a, schicht[..., 3], farbe, x0, y0, radius=max(2, int(k * 2.5)))
         ys, xs = np.nonzero(schicht[..., 3] > 0.5)
         zy, zx = ys + y0, xs + x0
         ok = (zy >= 0) & (zy < H) & (zx >= 0) & (zx < W)

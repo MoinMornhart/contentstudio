@@ -52,7 +52,7 @@ prüfbar; bleibt so markiert, bis ein Selbsttest auf einem passenden Rechner gr�
 ## M1 – Fundament → 0.1.0
 
 Übernahme der App-Architektur von MoinStudio (`docs/architecture.md`): Electron, electron-vite, React, TypeScript.
-Alles, was nach Philip, seinen Kanälen oder nur nach Claude klingt, wird dabei neutral.
+Alles, was nach dem Besitzer von MoinStudio, seinen Kanälen oder nur nach Claude klingt, wird dabei neutral.
 
 - [x] **1.1 Electron-Grundgerüst:** Main, Preload, Renderer getrennt, `contextIsolation`, typisierte IPC-Brücke
   (`window.cs`), Reiter Thumbnail, Schnitt, Planung, Einstellungen; ESLint, Vitest. ✅ `npm run check` grün, App startet,

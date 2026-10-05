@@ -11,7 +11,7 @@
 ## 1. Worum es geht
 
 **MoinStudio** (https://github.com/MoinMornhart/moinstudio) ist eine lokale Windows-Desktop-App eines einzelnen
-YouTubers (Kanäle MoinMornhart und MoinMorni, Minecraft und Streams). Sie hat drei Bereiche:
+YouTubers (zwei Kanäle, Minecraft und Streams). Sie hat drei Bereiche:
 
 - **Thumbnail:** Aus einer frei formulierten Beschreibung entsteht in Blender eine Szene mit dem eigenen Minecraft-Skin.
 - **Schnitt:** Rohvideo rein, fertiges Video raus, und Effekte oder Intros lassen sich in Worten verlangen.
@@ -21,9 +21,9 @@ Die KI läuft dort ausschließlich über das Claude-Abo des Besitzers.
 
 **ContentStudio** ist dieselbe App für alle anderen: für Creator mit anderen Plattformen, anderen Inhalten, anderen
 KI-Anbietern und anderer Hardware. ContentStudio ist ein **1:1-Nachbau im Funktionsumfang und in der Qualität**, aber an
-jeder Stelle, an der MoinStudio etwas für Philip fest eingebaut hat, fragt ContentStudio den Nutzer oder erkennt es selbst.
+jeder Stelle, an der MoinStudio etwas für seinen Besitzer fest eingebaut hat, fragt ContentStudio den Nutzer oder erkennt es selbst.
 
-Faustregel für jede Entscheidung: *Was MoinStudio für Philip weiß, muss ContentStudio erfragen, erkennen oder aus
+Faustregel für jede Entscheidung: *Was MoinStudio für seinen Besitzer weiß, muss ContentStudio erfragen, erkennen oder aus
 Beispielen lernen.*
 
 ---
@@ -318,9 +318,9 @@ Zuletzt übernommen: v0.36.0 (Commit 2662dec…) am 2026-09-30
 
 | MoinStudio | Art | Entscheidung | ContentStudio |
 |---|---|---|---|
-| v0.36.0 Mobs näher neben Philip | Thumbnail/3D | übernommen, verallgemeinert (Thema-Objekt statt Mob) | v1.4.0 |
+| v0.36.0 Mobs näher neben der Hauptfigur | Thumbnail/3D | übernommen, verallgemeinert (Thema-Objekt statt Mob) | v1.4.0 |
 | v0.35.1 Vorbild-Hinweis entfernt | Oberfläche | übernommen | v1.3.1 |
-| … | … | übersprungen: nur Philips Daten | – |
+| … | … | übersprungen: nur persönliche Daten | – |
 ```
 
 Ablauf:
@@ -332,7 +332,7 @@ Ablauf:
      Fehlerbehebungen): übernehmen.
    - **Richtungsspezifisch** (Minecraft, Streams, Reactions): übernehmen in das jeweilige Richtungs-Modul, damit es allen
      Nutzern mit dieser Richtung hilft.
-   - **Philip-spezifisch** (seine Kanalnamen, sein Stil als feste Regel, seine Fortschrittsseite, seine Daten): nicht
+   - **persönlich** (seine Kanalnamen, sein Stil als feste Regel, seine Fortschrittsseite, seine Daten): nicht
      wörtlich übernehmen. Prüfe, ob eine allgemeine Idee darin steckt, z. B. „Vorbild-Hinweis nervt“ → Einstellung „Hinweise
      ausblenden“, Standard aus. Wenn ja, als Profil-Einstellung umsetzen.
    - **Nur Claude:** über die KI-Schicht für alle Anbieter umsetzen, die es können.
@@ -354,8 +354,8 @@ an und lässt `UPSTREAM.md` unverändert.
 
 - Skins, Fotos, Videos, Renders, Test-Ausgaben, Stil-Referenzen und heruntergeladene Thumbnails anderer Kanäle (liegen
   in MoinStudio ohnehin nur lokal, nie im Repo)
-- Philips Kanalnamen, Serien, Freunde, Datenpfade, Upload-Rhythmus, Werkstatt- und Fortschrittsseite
-- Philips persönliche Vorlieben als feste Regel: BastiGHG/GommeHD/Paluten als einziger Maßstab, „nur Deutsch“,
+- Kanalnamen, Serien, Freunde, Datenpfade, Upload-Rhythmus, Werkstatt- und Fortschrittsseite
+- Persönliche Vorlieben als feste Regel: BastiGHG/GommeHD/Paluten als einziger Maßstab, „nur Deutsch“,
   „nur Claude-Abo“. Sie werden zu Profil-Einstellungen mit sinnvollen Standards. Die Minecraft-Vorbilder bleiben als
   Beispiel-Stilbuch für die Richtung „Minecraft“, ohne die Bilder selbst mitzuliefern (nur Beschreibung und Regeln).
 - Minecraft-Texturen und -Modelle: Die kommen immer aus der Spieldatei des Nutzers bzw. aus Mojangs öffentlichen
