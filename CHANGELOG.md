@@ -8,6 +8,12 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+### Fixed
+
+- Schnitt-Wünsche: Die KI sieht das Transkript jetzt Satz für Satz mit genauen Zeiten, auch wenn die Spracherkennung einen
+  langen Block liefert – Effekte wie „zensier das Wort …“ oder „schreib … wenn ich … sage“ sitzen genau. Eine Zensur
+  deckt immer ganze Wörter ab.
+
 ## [0.7.9] - 2026-10-05
 
 > Thumbnails in allen 5 Testrichtungen überwiegend gut: geteilte Bilder, genauere Prüfung, Posen nach Stimmung

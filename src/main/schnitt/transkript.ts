@@ -61,6 +61,37 @@ export function liesAbschnitte(jsonl: string): Abschnitt[] {
     .map((z) => JSON.parse(z) as Abschnitt)
 }
 
+/**
+ * Sätze für die KI: Whisper liefert manchmal einen einzigen Abschnitt über 40 s (Freiform-Lauf 05.10.: „Zensier das Wort
+ * Brot“ traf 4 s daneben, weil die KI nur „0–41 s: …“ sah). Lange Abschnitte werden mit den Wortzeiten an Satzenden,
+ * Pausen ab 0,6 s und spätestens nach 25 Wörtern geteilt; kurze bleiben, wie sie sind.
+ */
+export function kiSaetze(abschnitte: Abschnitt[]): { start: number; ende: number; text: string }[] {
+  const aus: { start: number; ende: number; text: string }[] = []
+  for (const a of abschnitte) {
+    const w = a.woerter ?? []
+    if (a.ende - a.start <= 8 || w.length < 2) {
+      aus.push({ start: a.start, ende: a.ende, text: a.text })
+      continue
+    }
+    let teil: typeof w = []
+    const abschliessen = (): void => {
+      if (!teil.length) return
+      aus.push({ start: teil[0]!.start, ende: teil[teil.length - 1]!.ende, text: teil.map((x) => x.wort.trim()).join(' ') })
+      teil = []
+    }
+    w.forEach((x, i) => {
+      teil.push(x)
+      const naechstes = w[i + 1]
+      const satzende = /[.!?…]["“”»]?$/.test(x.wort.trim())
+      const pause = naechstes ? naechstes.start - x.ende >= 0.6 : false
+      if (satzende || pause || teil.length >= 25) abschliessen()
+    })
+    abschliessen()
+  }
+  return aus
+}
+
 /** CUDA-Bibliotheken (cuBLAS, cuDNN) aus den nvidia-Paketen auf den Suchpfad legen. */
 async function cudaPfade(pyDir: string): Promise<string[]> {
   const basis = join(pyDir, 'Lib', 'site-packages', 'nvidia')

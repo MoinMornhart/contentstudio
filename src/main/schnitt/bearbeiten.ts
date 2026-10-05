@@ -11,7 +11,7 @@ import { stilFuer, stilText } from './stil'
 import type { JobContext } from '../jobs/queue'
 import { aendereProjekt, ladeProjekt, projektOrdner } from './projekt'
 import { schnittliste, type Entfernt, type Schnittliste } from './rohschnitt'
-import { liesAbschnitte } from './transkript'
+import { kiSaetze, liesAbschnitte } from './transkript'
 import { pruefeEffekte, type Effekt } from './effekte'
 import { ladeEffekte } from './effekt-vorbereitung'
 import { KLAENGE } from './klaenge'
@@ -96,6 +96,19 @@ const WunschZ = z.object({
 })
 
 const t2 = (s: number): string => s.toFixed(2)
+
+/**
+ * Zensur nie mitten im Wort: jede Zensur wird auf die vollen Wörter ausgedehnt, die sie berührt (Freiform-Lauf 05.10.:
+ * „Brot“ 13,65–14,07 s, die KI zensierte 13,45–13,90 s – das Wortende blieb hörbar).
+ */
+export function zensurAufWoerter(effekte: Effekt[], woerter: { start: number; ende: number }[]): Effekt[] {
+  return effekte.map((e) => {
+    if (e.art !== 'zensur') return e
+    const beruehrt = woerter.filter((w) => w.ende > e.von && w.start < e.bis)
+    if (!beruehrt.length) return e
+    return { ...e, von: Math.min(e.von, ...beruehrt.map((w) => w.start)), bis: Math.max(e.bis, ...beruehrt.map((w) => w.ende)) }
+  })
+}
 
 /** Beschreibung der Bausteine für die KI – frei kombinierbar, keine feste Effektliste */
 export function bausteinText(schrift: string | null = null, sting = false): string {
@@ -183,7 +196,8 @@ export async function wunschJob(p: WunschPayload, ctx: JobContext<unknown>, d: {
   if (!pr) throw new Error(t('schnitt.fehler.projekt'))
   const ordner = projektOrdner(p.daten, p.projekt)
   let liste = JSON.parse(await liesMitKonfliktkopien(join(ordner, 'schnitt.json'))) as Schnittliste
-  const saetze = liesAbschnitte(await readFile(join(ordner, 'transkript.jsonl'), 'utf8').catch(() => ''))
+  const abschnitte = liesAbschnitte(await readFile(join(ordner, 'transkript.jsonl'), 'utf8').catch(() => ''))
+  const saetze = kiSaetze(abschnitte)
   const wellen = pr.wellenform ? (JSON.parse(await readFile(join(ordner, 'wellenform.json'), 'utf8').catch(() => 'null')) as { aufloesung: number; werte: number[] } | null) : null
   const effekte = await ladeEffekte(ordner, liste.dauer)
   ctx.progress(10, t('schnitt.schritt.wunsch'))
@@ -198,7 +212,7 @@ export async function wunschJob(p: WunschPayload, ctx: JobContext<unknown>, d: {
     const e = await d.ki.frage({ name: 'schnitt-wunsch', system: 'You edit a video by producing a cut list and effect building blocks as JSON.', prompt, bilder: sicht ? [sicht] : [], brauchtBilder: !!sicht, schema: WunschZ, stufe: 'stark', maxAusgabe: 8000 }, ctx)
     a = e.daten
     const r = pruefeEffekte(a.effekte ?? effekte, liste.dauer)
-    geprueft = r.effekte
+    geprueft = zensurAufWoerter(r.effekte, abschnitte.flatMap((x) => x.woerter ?? []))
     if (!r.fehler.length) break
     ctx.progress(50, t('schnitt.schritt.wunschKorrektur'))
     prompt = `${wunschPrompt(basis)}\n\n# Korrektur\nDeine letzte Antwort hatte diese Fehler, behebe sie:\n${r.fehler.map((f) => `- ${f}`).join('\n')}`

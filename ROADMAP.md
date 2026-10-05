@@ -236,11 +236,12 @@ Quelle für alles, was MoinStudio fest eingebaut hat. Jede spätere Funktion lie
 
 ## M8 – Qualität → 0.8.0
 
-- [ ] **8.1 Freiform-Tests je Richtung:** je Inhaltsrichtung mindestens 20 ungewöhnliche Thumbnail-Beschreibungen und 20
+- [x] **8.1 Freiform-Tests je Richtung:** je Inhaltsrichtung mindestens 20 ungewöhnliche Thumbnail-Beschreibungen und 20
   Schnittwünsche mit neutralen Test-Avataren und Testvideos, Bewertung gut/mittel/schwach in `docs/tests/`; Fehler werden
   behoben, nicht gestrichen. ✅ Mindestens fünf Richtungen (darunter Minecraft-Gaming, echte Person/Vlog, Kochen oder
-  Bildung) überwiegend „gut“. Stand: Aufgaben und Lauf fertig (`docs/tests/freiform.md`), mit „ohne KI“ geprüft (dabei
-  einen zufälligen OpenCV-Absturz gefunden und behoben); die Bewertung wartet auf einen starken KI-Weg.
+  Bildung) überwiegend „gut“. Erledigt (05.10.2026, KI-Weg claude-cli): alle fünf Richtungen überwiegend gut –
+  Thumbnails 16–17 von 20, Schnittwünsche 19–20 von 20 (`docs/tests/freiform-thumbnails.md`, `freiform-schnitt.md`);
+  9 Fehler dabei gefunden und behoben.
 - [ ] **8.2 Vergleich mit Vorbildern:** Ergebnisse neben die Referenzen des Stilbuchs, verbessern bis sie mithalten.
   ✅ Vergleichsbilder und strenge Bewertung in `docs/tests/`.
 - [ ] **8.3 Jeder KI-Weg und ohne KI:** jede Funktion mit jedem Weg, der sie kann, und ohne KI (Hinweis statt Absturz).
