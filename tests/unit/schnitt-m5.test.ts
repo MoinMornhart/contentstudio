@@ -48,6 +48,19 @@ describe('Schnitt: Stil je Richtung (ROADMAP 5.3)', () => {
     expect(p).toContain(stilText(s, ['bildung']))
     expect(stilText(stilFuer(['gaming']), ['gaming'])).not.toBe(stilText(s, ['bildung']))
   })
+
+  it('Regeln aus der Recherche: Reaction mit 0,5 s Pausen, Gaming-Regeln, Hochformat eigene Regeln (aus MoinStudio v0.49.0)', () => {
+    const r = stilFuer(['Reactions'])
+    expect(r.name).toBe('reaction')
+    expect(r.maxPause).toBe(0.5)
+    expect(stilFuer(['gaming']).maxPause).toBe(0.6)
+    expect(stilText(r, ['Reactions'])).toMatch(/15–30 s Original/)
+    expect(stilText(stilFuer(['minecraft']), ['minecraft'])).toMatch(/Zoom-Punch/)
+    expect(stilText(stilFuer(['kochen']), ['kochen'])).toMatch(/Hook 0–15 s/)
+    expect(stilText(stilFuer(['kochen']), ['kochen'])).not.toMatch(/Zoom-Punch|Original/)
+    expect(stilText(stilFuer(['vlog'], '9:16'), ['vlog'], '9:16')).toMatch(/erste Sekunde/)
+    expect(stilText(r, ['Reactions'], '16:9', false)).not.toMatch(/Hook/)
+  })
 })
 
 describe('Schnitt: Hochformat folgt dem Motiv (ROADMAP 5.5)', () => {

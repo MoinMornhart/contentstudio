@@ -176,7 +176,7 @@ export async function rohschnittJob(p: RohschnittPayload, ctx: JobContext<unknow
       ctx.progress(20 + (i / abschnitte.length) * 70, t('schnitt.schritt.kiLiest'))
       const teil = abschnitte.slice(i, i + block)
       const a = await d.ki
-        .frage({ name: 'rohschnitt', system: 'You are a careful video editor. Only mark sentences that clearly hurt the finished video.', prompt: rohschnittPrompt(teil, { kanal: pr.kanal, plattform: pr.plattform, sprache: pr.sprache, stil: stilText(stil, [pr.richtung]) }), schema: SchemaZ, stufe: 'schnell', maxAusgabe: 3000 }, ctx)
+        .frage({ name: 'rohschnitt', system: 'You are a careful video editor. Only mark sentences that clearly hurt the finished video.', prompt: rohschnittPrompt(teil, { kanal: pr.kanal, plattform: pr.plattform, sprache: pr.sprache, stil: stilText(stil, [pr.richtung], pr.einstellungen?.format ?? '16:9') }), schema: SchemaZ, stufe: 'schnell', maxAusgabe: 3000 }, ctx)
         .then((e) => e.daten)
         .catch(() => null)
       if (!a) continue

@@ -253,7 +253,7 @@ export async function exportJob(p: ExportPayload, ctx: JobContext<unknown>, d: {
       .filter((a): a is { z: number; text: string } => a.z !== null)
       .map((a) => `[${Math.round(a.z)}] ${a.text}`)
     const erg = await d.ki
-      .frage({ name: 'schnitt-texte', system: 'You write titles, descriptions and chapters for a video, following the platform rules exactly.', prompt: textPrompt({ kanal: pr.kanal, plattform: t(`plattform.${pr.plattform}`), sprache: sprachName(pr.sprache), vorgabe, laenge, zeilen, stil: stilText(stilFuer([pr.richtung]), [pr.richtung]) }), schema: TexteZ, stufe: 'schnell', maxAusgabe: 3000 }, ctx)
+      .frage({ name: 'schnitt-texte', system: 'You write titles, descriptions and chapters for a video, following the platform rules exactly.', prompt: textPrompt({ kanal: pr.kanal, plattform: t(`plattform.${pr.plattform}`), sprache: sprachName(pr.sprache), vorgabe, laenge, zeilen, stil: stilText(stilFuer([pr.richtung]), [pr.richtung], '16:9', false) }), schema: TexteZ, stufe: 'schnell', maxAusgabe: 3000 }, ctx)
       .then((e) => e.daten)
       .catch(() => null)
     if (erg) {

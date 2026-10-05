@@ -162,7 +162,7 @@ export async function wunschJob(p: WunschPayload, ctx: JobContext<unknown>, d: {
   ctx.progress(10, t('schnitt.schritt.wunsch'))
   // Sichtbogen nur, wenn eine Bild-KI da ist
   const sicht = p.ffmpeg && pr.quelle && (await d.ki.verfuegbar(true)) ? await sichtbogen(p.ffmpeg, pr.proxy ? join(ordner, 'proxy.mp4') : pr.quelle.pfad, ordner, liste.dauer) : null
-  const basis = { wunsch: p.wunsch, kanal: pr.kanal, plattform: pr.plattform, stil: stilText(stilFuer([pr.richtung], pr.einstellungen?.format ?? '16:9'), [pr.richtung]), sprache: sprachName(hauptSprache()), schrift: p.schrift ?? null, liste, saetze, effekte, laut: lauteMomente(wellen), sicht: !!sicht }
+  const basis = { wunsch: p.wunsch, kanal: pr.kanal, plattform: pr.plattform, stil: stilText(stilFuer([pr.richtung], pr.einstellungen?.format ?? '16:9'), [pr.richtung], pr.einstellungen?.format ?? '16:9'), sprache: sprachName(hauptSprache()), schrift: p.schrift ?? null, liste, saetze, effekte, laut: lauteMomente(wellen), sicht: !!sicht }
   let prompt = wunschPrompt(basis)
   let a: { schritte?: { art: 'entfernen' | 'zurueck'; von: number; bis: number; warum?: string }[]; effekte?: unknown; antwort?: string } = {}
   let geprueft: Effekt[] = effekte
