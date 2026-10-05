@@ -8,7 +8,13 @@ describe('Schnitt: Export für YouTube (ROADMAP M5, MoinStudio 6.7)', () => {
   it('behält die Auflösung der Aufnahme (gerade Zahlen, höchstens 4K, höchstens 60 fps)', () => {
     expect(zielFormat(1920, 1080, 59.94)).toEqual({ breite: 1920, hoehe: 1080, fps: 60 })
     expect(zielFormat(5120, 2880, 30)).toEqual({ breite: 3840, hoehe: 2160, fps: 30 })
-    expect(zielFormat(1281, 721, 144)).toEqual({ breite: 1282, hoehe: 722, fps: 60 })
+    expect(zielFormat(1281, 721, 144)).toEqual({ breite: 1918, hoehe: 1080, fps: 60 })
+    // mindestens 1080p, Gaming immer 60 fps, sonst mindestens 30 (aus MoinStudio v0.52.0)
+    expect(zielFormat(1280, 720, 30, true)).toEqual({ breite: 1920, hoehe: 1080, fps: 60 })
+    expect(zielFormat(1920, 1080, 30)).toEqual({ breite: 1920, hoehe: 1080, fps: 30 })
+    expect(zielFormat(1920, 1080, 24)).toEqual({ breite: 1920, hoehe: 1080, fps: 30 })
+    expect(zielFormat(720, 1280, 30)).toEqual({ breite: 1080, hoehe: 1920, fps: 30 })
+    expect(zielFormat(2160, 3840, 30)).toEqual({ breite: 2160, hoehe: 3840, fps: 30 })
   })
 
   it('wählt Bitraten nach YouTube-Empfehlung und setzt High-Profil, 2 B-Frames, halbe-Sekunde-GOP, BT.709', () => {

@@ -55,6 +55,16 @@ describe('Schnitt: Untertitel, Zooms, Render (ROADMAP M5, MoinStudio 6.6)', () =
     expect(g).toContain('subtitles=vorschau.ass')
     expect(g).toContain("[0:a]aselect='")
     expect(renderArgs(o, 'f.txt')).toEqual(expect.arrayContaining(['-/filter_complex', 'f.txt', '-map', '[a]']))
+    expect(g).not.toContain('loudnorm')
+    // Export: Ton auf Plattform-Lautheit, Ausgang bleibt [a] (genau einmal; aus MoinStudio v0.52.0/v0.53.1)
+    const laut = filterGraph({ ...o, lautheit: -14 })
+    expect(laut).toContain('[aroh]loudnorm=I=-14:TP=-1:LRA=11,aresample=48000[a]')
+    expect(laut.match(/\[a\]/g)).toHaveLength(1)
+    // sonst unverändert: nur die Marke wird umbenannt, kein „a“ in Filternamen (scale, aselect)
+    expect(laut).toContain('crop=960:540')
+    expect(laut.replace(';\n[aroh]loudnorm=I=-14:TP=-1:LRA=11,aresample=48000[a]', '').split('[aroh]').join('[a]')).toBe(g)
+    // ohne Ton keine Normalisierung
+    expect(filterGraph({ ...o, audio: false, lautheit: -14 })).not.toContain('loudnorm')
   })
 
   it('Auswahl auch bei Hunderten Stücken: flacher Baum, wählt genau die behaltenen Zeiten', () => {

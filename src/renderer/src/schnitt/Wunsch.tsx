@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import type { SchnittEffekt, SchnittProjekt } from '@shared/schnitt'
 import { fehlerText, useT } from '../i18n'
 import { effektText } from '@shared/effekt-text'
+import { EFFEKTE_GEAENDERT } from './Zeitleiste'
 
 type T = ReturnType<typeof useT>
 
@@ -82,10 +83,17 @@ export function EffektListe({ p, springe, neuLaden }: { p: SchnittProjekt; sprin
   useEffect(() => {
     if (!p.auftrag) void window.cs.schnittEffekte(p.id).then(setListe)
   }, [p.id, p.auftrag, p.antwort?.zeit])
+  // Änderungen aus der Timeline übernehmen
+  useEffect(() => {
+    const neu = (): void => void window.cs.schnittEffekte(p.id).then(setListe)
+    window.addEventListener(EFFEKTE_GEAENDERT, neu)
+    return () => window.removeEventListener(EFFEKTE_GEAENDERT, neu)
+  }, [p.id])
   if (!liste.length) return null
   const aendern = (i: number, a: { aus: boolean } | null): void =>
     void window.cs.schnittEffektAendern(p.id, i, a).then((l) => {
       setListe(l)
+      window.dispatchEvent(new Event(EFFEKTE_GEAENDERT))
       neuLaden()
     })
   return (

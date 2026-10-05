@@ -61,6 +61,25 @@ body { background: var(--bg); color: var(--text); }
 .page-header p { margin: 0 0 22px; color: var(--muted); }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 18px; }
+/* Timeline (Schnitt, aus MoinStudio v0.52.0) */
+.zeitleiste { display: grid; gap: 8px; margin-top: 12px; }
+.zl-rahmen { display: grid; grid-template-columns: 110px 1fr; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg-2); }
+.zl-namen { display: grid; grid-template-rows: 20px repeat(5, 26px); font-size: 12px; color: var(--muted); border-right: 1px solid var(--border); }
+.zl-namen span { display: flex; align-items: center; padding: 0 8px; border-bottom: 1px solid var(--border); }
+.zl-rolle { overflow-x: auto; min-width: 0; }
+.zl-inhalt { position: relative; min-width: 100%; }
+.zl-lineal { position: relative; overflow: hidden; height: 20px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 10px; color: var(--muted); }
+.zl-lineal span { position: absolute; top: 3px; padding-left: 3px; border-left: 1px solid var(--border); white-space: nowrap; }
+.zl-spur { position: relative; height: 26px; border-bottom: 1px solid var(--border); }
+.zl-spur > * { position: absolute; top: 4px; bottom: 4px; border-radius: 3px; }
+.zl-drin { background: #2f8a4c; opacity: 0.75; border-radius: 0 !important; cursor: pointer; }
+.zl-weg { background: #c0392b; opacity: 0.85; border-radius: 0 !important; cursor: pointer; z-index: 1; }
+.zl-weg.aus { background: #2f8a4c; opacity: 0.9; outline: 1px dashed var(--text); }
+.zl-effekt { border: 0; padding: 0; background: var(--accent); cursor: pointer; min-width: 3px; }
+.zl-effekt.aus { opacity: 0.3; }
+.zl-effekt.on { outline: 2px solid var(--text); z-index: 2; }
+.zl-kopf { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--text); pointer-events: none; z-index: 3; }
+.card.breit { grid-column: 1 / -1; }
 .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
 .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .card-head h2 { margin: 0; font-size: 15px; }

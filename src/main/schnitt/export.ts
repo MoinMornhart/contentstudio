@@ -10,12 +10,12 @@ import { t } from '../i18n'
 import { sprachName } from '../thumbnail/job'
 import { ffmpegMitFortschritt } from './import'
 import { aendereProjekt, ladeProjekt, projektOrdner } from './projekt'
-import { auswahlAusdruck, filterGraph, renderArgs, zeitAbbildung } from './render'
+import { auswahlAusdruck, filterGraph, lautheitFilter, renderArgs, zeitAbbildung } from './render'
 import { liesAbschnitte } from './transkript'
 import { einstellungen, renderPlan, verfolgungFallsNoetig } from './vorschau'
 import type { ThumbUmgebung } from '../thumbnail/umgebung'
 import type { EffektHilfe } from './effekt-vorbereitung'
-import { stilFuer, stilText } from './stil'
+import { istGaming, stilFuer, stilText } from './stil'
 
 /**
  * Export je Plattform (ROADMAP 5.7): volle Qualität aus dem Original, technisch nach YouTubes Upload-Empfehlung, die
@@ -24,12 +24,25 @@ import { stilFuer, stilText } from './stil'
  * Encoder aus dem Hardware-Profil (NVENC/AMF/QSV), sonst libx264. Titel, Text und Kapitel von der KI, falls gewählt.
  */
 
-/** Zielgröße: Auflösung der Aufnahme (gerade Zahlen, höchstens 4K), Bildrate wie aufgenommen (höchstens 60). */
-export function zielFormat(breite: number, hoehe: number, fps: number): { breite: number; hoehe: number; fps: number } {
-  const f = Math.min(1, 3840 / Math.max(breite, 1), 2160 / Math.max(hoehe, 1))
+/**
+ * Zielgröße: Auflösung der Aufnahme (gerade Zahlen), mindestens 1080p (kleinere Aufnahmen werden hochskaliert – YouTube
+ * gibt 1080p deutlich mehr Bitrate), höchstens 4K. Bildrate wie aufgenommen (30–60), Gaming immer 60 fps
+ * (aus MoinStudio v0.52.0).
+ */
+export function zielFormat(breite: number, hoehe: number, fps: number, gaming = false): { breite: number; hoehe: number; fps: number } {
+  const b = breite || 1920
+  const h = hoehe || 1080
+  const hoch = Math.max(1, 1080 / Math.max(1, Math.min(b, h)))
+  const f = Math.min(hoch, 3840 / Math.max(b, h, 1), 2160 / Math.max(1, Math.min(b, h)))
   const gerade = (x: number): number => Math.max(2, Math.round((x * f) / 2) * 2)
-  return { breite: gerade(breite || 1920), hoehe: gerade(hoehe || 1080), fps: Math.min(60, Math.round(fps) || 30) }
+  return { breite: gerade(b), hoehe: gerade(h), fps: zielFps(fps, gaming) }
 }
+
+/** Bildrate: Gaming immer 60, sonst wie aufgenommen zwischen 30 und 60 */
+export const zielFps = (fps: number, gaming = false): number => (gaming ? 60 : Math.min(60, Math.max(30, Math.round(fps) || 30)))
+
+/** Ziel-Lautheit je Plattform: Video −14 LUFS (YouTube, TikTok, Instagram), Podcast −16 LUFS */
+export const zielLautheit = (audio: boolean): number => (audio ? -16 : -14)
 
 /** YouTube-Bitrate (SDR) in Mbit/s nach Auflösung und Bildrate. */
 export function youtubeBitrate(hoehe: number, fps: number): number {
@@ -145,8 +158,8 @@ export async function istFaststart(datei: string): Promise<boolean> {
 }
 
 /** Hochformat-Ziel (Shorts, Reels, TikTok): 1080 × 1920, Bildrate wie aufgenommen (höchstens 60) */
-export function zielHoch(fps: number): { breite: number; hoehe: number; fps: number } {
-  return { breite: 1080, hoehe: 1920, fps: Math.min(60, Math.round(fps) || 30) }
+export function zielHoch(fps: number, gaming = false): { breite: number; hoehe: number; fps: number } {
+  return { breite: 1080, hoehe: 1920, fps: zielFps(fps, gaming) }
 }
 
 /** Prüfpunkte der Plattform zusätzlich zu den technischen (ROADMAP 5.7) */
@@ -232,9 +245,10 @@ export async function exportJob(p: ExportPayload, ctx: JobContext<unknown>, d: {
   const vorgabe = PLATTFORM_VORGABEN[pr.plattform]
   const audio = vorgabe.format === 'audio'
   const hoch = !audio && einstellungen(pr).format === '9:16'
-  const ziel = hoch ? zielHoch(pr.quelle.fps) : zielFormat(pr.quelle.breite, pr.quelle.hoehe, pr.quelle.fps)
+  const gaming = istGaming([pr.richtung])
+  const ziel = hoch ? zielHoch(pr.quelle.fps, gaming) : zielFormat(pr.quelle.breite, pr.quelle.hoehe, pr.quelle.fps, gaming)
   if (hoch) await verfolgungFallsNoetig(pr, ordner, p.ffmpeg, p.umgebung, ctx)
-  const plan = await renderPlan(p.daten, pr, { quelle: pr.quelle.pfad, ...ziel, encoder: encoderArgs(p.encoder, ziel.hoehe, ziel.fps), ausgabe: 'export.mp4', untertitelDatei: 'export.ass' }, p.hilfe)
+  const plan = { ...(await renderPlan(p.daten, pr, { quelle: pr.quelle.pfad, ...ziel, encoder: encoderArgs(p.encoder, ziel.hoehe, ziel.fps), ausgabe: 'export.mp4', untertitelDatei: 'export.ass' }, p.hilfe)), lautheit: zielLautheit(audio) }
   const abb = zeitAbbildung(plan.liste.behalten)
   // Mit Effekten (Zeitlupe, Standbild) verschieben sich alle Zeiten: Kapitel gelten für das fertige Video
   const imSchnitt = (x: number): number | null => {
@@ -271,7 +285,7 @@ export async function exportJob(p: ExportPayload, ctx: JobContext<unknown>, d: {
     // Podcast: nur der geschnittene Ton, AAC, mit Kapiteln als Metadaten
     const auswahl = auswahlAusdruck(plan.liste.behalten)
     await writeFile(join(ordner, 'export-kapitel.txt'), kapitelMetadaten(text.kapitel, laenge))
-    await ffmpegMitFortschritt(p.ffmpeg, ['-i', pr.quelle.pfad, '-i', 'export-kapitel.txt', '-map_metadata', '1', '-map_chapters', '1', '-vn', '-af', `aselect='${auswahl}',asetpts=N/SR/TB`, '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-movflags', '+faststart', `export.${endung}`], ctx, laenge, (a) => ctx.progress(8 + a * 88, t('schnitt.schritt.export', { prozent: Math.round(a * 100) })), ordner)
+    await ffmpegMitFortschritt(p.ffmpeg, ['-i', pr.quelle.pfad, '-i', 'export-kapitel.txt', '-map_metadata', '1', '-map_chapters', '1', '-vn', '-af', `aselect='${auswahl}',asetpts=N/SR/TB,${lautheitFilter(zielLautheit(true))}`, '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-movflags', '+faststart', `export.${endung}`], ctx, laenge, (a) => ctx.progress(8 + a * 88, t('schnitt.schritt.export', { prozent: Math.round(a * 100) })), ordner)
   } else {
     await writeFile(join(ordner, 'export-filter.txt'), filterGraph(plan))
     await ffmpegMitFortschritt(p.ffmpeg, renderArgs(plan, 'export-filter.txt'), ctx, laenge, (a) => ctx.progress(8 + a * 88, t('schnitt.schritt.export', { prozent: Math.round(a * 100) })), ordner)

@@ -165,6 +165,8 @@ export interface RenderOptionen {
   hoehe: number
   fps: number
   audio: boolean
+  /** Ton auf diese Lautheit bringen (LUFS, Spitzen höchstens −1 dBTP) – nur beim Export (aus MoinStudio v0.52.0) */
+  lautheit?: number
   /**
    * Hochformat (Shorts, Reels, TikTok): mit Facecam-Bereich im Original (Anteile x0,y0,x1,y1) oben die Facecam und
    * darunter das Spiel; sonst ein Ausschnitt, der der Verfolgung folgt (Punkte in Originalzeit, x = Mitte 0–1).
@@ -239,7 +241,17 @@ export function auswahlAusdruck(stuecke: readonly { start: number; ende: number 
 }
 
 /** Filtergraph (kommt in eine Datei – bei Stunden-Streams wäre er für die Windows-Befehlszeile zu lang). */
+/** Lautheits-Normalisierung (EBU R128) auf `lufs`, Spitzen höchstens −1 dBTP, 48 kHz */
+export const lautheitFilter = (lufs: number): string => `loudnorm=I=${lufs}:TP=-1:LRA=11,aresample=48000`
+
 export function filterGraph(o: RenderOptionen): string {
+  const g = filterGraphRoh(o)
+  // [a] ist immer nur Ausgang des Graphen: Marke umbenennen und die Normalisierung dahinter hängen. Nur die ganze Marke
+  // „[a]“ ersetzen – ein Ersetzen per /[a]/ traf jedes einzelne „a“ (scale → sc[aroh]le; MoinStudio v0.53.1)
+  return o.lautheit !== undefined && o.audio ? `${g.split('[a]').join('[aroh]')};\n[aroh]${lautheitFilter(o.lautheit)}[a]` : g
+}
+
+function filterGraphRoh(o: RenderOptionen): string {
   const auswahl = auswahlAusdruck(o.liste.behalten)
   const idx = spurIndex(o)
   const teile: string[] = []

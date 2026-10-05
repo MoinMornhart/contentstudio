@@ -6,6 +6,7 @@ import { PLATTFORMEN, RICHTUNGEN } from '@shared/profil'
 import type { Schluessel } from '@shared/i18n'
 import { Card, PageHeader } from '../components/Panel'
 import { EffektListe, WunschFeld, zeitText } from '../schnitt/Wunsch'
+import { Zeitleiste } from '../schnitt/Zeitleiste'
 import { EffektBibliothek } from '../schnitt/EffektBibliothek'
 import { abholen, OEFFNE_EREIGNIS } from '../navigation'
 import { useProfil } from '../profil/useProfil'
@@ -433,6 +434,7 @@ function ProjektAnsicht({ p, ki, zurueck, loeschen, neuLaden }: { p: SchnittProj
           }}
         />
       )}
+      {liste && dauer > 0 && <Zeitleiste p={p} liste={liste} setListe={setListe} zeit={zeit} springe={springe} />}
       {liste && (
         <label className="row" style={{ alignItems: 'center' }}>
           <input type="checkbox" checked={geschnitten} onChange={(e) => setGeschnitten(e.target.checked)} /> {t('schnitt.geschnittenAbspielen')}

@@ -100,11 +100,14 @@ const GAMING = `Gaming:
 - Zeitlupe (25–50 %) beim entscheidenden Moment, Replay bei Fails, Freeze mit Text vor einem Fail.
 - Story statt Liste: Ziel in den ersten 15 s, Zwischenstände als Text („Tag 3“, „2/5“), Finale am Ende.`
 
+/** Gehört die Richtung zum Gaming (Spiele, Streams)? */
+export const istGaming = (richtungen: string[]): boolean => richtungen.some((r) => /gaming|spiel|game|minecraft|fortnite|roblox|esport/i.test(r))
+
 /** Beschreibung des Stils für die KI (Rohschnitt, Wünsche, Highlights) */
 export function stilText(s: SchnittStil, richtungen: string[], format: SchnittFormat = '16:9', regeln = true): string {
   const tempo = { reaction: 'eng geschnitten, Reaktionen im Mittelpunkt', schnell: 'schnell und eng geschnitten, viele Akzente an Höhepunkten', normal: 'zügig, natürliche Pausen bleiben', ruhig: 'ruhig, Pausen zum Zuschauen und Nachdenken bleiben stehen' }[s.name]
   const zeile = `Richtung: ${richtungen.join(', ') || 'allgemein'} – Schnitt ${tempo}; Effekte ${s.effektDichte === 'viel' ? 'knackig und häufiger' : s.effektDichte === 'mittel' ? 'gezielt an Höhepunkten' : 'sparsam, nur wo sie helfen'}.`
   if (!regeln) return zeile
-  const art = s.name === 'reaction' ? REACTION : richtungen.some((r) => /gaming|spiel|game|minecraft|fortnite|roblox|esport/i.test(r)) ? GAMING : null
+  const art = s.name === 'reaction' ? REACTION : istGaming(richtungen) ? GAMING : null
   return [zeile, format === '9:16' ? HOCHFORMAT : GEMEINSAM, art].filter(Boolean).join('\n\n')
 }

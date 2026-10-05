@@ -9,9 +9,9 @@ export function PageHeader({ title, subtitle }: { title: string; subtitle: strin
   )
 }
 
-export function Card({ title, children, badge }: { title: string; children: ReactNode; badge?: string }): React.JSX.Element {
+export function Card({ title, children, badge, breit }: { title: string; children: ReactNode; badge?: string; /** über die ganze Breite des Rasters */ breit?: boolean }): React.JSX.Element {
   return (
-    <section className="card">
+    <section className={breit ? 'card breit' : 'card'}>
       <div className="card-head">
         <h2>{title}</h2>
         {badge && <span className="badge">{badge}</span>}
