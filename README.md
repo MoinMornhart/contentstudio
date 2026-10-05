@@ -153,11 +153,11 @@ zwölf Schritten durch Profil, Kanäle, Darstellung, Marke und KI. Updates komme
 ## Neueste Änderungen
 
 <!-- CHANGELOG:START -->
+- **0.7.9** (2026-10-05): Thumbnails in allen 5 Testrichtungen überwiegend gut: geteilte Bilder, genauere Prüfung, Posen nach Stimmung
 - **0.7.8** (2026-10-05): Bessere Thumbnails: keine harten Kanten bei Porträts, passende Orte, ruhigere Gefahr-Kamera
 - **0.7.7** (2026-10-05): Premiere-Brücke (UXP-Plugin, ungetestet); damit ist MoinStudio bis v0.50.1 übernommen
 - **0.7.6** (2026-10-05): Skin-Intro Sting im Schnitt für Minecraft-Konten
 - **0.7.5** (2026-10-05): Neuer Reiter Logo: Logos erstellen und verwalten, Logo mit Ecke und Größe in jedem Thumbnail
-- **0.7.4** (2026-10-05): Thumbnail-Vorlage für jede Art von Bild: eigene Maske je Person, Hände, Ketten, Schlussprüfung mit Korrektur
 <!-- CHANGELOG:END -->
 
 ## Entwicklung

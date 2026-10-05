@@ -8,6 +8,10 @@ Kurzbeschreibung für die README.
 
 ## [Unreleased]
 
+## [0.7.9] - 2026-10-05
+
+> Thumbnails in allen 5 Testrichtungen überwiegend gut: geteilte Bilder, genauere Prüfung, Posen nach Stimmung
+
 ### Fixed
 
 - Minecraft: Nennt die Beschreibung zwei Seiten oder Welten („links … rechts …“, Oberwelt und Nether), wird ein geteiltes
